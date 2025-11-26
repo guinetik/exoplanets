@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useCallback, Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { useNavigate } from 'react-router-dom';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { Star, Exoplanet } from '../../types';
@@ -20,14 +20,51 @@ interface StarSystemProps {
   onPlanetClick?: (planet: Exoplanet) => void;
 }
 
-// Separate component to control camera with manual rotation
+// Static background stars - no animation, attached to camera
+function BackgroundStars({ count = 3000 }: { count?: number }) {
+  const positions = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      // Distribute on a sphere
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 500;
+
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return pos;
+  }, [count]);
+
+  return (
+    <points>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={1.5}
+        color={0xffffff}
+        transparent
+        opacity={0.6}
+        sizeAttenuation={false}
+      />
+    </points>
+  );
+}
+
+// Camera controls with slow auto-rotation
 function CameraControls({ shouldAutoRotate, maxDistance }: { shouldAutoRotate: boolean; maxDistance: number }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
-  // Manual auto-rotation using useFrame
+  // Auto-rotation
   useFrame((_, delta) => {
     if (controlsRef.current && shouldAutoRotate) {
-      // Manually rotate the azimuthal angle
       controlsRef.current.setAzimuthalAngle(
         controlsRef.current.getAzimuthalAngle() + delta * 0.1
       );
@@ -94,16 +131,8 @@ export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: Sta
           {/* Hemisphere light for better planet illumination */}
           <hemisphereLight args={['#ffffff', '#444444', 0.5]} />
 
-          {/* Space background with stars */}
-          <Stars
-            radius={300}
-            depth={60}
-            count={5000}
-            factor={4}
-            saturation={0}
-            fade
-            speed={0.5}
-          />
+          {/* Space background with static stars */}
+          <BackgroundStars count={3000} />
 
           {/* Render all celestial bodies */}
           {bodies.map((body) => (

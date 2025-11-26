@@ -186,7 +186,7 @@ const float TERRAIN_PEAK_LOW = 0.7;
 const float TERRAIN_PEAK_HIGH = 0.9;
 
 // --- FBM Constants ---
-const float FBM_MAX_OCTAVES = 5; // Maximum octaves for FBM
+const int FBM_MAX_OCTAVES = 5; // Maximum octaves for FBM
 const float FBM_FREQUENCY_MULT = 2.0; // How much frequency increases per octave
 const float FBM_AMPLITUDE_MULT = 0.5; // How much amplitude decreases per octave
 

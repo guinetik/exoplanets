@@ -97,13 +97,20 @@ export function generateSolarSystem(
   // Star luminosity (log scale, default to 0 = 1 solar luminosity)
   const starLum = star.st_lum ?? 0;
 
+  // Scale star diameter - use log scale for giant stars to keep visualization manageable
+  // Small stars (< 5 R☉): linear scaling
+  // Giant stars (> 5 R☉): logarithmic scaling to prevent massive stars from dominating
+  const starDiameter = starRadius <= 5
+    ? 2 + starRadius * 1.5
+    : 2 + 5 * 1.5 + Math.log10(starRadius / 5) * 8;
+
   // Add the star
   bodies.push({
     id: star.id,
     name: star.hostname,
     displayName: star.hostname,
     type: 'star',
-    diameter: 2 + starRadius * 1.5, // Base size + scaled by radius
+    diameter: starDiameter,
     color: getStarColor(star.star_class),
     emissive: getStarColor(star.star_class),
     emissiveIntensity: 0.8 + Math.pow(10, starLum) * 0.2,
@@ -133,7 +140,10 @@ export function generateSolarSystem(
 
     // Scale orbit radius for visualization (compress large distances)
     // Use logarithmic scaling for better visualization
-    const orbitRadius = 5 + Math.log10(1 + semiMajorAxis * 10) * 8;
+    // Ensure orbit is always outside the star (star radius + padding + orbit distance)
+    const baseOrbitRadius = 5 + Math.log10(1 + semiMajorAxis * 10) * 8;
+    const minOrbitRadius = starDiameter / 2 + 2; // At least star radius + padding
+    const orbitRadius = Math.max(baseOrbitRadius, minOrbitRadius + index * 2);
 
     // Scale orbital period for animation (faster for outer planets too)
     const animationPeriod = 200 + Math.sqrt(orbitalPeriod) * 5;

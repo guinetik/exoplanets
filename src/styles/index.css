@@ -205,6 +205,13 @@
     @apply relative w-full flex-1 overflow-hidden;
   }
 
+  /* Scene fade overlay - covers canvas during intro */
+  .scene-fade-overlay {
+    @apply absolute inset-0 bg-black;
+    z-index: 5;
+    transition: opacity 1.5s ease-out;
+  }
+
   /* Telescope Bearing Display */
   .starfield-bearing {
     @apply absolute top-4 left-4 text-white/80 text-sm font-mono;
@@ -328,16 +335,27 @@
     text-shadow:
       0 0 60px rgba(255, 255, 255, 0.5),
       0 0 120px rgba(100, 150, 255, 0.3);
-    animation: intro-glow 3s ease-in-out infinite alternate;
+  }
+
+  .intro-letter {
+    @apply inline-block opacity-0;
+    animation: letter-reveal 0.5s ease-out forwards, intro-glow 3s ease-in-out infinite alternate;
+  }
+
+  @keyframes letter-reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .intro-subtitle {
     @apply text-xl md:text-2xl font-light tracking-[0.2em] text-white/70;
     animation: fade-in 1s ease-out;
-  }
-
-  .intro-text-fade-in {
-    animation: fade-in 1.5s ease-out;
   }
 
   .intro-skip {

@@ -11,6 +11,7 @@
 uniform vec3 uBaseColor;
 uniform float uTime;
 uniform float uTemperature; // Planet equilibrium temperature
+uniform float uHasAtmosphere; // Unused but passed from component
 uniform float uSeed; // Unique seed per planet for color variation
 
 varying vec3 vNormal;

@@ -1,6 +1,6 @@
 /**
  * Earth Surface Fragment Shader
- * Creates procedural ocean/land texture with city lights
+ * Kepler-inspired procedural planet with atmosphere, clouds, and ice caps
  */
 
 varying vec3 vNormal;
@@ -8,67 +8,7 @@ varying vec2 vUv;
 varying vec3 vPosition;
 
 // =============================================================================
-// Constants - Noise Generation
-// =============================================================================
-
-const float NOISE_BASE_SCALE = 2.0;
-const float NOISE_SCALE_MULTIPLIER_2 = 2.0;
-const float NOISE_SCALE_MULTIPLIER_4 = 4.0;
-const float NOISE_AMPLITUDE_1 = 0.5;
-const float NOISE_AMPLITUDE_2 = 0.25;
-const float NOISE_AMPLITUDE_3 = 0.125;
-const float NOISE_NORMALIZATION = 1.875;
-
-// =============================================================================
-// Constants - Ocean Colors
-// =============================================================================
-
-const vec3 DEEP_OCEAN_COLOR = vec3(0.02, 0.06, 0.15);
-const vec3 SHALLOW_OCEAN_COLOR = vec3(0.05, 0.15, 0.30);
-const float OCEAN_DEPTH_MIX_FACTOR = 0.5;
-
-// =============================================================================
-// Constants - Land Colors
-// =============================================================================
-
-const vec3 LAND_COLOR = vec3(0.06, 0.20, 0.08); // More green
-const vec3 DESERT_COLOR = vec3(0.25, 0.18, 0.10); // More tan/brown
-const float DESERT_NOISE_SCALE = 8.0;
-
-// =============================================================================
-// Constants - Land/Ocean Threshold
-// =============================================================================
-
-const float LAND_THRESHOLD = 0.52;
-const float LAND_THRESHOLD_SOFTNESS = 0.05;
-
-// =============================================================================
-// Constants - City Lights
-// =============================================================================
-
-const float CITY_LIGHTS_NOISE_SCALE = 20.0;
-const float CITY_LIGHTS_SMOOTHSTEP_MIN = 0.7;
-const float CITY_LIGHTS_SMOOTHSTEP_MAX = 0.9;
-const float CITY_LIGHTS_INTENSITY = 0.15;
-const vec3 CITY_LIGHTS_COLOR = vec3(1.0, 0.9, 0.6);
-
-// =============================================================================
-// Constants - Limb Darkening
-// =============================================================================
-
-const float LIMB_DARKENING_SMOOTHSTEP_MIN = -0.3;
-const float LIMB_DARKENING_SMOOTHSTEP_MAX = 0.6;
-const float LIMB_DARKENING_MIN_FACTOR = 0.5;
-const float LIMB_DARKENING_MAX_FACTOR = 0.5;
-
-// =============================================================================
-// Constants - View Direction
-// =============================================================================
-
-const vec3 UP_VECTOR = vec3(0.0, 1.0, 0.0);
-
-// =============================================================================
-// Simplex Noise (for land/ocean variation)
+// Simplex Noise
 // =============================================================================
 
 vec3 mod289(vec3 x) {
@@ -110,33 +50,94 @@ float snoise(vec2 v) {
 // =============================================================================
 
 void main() {
-    // Generate noise for land masses (lower scale = larger continents)
-    float noise = snoise(vUv * NOISE_BASE_SCALE) * NOISE_AMPLITUDE_1;
-    noise += snoise(vUv * NOISE_BASE_SCALE * NOISE_SCALE_MULTIPLIER_2) * NOISE_AMPLITUDE_2;
-    noise += snoise(vUv * NOISE_BASE_SCALE * NOISE_SCALE_MULTIPLIER_4) * NOISE_AMPLITUDE_3;
-    noise = noise / NOISE_NORMALIZATION; // Normalize
+    vec3 nPos = normalize(vPosition);
 
-    // Mix ocean depths
-    vec3 oceanColor = mix(DEEP_OCEAN_COLOR, SHALLOW_OCEAN_COLOR, noise * OCEAN_DEPTH_MIX_FACTOR);
+    // ==========================================================================
+    // Atmosphere color (kepler-style blue atmosphere)
+    // ==========================================================================
+    float atmosphereDensity = 1.45 + nPos.z;
+    vec3 atmosphereColor = vec3(0.075, 0.35, 0.99) * 0.45;
 
-    // Determine land vs ocean (~40% land, lower threshold = more land)
-    float isLand = smoothstep(LAND_THRESHOLD - LAND_THRESHOLD_SOFTNESS, LAND_THRESHOLD + LAND_THRESHOLD_SOFTNESS, noise);
+    // ==========================================================================
+    // Generate noise for terrain
+    // ==========================================================================
+    float noise = snoise(vUv * 2.0) * 0.5;
+    noise += snoise(vUv * 4.0) * 0.25;
+    noise += snoise(vUv * 8.0) * 0.125;
+    noise = noise / 1.875;
 
-    // Mix land types
-    vec3 landColor = mix(LAND_COLOR, DESERT_COLOR, snoise(vUv * DESERT_NOISE_SCALE) * 0.5 + 0.5);
+    // Detail noise for texture variation
+    float detailNoise = snoise(vUv * 16.0) * 0.5 + 0.5;
 
-    // Final surface color
+    // ==========================================================================
+    // Ocean (kepler-style deep blue)
+    // ==========================================================================
+    vec3 deepOcean = vec3(0.02, 0.06, 0.15);
+    vec3 shallowOcean = vec3(0.05, 0.12, 0.25);
+    vec3 oceanColor = mix(deepOcean, shallowOcean, noise * 0.5);
+
+    // ==========================================================================
+    // Land (kepler-style green/brown terrain)
+    // ==========================================================================
+    float isLand = smoothstep(0.47, 0.57, noise);
+
+    // Green lowlands
+    vec3 landGreen = vec3(0.13, 0.65, 0.01) * 0.15;
+    // Brown/tan highlands
+    vec3 landBrown = vec3(0.8, 0.4, 0.01) * 0.12;
+
+    // Mix based on detail noise
+    vec3 landColor = mix(landGreen, landBrown, detailNoise);
+    landColor *= (detailNoise * 0.5 + 0.75); // Add texture variation
+
+    // ==========================================================================
+    // Ice caps at poles (kepler-style)
+    // ==========================================================================
+    float iceFactor = pow(abs(nPos.y), 2.0);
+    vec3 iceColor = vec3(0.9, 0.92, 0.95) * isLand * 0.8;
+
+    // ==========================================================================
+    // Clouds (kepler-style spiral clouds)
+    // ==========================================================================
+    float cloudNoise1 = snoise(vUv * 6.0);
+    float cloudNoise2 = snoise(vUv * 12.0);
+    float cloudDensity = max(0.0, pow(cloudNoise1 * cloudNoise2 + 0.5, 0.7) * 1.5);
+
+    // ==========================================================================
+    // Combine surface
+    // ==========================================================================
     vec3 surfaceColor = mix(oceanColor, landColor, isLand);
 
-    // Add subtle city lights on dark side (night)
-    float lightNoise = snoise(vUv * CITY_LIGHTS_NOISE_SCALE);
-    float cityLights = smoothstep(CITY_LIGHTS_SMOOTHSTEP_MIN, CITY_LIGHTS_SMOOTHSTEP_MAX, lightNoise) * isLand * CITY_LIGHTS_INTENSITY;
-    surfaceColor += CITY_LIGHTS_COLOR * cityLights;
+    // Add ice at poles
+    surfaceColor = mix(surfaceColor, iceColor, iceFactor * isLand);
 
-    // Darken edges (limb darkening) - less aggressive
-    float limb = dot(vNormal, UP_VECTOR);
-    limb = smoothstep(LIMB_DARKENING_SMOOTHSTEP_MIN, LIMB_DARKENING_SMOOTHSTEP_MAX, limb);
-    surfaceColor *= LIMB_DARKENING_MIN_FACTOR + limb * LIMB_DARKENING_MAX_FACTOR;
+    // Add atmosphere tint
+    vec3 finalAtmosphere = atmosphereColor * atmosphereDensity;
+    surfaceColor += finalAtmosphere * 0.15;
+
+    // Add clouds
+    surfaceColor = mix(surfaceColor, vec3(0.85, 0.88, 0.92), cloudDensity * 0.5);
+
+    // ==========================================================================
+    // City lights on dark side
+    // ==========================================================================
+    float lightNoise = snoise(vUv * 20.0);
+    float cityLights = smoothstep(0.7, 0.9, lightNoise) * isLand * 0.12;
+    vec3 cityColor = vec3(1.0, 0.9, 0.6);
+
+    // ==========================================================================
+    // Lighting (view from above, sun from the side)
+    // ==========================================================================
+    float limb = dot(vNormal, vec3(0.0, 1.0, 0.0));
+    limb = smoothstep(-0.3, 0.6, limb);
+    float lighting = 0.4 + limb * 0.6;
+
+    // Add city lights on darker areas
+    float darkSide = 1.0 - limb;
+    surfaceColor += cityColor * cityLights * darkSide * 2.0;
+
+    // Apply lighting
+    surfaceColor *= lighting;
 
     gl_FragColor = vec4(surfaceColor, 1.0);
 }

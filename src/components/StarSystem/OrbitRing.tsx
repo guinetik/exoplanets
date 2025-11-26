@@ -17,8 +17,9 @@ export function OrbitRing({ radius, isHighlighted }: OrbitRingProps) {
       <meshBasicMaterial
         color={isHighlighted ? '#ffffff' : '#888888'}
         transparent
-        opacity={isHighlighted ? 0.8 : 0.5}
+        opacity={isHighlighted ? 0.8 : 0.3}
         side={THREE.DoubleSide}
+        depthWrite={false}
       />
     </mesh>
   );

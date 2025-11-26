@@ -39,61 +39,178 @@ interface IntroState {
   progress: number;
 }
 
+// Simplified procedural planet shader (inspired by kepler.glsl)
+const introPlanetVertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  varying vec2 vUv;
+
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vPosition = position;
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const introPlanetFragmentShader = `
+  uniform float uTime;
+  uniform float uOpacity;
+
+  varying vec3 vNormal;
+  varying vec3 vPosition;
+  varying vec2 vUv;
+
+  // Simple noise function
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  float fbm(vec2 p) {
+    float sum = 0.0;
+    float amp = 0.5;
+    for(int i = 0; i < 4; i++) {
+      sum += noise(p) * amp;
+      p *= 2.0;
+      amp *= 0.5;
+    }
+    return sum;
+  }
+
+  void main() {
+    // Convert position to spherical coordinates for texture mapping
+    vec3 nPos = normalize(vPosition);
+    float longitude = atan(nPos.x, nPos.z) + uTime * 0.1;
+    float latitude = asin(nPos.y);
+    vec2 uv = vec2(longitude / 3.14159, latitude / 1.5708 + 0.5);
+
+    // Ocean base color
+    vec3 oceanColor = vec3(0.02, 0.08, 0.15);
+    vec3 oceanHighlight = vec3(0.05, 0.15, 0.3);
+
+    // Land generation using noise
+    float landNoise = fbm(uv * 8.0);
+    float landMask = smoothstep(0.45, 0.55, landNoise);
+
+    // Land colors
+    vec3 landLow = vec3(0.08, 0.25, 0.05); // Green lowlands
+    vec3 landHigh = vec3(0.3, 0.2, 0.1);   // Brown highlands
+    vec3 landColor = mix(landLow, landHigh, fbm(uv * 16.0));
+
+    // Ice caps at poles
+    float iceMask = smoothstep(0.7, 0.9, abs(nPos.y));
+    vec3 iceColor = vec3(0.9, 0.95, 1.0);
+
+    // Clouds
+    float cloudNoise = fbm(uv * 6.0 + uTime * 0.05);
+    float cloudMask = smoothstep(0.5, 0.7, cloudNoise);
+    vec3 cloudColor = vec3(1.0, 1.0, 1.0);
+
+    // Combine layers
+    vec3 surfaceColor = mix(oceanColor, landColor, landMask);
+    surfaceColor = mix(surfaceColor, iceColor, iceMask);
+    surfaceColor = mix(surfaceColor, cloudColor, cloudMask * 0.7);
+
+    // Simple lighting from camera direction
+    vec3 lightDir = normalize(vec3(0.5, 0.3, 1.0));
+    float light = max(0.0, dot(vNormal, lightDir));
+    float ambient = 0.15;
+
+    // Atmosphere rim lighting
+    float rim = 1.0 - max(0.0, dot(vNormal, vec3(0.0, 0.0, 1.0)));
+    vec3 atmosphereColor = vec3(0.3, 0.6, 1.0);
+    vec3 rimGlow = atmosphereColor * pow(rim, 3.0) * 0.5;
+
+    vec3 finalColor = surfaceColor * (light + ambient) + rimGlow;
+
+    gl_FragColor = vec4(finalColor, uOpacity);
+  }
+`;
+
 /**
- * Intro Earth - larger, rotating planet during intro
+ * Intro Earth - starts centered, pans down to horizon position
+ * Uses procedural shader for realistic planet appearance
  */
 function IntroEarth({ opacity, swoopProgress }: { opacity: number; swoopProgress: number }) {
   const groupRef = useRef<THREE.Group>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (groupRef.current) {
       groupRef.current.rotation.y += delta * 0.15;
+    }
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+      materialRef.current.uniforms.uOpacity.value = opacity;
     }
   });
 
   if (opacity <= 0) return null;
 
-  // During swoop, Earth moves down from center view to horizon
-  // Start Y: -300 (center of view), End Y: -600 (at horizon level)
-  const yPosition = -300 - swoopProgress * 300;
+  // Animate from center of screen to horizon position
+  // Start: planet centered, visible in full
+  // End: large planet at bottom, only top arc visible (matching horizon Earth)
+  const startY = 0;         // Centered vertically
+  const endY = -600;        // Same as horizon Earth center
+  const startZ = -600;      // See whole planet but larger
+  const endZ = -100;        // Close for horizon
+  const startScale = 0.35;  // Larger but still see full planet
+  const endScale = 1.0;     // Full size matching horizon
+
+  const yPosition = startY + swoopProgress * (endY - startY);
+  const zPosition = startZ + swoopProgress * (endZ - startZ);
+  const scale = startScale + swoopProgress * (endScale - startScale);
+
+  const baseRadius = 580;
 
   return (
-    <group ref={groupRef} position={[0, yPosition, -400]}>
-      {/* Main Earth body */}
+    <group ref={groupRef} position={[0, yPosition, zPosition]} scale={[scale, scale, scale]}>
+      {/* Main Earth body with procedural shader */}
       <mesh>
-        <sphereGeometry args={[250, 64, 64]} />
-        <meshBasicMaterial color={0x0a1628} transparent opacity={opacity} />
-      </mesh>
-
-      {/* Ocean hints */}
-      <mesh>
-        <sphereGeometry args={[251, 64, 64]} />
-        <meshBasicMaterial
-          color={0x1a4a7a}
+        <sphereGeometry args={[baseRadius, 64, 64]} />
+        <shaderMaterial
+          ref={materialRef}
+          vertexShader={introPlanetVertexShader}
+          fragmentShader={introPlanetFragmentShader}
+          uniforms={{
+            uTime: { value: 0 },
+            uOpacity: { value: opacity },
+          }}
           transparent
-          opacity={opacity * 0.3}
-          wireframe
         />
       </mesh>
 
-      {/* Inner atmosphere */}
-      <mesh scale={[1.02, 1.02, 1.02]}>
-        <sphereGeometry args={[250, 32, 32]} />
+      {/* Atmosphere glow */}
+      <mesh scale={[1.05, 1.05, 1.05]}>
+        <sphereGeometry args={[baseRadius, 32, 32]} />
         <meshBasicMaterial
-          color={0x3388cc}
+          color={0x4488ff}
           transparent
-          opacity={opacity * 0.2}
+          opacity={opacity * 0.15}
           side={THREE.BackSide}
         />
       </mesh>
 
       {/* Outer glow */}
-      <mesh scale={[1.08, 1.08, 1.08]}>
-        <sphereGeometry args={[250, 32, 32]} />
+      <mesh scale={[1.12, 1.12, 1.12]}>
+        <sphereGeometry args={[baseRadius, 32, 32]} />
         <meshBasicMaterial
           color={0x66aaff}
           transparent
-          opacity={opacity * 0.1}
+          opacity={opacity * 0.08}
           side={THREE.BackSide}
         />
       </mesh>
@@ -122,42 +239,11 @@ function CameraController({
   useFrame(() => {
     const { phase, progress } = introState;
 
-    if (phase === 'earth-spin') {
-      // Camera positioned to view Earth from space
-      const angle = progress * Math.PI * 0.3; // Slight orbit
-      camera.position.set(
-        Math.sin(angle) * 100,
-        50 + Math.sin(progress * Math.PI) * 30,
-        400 - progress * 100
-      );
-      camera.lookAt(0, -300, -400);
+    if (phase === 'earth-spin' || phase === 'camera-swoop') {
+      // Camera stays fixed at origin looking forward during intro
+      camera.position.set(0, 0, 0);
+      camera.lookAt(0, 0, -100);
       camera.updateProjectionMatrix();
-    } else if (phase === 'camera-swoop') {
-      // Swoop from space view to surface view
-      const eased = easeOutCubic(progress);
-
-      // Start position (viewing Earth from space)
-      const startPos = new THREE.Vector3(0, 80, 300);
-      // End position (at surface, origin)
-      const endPos = new THREE.Vector3(0, 0, 0);
-
-      camera.position.lerpVectors(startPos, endPos, eased);
-
-      // Start looking at Earth center, end looking at horizon
-      const startLook = new THREE.Vector3(0, -300, -400);
-      const azRad = (180 * Math.PI) / 180;
-      const altRad = (-10 * Math.PI) / 180;
-      const endLook = new THREE.Vector3(
-        -Math.sin(azRad) * Math.cos(altRad) * 100,
-        Math.sin(altRad) * 100,
-        -Math.cos(azRad) * Math.cos(altRad) * 100
-      );
-
-      const lookTarget = new THREE.Vector3().lerpVectors(startLook, endLook, eased);
-      camera.lookAt(lookTarget);
-      camera.updateProjectionMatrix();
-
-      onBearingChange(180, -10 * eased);
     } else if (phase === 'stars-fade' || phase === 'complete') {
       // Final position maintained by user controls or default
       if (!controlsEnabled) {
@@ -287,38 +373,6 @@ function BackgroundStars({ opacity }: { opacity: number }) {
   );
 }
 
-/**
- * Stars wrapper with opacity control
- */
-function StarsWithOpacity({
-  stars,
-  observer,
-  date,
-  opacity,
-  onStarClick,
-  onStarHover,
-}: {
-  stars: Star[];
-  observer: ObserverLocation;
-  date: Date;
-  opacity: number;
-  onStarClick?: (star: Star) => void;
-  onStarHover?: (star: Star | null, mousePos?: { x: number; y: number }) => void;
-}) {
-  if (opacity <= 0) return null;
-
-  return (
-    <group>
-      <Stars
-        stars={stars}
-        observer={observer}
-        date={date}
-        onStarClick={onStarClick}
-        onStarHover={onStarHover}
-      />
-    </group>
-  );
-}
 
 /**
  * Custom hook for intro sequence
@@ -331,7 +385,7 @@ function useIntroSequence() {
 
   const phaseStartTime = useRef(Date.now());
 
-  const EARTH_SPIN_DURATION = 3000;
+  const EARTH_SPIN_DURATION = 5000;  // Longer for letter animation
   const CAMERA_SWOOP_DURATION = 2500;
   const STARS_FADE_DURATION = 2000;
 
@@ -389,14 +443,7 @@ function useIntroSequence() {
     return () => cancelAnimationFrame(frameId);
   }, [state.phase]);
 
-  // Calculate derived values
-  const introEarthOpacity =
-    state.phase === 'earth-spin'
-      ? 1
-      : state.phase === 'camera-swoop'
-        ? 1 - easeInOutCubic(state.progress)
-        : 0;
-
+  // Stars fade in during stars-fade phase
   const starsOpacity =
     state.phase === 'stars-fade'
       ? easeInOutCubic(state.progress)
@@ -404,9 +451,15 @@ function useIntroSequence() {
         ? 1
         : 0;
 
+  // Intro Earth stays fully visible until fade is complete
+  const introEarthOpacity =
+    state.phase === 'complete'
+      ? 0
+      : 1;
+
   const controlsEnabled = state.phase === 'complete';
 
-  // Progress of the swoop phase (0-1), used to animate Earth moving down
+  // Progress of the swoop phase (0-1), used to animate Earth moving down to horizon
   const swoopProgress =
     state.phase === 'camera-swoop'
       ? easeOutCubic(state.progress)
@@ -607,25 +660,36 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         {/* Intro Earth (fades out) */}
         <IntroEarth opacity={introEarthOpacity} swoopProgress={swoopProgress} />
 
-        {/* Background stars */}
-        <BackgroundStars opacity={starsOpacity} />
+        {/* Main scene - only rendered after intro Earth fades */}
+        {(state.phase === 'stars-fade' || state.phase === 'complete') && (
+          <>
+            <BackgroundStars opacity={1} />
 
-        {/* Main stars from dataset */}
-        <StarsWithOpacity
-          stars={stars}
-          observer={observer}
-          date={date}
-          opacity={starsOpacity}
-          onStarClick={onStarClick}
-          onStarHover={handleStarHover}
-        />
+            <Stars
+              stars={stars}
+              observer={observer}
+              date={date}
+              onStarClick={onStarClick}
+              onStarHover={handleStarHover}
+            />
 
-        {/* Earth horizon (fades in with stars, rotates with location) */}
-        {starsOpacity > 0 && <EarthHorizon longitude={observer.longitude} />}
+            <EarthHorizon longitude={observer.longitude} />
 
-        {/* Satellites cruising across the sky (only after intro) */}
-        {starsOpacity > 0.5 && <Satellites />}
+            {state.phase === 'complete' && <Satellites />}
+          </>
+        )}
       </Canvas>
+
+      {/* Fade overlay - only shown during stars-fade phase to fade in the scene */}
+      {(state.phase === 'stars-fade' || state.phase === 'complete') && (
+        <div
+          className="scene-fade-overlay"
+          style={{
+            opacity: 1 - starsOpacity,
+            pointerEvents: starsOpacity >= 1 ? 'none' : 'auto',
+          }}
+        />
+      )}
 
       {/* Telescope Bearing Display */}
       {showUI && (
@@ -708,8 +772,20 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
       {state.phase !== 'complete' && (
         <div className="intro-overlay" onClick={skipIntro}>
           {state.phase === 'earth-spin' && (
-            <div className="intro-text intro-text-fade-in">
-              <span className="intro-title">EXOPLANETS</span>
+            <div className="intro-text">
+              <span className="intro-title">
+                {'EXOPLANETS'.split('').map((letter, i) => (
+                  <span
+                    key={i}
+                    className="intro-letter"
+                    style={{
+                      animationDelay: `${i * 0.3}s`,
+                    }}
+                  >
+                    {letter}
+                  </span>
+                ))}
+              </span>
             </div>
           )}
           {state.phase === 'camera-swoop' && (

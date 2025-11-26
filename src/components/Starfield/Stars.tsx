@@ -1,6 +1,7 @@
 /**
  * Stars Component
- * Renders stars as 3D sprite objects that can be clicked
+ * Renders stars using Points with custom shader for performance
+ * Single draw call with GPU-based twinkle animation
  */
 
 import { useRef, useMemo, useState, useCallback, useEffect } from 'react';
@@ -14,6 +15,18 @@ import {
   magnitudeToSize,
 } from '../../utils/astronomy';
 
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const STAR_DISTANCE = 500; // Distance from camera to stars
+const BASE_SCALE = 20; // Base scale multiplier for star size
+const HOVER_SCALE = 40; // Fixed scale when hovered
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
 interface StarsProps {
   stars: Star[];
   observer: ObserverLocation;
@@ -22,8 +35,22 @@ interface StarsProps {
   onStarHover?: (star: Star | null, mousePos?: { x: number; y: number }) => void;
 }
 
+interface VisibleStar {
+  star: Star;
+  position: THREE.Vector3;
+  color: THREE.Color;
+  size: number;
+  twinkleSpeed: number;
+  twinklePhase: number;
+  twinkleIntensity: number;
+}
+
+// =============================================================================
+// TEXTURE CREATION
+// =============================================================================
+
 /**
- * Create a star texture with glow effect
+ * Create a star texture with glow effect and spikes
  */
 function createStarTexture(): THREE.Texture {
   const size = 128;
@@ -85,6 +112,10 @@ function createStarTexture(): THREE.Texture {
   return texture;
 }
 
+// =============================================================================
+// HASH FUNCTION
+// =============================================================================
+
 /**
  * Generate a hash from string for consistent random values per star
  */
@@ -98,99 +129,65 @@ function hashString(str: string): number {
   return Math.abs(hash);
 }
 
-/**
- * Individual Star Sprite Component
- */
-function StarSprite({
-  star,
-  position,
-  color,
-  size,
-  texture,
-  onStarClick,
-  onStarHover,
-  isHovered,
-}: {
-  star: Star;
-  position: [number, number, number];
-  color: THREE.Color;
-  size: number;
-  texture: THREE.Texture;
-  onStarClick?: (star: Star) => void;
-  onStarHover?: (star: Star | null, event?: PointerEvent) => void;
-  isHovered: boolean;
-}) {
-  const spriteRef = useRef<THREE.Sprite>(null);
-  const materialRef = useRef<THREE.SpriteMaterial>(null);
-  const { gl } = useThree();
-  const baseScale = size * 20;
-  const hoverScale = 40; // Fixed size for all stars when hovered
-  const targetScale = isHovered ? hoverScale : baseScale;
+// =============================================================================
+// CUSTOM SHADER MATERIAL
+// =============================================================================
 
-  // Generate unique twinkle parameters for this star
-  const twinkleParams = useMemo(() => {
-    const hash = hashString(star.hostname);
-    return {
-      speed: 0.5 + (hash % 100) / 50, // 0.5 to 2.5 cycles per second
-      phase: (hash % 1000) / 1000 * Math.PI * 2, // Random starting phase
-      intensity: 0.15 + (hash % 50) / 200, // 0.15 to 0.4 intensity variation
-    };
-  }, [star.hostname]);
+const vertexShader = `
+  attribute vec3 starColor;
+  attribute float starSize;
+  attribute float twinkleSpeed;
+  attribute float twinklePhase;
+  attribute float twinkleIntensity;
+  attribute float isHovered;
 
-  // Animate scale on hover and twinkle effect
-  useFrame((state) => {
-    if (spriteRef.current && materialRef.current) {
-      // Hover scale animation
-      const current = spriteRef.current.scale.x;
-      const twinkle = Math.sin(state.clock.elapsedTime * twinkleParams.speed + twinkleParams.phase);
-      const twinkleScale = 1 + twinkle * twinkleParams.intensity;
-      const finalTargetScale = targetScale * twinkleScale;
-      const newScale = current + (finalTargetScale - current) * 0.15;
-      spriteRef.current.scale.setScalar(newScale);
+  uniform float uTime;
 
-      // Twinkle opacity
-      const baseOpacity = isHovered ? 1 : 0.9;
-      const opacityTwinkle = 1 + twinkle * (twinkleParams.intensity * 0.5);
-      materialRef.current.opacity = Math.min(1, baseOpacity * opacityTwinkle);
-    }
-  });
+  varying vec3 vColor;
+  varying float vOpacity;
 
-  return (
-    <sprite
-      ref={spriteRef}
-      position={position}
-      scale={[baseScale, baseScale, 1]}
-      onClick={(e) => {
-        e.stopPropagation();
-        onStarClick?.(star);
-      }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        gl.domElement.style.cursor = 'pointer';
-        onStarHover?.(star, e.nativeEvent);
-      }}
-      onPointerMove={(e) => {
-        e.stopPropagation();
-        onStarHover?.(star, e.nativeEvent);
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        gl.domElement.style.cursor = 'grab';
-        onStarHover?.(null);
-      }}
-    >
-      <spriteMaterial
-        ref={materialRef}
-        map={texture}
-        color={color}
-        transparent
-        opacity={isHovered ? 1 : 0.9}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </sprite>
-  );
-}
+  void main() {
+    vColor = starColor;
+
+    // Subtle twinkle - very gentle brightness variation
+    float twinkle = sin(uTime * twinkleSpeed * 0.3 + twinklePhase);
+    float twinkleScale = 1.0 + twinkle * twinkleIntensity * 0.15;
+
+    // Stable opacity - minimal twinkle effect
+    float baseOpacity = isHovered > 0.5 ? 1.0 : 0.95;
+    vOpacity = baseOpacity;
+
+    // Calculate final size - interpolate between base and hover scale
+    float baseScale = starSize * ${BASE_SCALE.toFixed(1)};
+    float hoverScale = ${HOVER_SCALE.toFixed(1)};
+    float targetScale = mix(baseScale, hoverScale, isHovered);
+    float finalSize = targetScale * twinkleScale;
+
+    // Position
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition;
+
+    // Size attenuation - scale by distance from camera
+    // Using higher multiplier to match original sprite sizes
+    gl_PointSize = finalSize * (1500.0 / -mvPosition.z);
+  }
+`;
+
+const fragmentShader = `
+  uniform sampler2D uTexture;
+
+  varying vec3 vColor;
+  varying float vOpacity;
+
+  void main() {
+    vec4 texColor = texture2D(uTexture, gl_PointCoord);
+    gl_FragColor = vec4(vColor * texColor.rgb, texColor.a * vOpacity);
+  }
+`;
+
+// =============================================================================
+// STARS COMPONENT
+// =============================================================================
 
 export function Stars({
   stars,
@@ -199,49 +196,225 @@ export function Stars({
   onStarClick,
   onStarHover,
 }: StarsProps) {
-  const [hoveredStar, setHoveredStar] = useState<string | null>(null);
+  const pointsRef = useRef<THREE.Points>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
+  const geometryRef = useRef<THREE.BufferGeometry>(null);
+  const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
+  const { gl, camera } = useThree();
+
+  // Create texture once
   const texture = useMemo(() => createStarTexture(), []);
 
-  // Handle hover with callback to parent
-  const handleHover = useCallback(
-    (star: Star | null, event?: PointerEvent) => {
-      setHoveredStar(star?.hostname ?? null);
-      const mousePos = event ? { x: event.clientX, y: event.clientY } : undefined;
-      onStarHover?.(star, mousePos);
-    },
-    [onStarHover]
-  );
-
-  // Calculate visible stars with positions
-  const visibleStars = useMemo(() => {
-    const result: {
-      star: Star;
-      position: [number, number, number];
-      color: THREE.Color;
-      size: number;
-    }[] = [];
+  // Calculate visible stars with all their properties
+  const visibleStars = useMemo((): VisibleStar[] => {
+    const result: VisibleStar[] = [];
 
     for (const star of stars) {
       if (star.ra === null || star.dec === null) continue;
 
-      const pos = starTo3D(star.ra, star.dec, observer, date, 500);
-
-      // Only include stars above horizon
+      const pos = starTo3D(star.ra, star.dec, observer, date, STAR_DISTANCE);
       if (!pos.visible) continue;
 
-      const color = new THREE.Color(getStarColorHex(star.star_class));
-      const size = magnitudeToSize(star.sy_vmag);
+      const hash = hashString(star.hostname);
 
       result.push({
         star,
-        position: [pos.x, pos.y, pos.z],
-        color,
-        size,
+        position: new THREE.Vector3(pos.x, pos.y, pos.z),
+        color: new THREE.Color(getStarColorHex(star.star_class)),
+        size: magnitudeToSize(star.sy_vmag),
+        twinkleSpeed: 0.5 + (hash % 100) / 50,
+        twinklePhase: ((hash % 1000) / 1000) * Math.PI * 2,
+        twinkleIntensity: 0.15 + (hash % 50) / 200,
       });
     }
 
     return result;
   }, [stars, observer, date]);
+
+  // Create buffer attributes
+  const bufferData = useMemo(() => {
+    const count = visibleStars.length;
+
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const twinkleSpeeds = new Float32Array(count);
+    const twinklePhases = new Float32Array(count);
+    const twinkleIntensities = new Float32Array(count);
+    const isHovered = new Float32Array(count);
+
+    visibleStars.forEach((star, i) => {
+      // Position
+      positions[i * 3] = star.position.x;
+      positions[i * 3 + 1] = star.position.y;
+      positions[i * 3 + 2] = star.position.z;
+
+      // Color
+      colors[i * 3] = star.color.r;
+      colors[i * 3 + 1] = star.color.g;
+      colors[i * 3 + 2] = star.color.b;
+
+      // Other attributes
+      sizes[i] = star.size;
+      twinkleSpeeds[i] = star.twinkleSpeed;
+      twinklePhases[i] = star.twinklePhase;
+      twinkleIntensities[i] = star.twinkleIntensity;
+      isHovered[i] = 0;
+    });
+
+    return {
+      positions,
+      colors,
+      sizes,
+      twinkleSpeeds,
+      twinklePhases,
+      twinkleIntensities,
+      isHovered,
+    };
+  }, [visibleStars]);
+
+  // Store hover attribute ref for updates
+  const hoverAttrRef = useRef<THREE.BufferAttribute | null>(null);
+
+  // Update geometry when buffer data changes
+  useEffect(() => {
+    if (!geometryRef.current) return;
+
+    const geo = geometryRef.current;
+
+    geo.setAttribute('position',
+      new THREE.BufferAttribute(bufferData.positions, 3));
+    geo.setAttribute('starColor',
+      new THREE.BufferAttribute(bufferData.colors, 3));
+    geo.setAttribute('starSize',
+      new THREE.BufferAttribute(bufferData.sizes, 1));
+    geo.setAttribute('twinkleSpeed',
+      new THREE.BufferAttribute(bufferData.twinkleSpeeds, 1));
+    geo.setAttribute('twinklePhase',
+      new THREE.BufferAttribute(bufferData.twinklePhases, 1));
+    geo.setAttribute('twinkleIntensity',
+      new THREE.BufferAttribute(bufferData.twinkleIntensities, 1));
+
+    const hoverAttr = new THREE.BufferAttribute(bufferData.isHovered, 1);
+    geo.setAttribute('isHovered', hoverAttr);
+    hoverAttrRef.current = hoverAttr;
+
+    geo.computeBoundingSphere();
+  }, [bufferData]);
+
+  // Update time uniform and hover state each frame
+  useFrame((state) => {
+    if (materialRef.current) {
+      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+
+    // Smooth hover transitions
+    if (hoverAttrRef.current) {
+      const arr = hoverAttrRef.current.array as Float32Array;
+      let needsUpdate = false;
+
+      for (let i = 0; i < arr.length; i++) {
+        const target = i === hoveredIndex ? 1 : 0;
+        const diff = target - arr[i];
+
+        if (Math.abs(diff) > 0.001) {
+          arr[i] += diff * 0.15;
+          needsUpdate = true;
+        }
+      }
+
+      if (needsUpdate) {
+        hoverAttrRef.current.needsUpdate = true;
+      }
+    }
+  });
+
+  // Handle pointer events - screen-space hit testing
+  const handlePointerMove = useCallback((event: PointerEvent) => {
+    if (visibleStars.length === 0) return;
+
+    const rect = gl.domElement.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Find closest star to mouse in screen space
+    let closestIndex = -1;
+    let closestDistance = Infinity;
+    const baseThreshold = 15; // Base screen-space threshold in pixels
+
+    for (let i = 0; i < visibleStars.length; i++) {
+      const star = visibleStars[i];
+
+      // Project star position to screen
+      const projected = star.position.clone().project(camera);
+
+      // Skip stars behind camera
+      if (projected.z > 1) continue;
+
+      const screenX = (projected.x + 1) / 2 * rect.width;
+      const screenY = (1 - projected.y) / 2 * rect.height;
+
+      // Calculate screen distance
+      const dx = mouseX - screenX;
+      const dy = mouseY - screenY;
+      const screenDist = Math.sqrt(dx * dx + dy * dy);
+
+      // Scale threshold by star size for larger stars to be easier to hit
+      const adjustedThreshold = baseThreshold + star.size * BASE_SCALE * 0.3;
+
+      if (screenDist < adjustedThreshold && screenDist < closestDistance) {
+        closestIndex = i;
+        closestDistance = screenDist;
+      }
+    }
+
+    if (closestIndex !== hoveredIndex) {
+      setHoveredIndex(closestIndex);
+
+      if (closestIndex >= 0) {
+        gl.domElement.style.cursor = 'pointer';
+        onStarHover?.(visibleStars[closestIndex].star, {
+          x: event.clientX,
+          y: event.clientY
+        });
+      } else {
+        gl.domElement.style.cursor = 'grab';
+        onStarHover?.(null);
+      }
+    } else if (closestIndex >= 0) {
+      // Update mouse position for tooltip tracking
+      onStarHover?.(visibleStars[closestIndex].star, {
+        x: event.clientX,
+        y: event.clientY
+      });
+    }
+  }, [visibleStars, hoveredIndex, gl, camera, onStarHover]);
+
+  const handleClick = useCallback(() => {
+    if (hoveredIndex >= 0 && visibleStars[hoveredIndex]) {
+      onStarClick?.(visibleStars[hoveredIndex].star);
+    }
+  }, [hoveredIndex, visibleStars, onStarClick]);
+
+  const handlePointerLeave = useCallback(() => {
+    setHoveredIndex(-1);
+    gl.domElement.style.cursor = 'grab';
+    onStarHover?.(null);
+  }, [gl, onStarHover]);
+
+  // Attach event listeners
+  useEffect(() => {
+    const canvas = gl.domElement;
+    canvas.addEventListener('pointermove', handlePointerMove);
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('pointerleave', handlePointerLeave);
+
+    return () => {
+      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('pointerleave', handlePointerLeave);
+    };
+  }, [gl, handlePointerMove, handleClick, handlePointerLeave]);
 
   // Cleanup texture on unmount
   useEffect(() => {
@@ -250,22 +423,24 @@ export function Stars({
     };
   }, [texture]);
 
+  if (visibleStars.length === 0) return null;
+
   return (
-    <group>
-      {visibleStars.map(({ star, position, color, size }) => (
-        <StarSprite
-          key={star.hostname}
-          star={star}
-          position={position}
-          color={color}
-          size={size}
-          texture={texture}
-          onStarClick={onStarClick}
-          onStarHover={handleHover}
-          isHovered={hoveredStar === star.hostname}
-        />
-      ))}
-    </group>
+    <points ref={pointsRef} frustumCulled={false}>
+      <bufferGeometry ref={geometryRef} />
+      <shaderMaterial
+        ref={materialRef}
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+        uniforms={{
+          uTime: { value: 0 },
+          uTexture: { value: texture },
+        }}
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
   );
 }
 
