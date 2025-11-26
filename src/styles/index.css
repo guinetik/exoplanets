@@ -1,0 +1,1095 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   BASE STYLES
+   ============================================================================= */
+
+@layer base {
+  html,
+  body,
+  #root {
+    @apply h-full m-0 p-0;
+  }
+
+  body {
+    @apply bg-black text-white;
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  /* =============================================================================
+     CUSTOM SCROLLBARS - Sleek minimal style
+     ============================================================================= */
+
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+}
+
+/* =============================================================================
+   COMPONENT STYLES
+   Using @apply to avoid inline Tailwind class soup
+   ============================================================================= */
+
+@layer components {
+  /* Layout */
+  .app-container {
+    @apply h-full flex flex-col;
+  }
+
+  .app-container > main {
+    @apply flex-1 flex flex-col min-h-0;
+  }
+
+  .page-container {
+    @apply flex-1 w-full max-w-7xl mx-auto px-4 py-8;
+  }
+
+  /* Navigation */
+  .navbar {
+    @apply sticky top-0 z-50 bg-black border-b border-white/10;
+  }
+
+  .navbar-inner {
+    @apply max-w-7xl mx-auto px-4 h-16 flex items-center justify-between;
+  }
+
+  .navbar-brand {
+    @apply text-xl font-bold;
+  }
+
+  .navbar-menu {
+    @apply hidden md:flex items-center gap-6;
+  }
+
+  .navbar-link {
+    @apply text-white/70 hover:text-white transition-colors;
+  }
+
+  .navbar-link-active {
+    @apply text-white;
+  }
+
+  .navbar-actions {
+    @apply flex items-center gap-4;
+  }
+
+  /* Mobile Menu */
+  .mobile-menu-button {
+    @apply md:hidden p-2 text-white/70 hover:text-white;
+  }
+
+  .mobile-menu {
+    @apply md:hidden border-t border-white/10;
+  }
+
+  .mobile-menu-inner {
+    @apply px-4 py-4 flex flex-col gap-4;
+  }
+
+  .mobile-menu-link {
+    @apply text-white/70 hover:text-white py-2;
+  }
+
+  /* Language Picker */
+  .lang-picker {
+    @apply flex items-center gap-2;
+  }
+
+  .lang-button {
+    @apply px-2 py-1 text-sm text-white/50 hover:text-white transition-colors;
+  }
+
+  .lang-button-active {
+    @apply text-white font-medium;
+  }
+
+  /* Page Titles */
+  .page-title {
+    @apply text-3xl md:text-4xl font-bold mb-8;
+  }
+
+  /* Placeholder Content */
+  .placeholder {
+    @apply text-white/50 text-center py-20;
+  }
+
+  /* Spinner / Loading */
+  .spinner-container {
+    @apply fixed inset-0 flex items-center justify-center bg-black z-50;
+  }
+
+  .spinner-content {
+    @apply flex flex-col items-center gap-8;
+  }
+
+  .spinner-orbit {
+    @apply relative w-24 h-24;
+    animation: spin 3s linear infinite;
+  }
+
+  .spinner-orbit::before {
+    content: '';
+    @apply absolute inset-0 rounded-full border border-white/20;
+  }
+
+  .spinner-planet {
+    @apply absolute w-4 h-4 rounded-full bg-white;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .spinner-text {
+    @apply text-xl text-white/70;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Error State */
+  .error-container {
+    @apply fixed inset-0 flex items-center justify-center bg-black z-50;
+  }
+
+  .error-content {
+    @apply text-center p-8;
+  }
+
+  .error-title {
+    @apply text-2xl text-red-500 mb-4;
+  }
+
+  .error-message {
+    @apply text-white/70;
+  }
+
+  /* =============================================================================
+     STARFIELD COMPONENTS
+     ============================================================================= */
+
+  /* Starfield Container */
+  .starfield-container {
+    @apply relative w-full flex-1 overflow-hidden;
+  }
+
+  /* Telescope Bearing Display */
+  .starfield-bearing {
+    @apply absolute top-4 left-4 text-white/80 text-sm font-mono;
+  }
+
+  .bearing-title {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-1;
+  }
+
+  .bearing-value {
+    @apply flex items-center gap-2;
+  }
+
+  .bearing-icon {
+    @apply text-white/40;
+  }
+
+  /* Location Display */
+  .starfield-location {
+    @apply absolute bottom-8 left-4 flex items-center gap-4;
+  }
+
+  .location-coords {
+    @apply text-white/80 font-mono text-sm;
+  }
+
+  .location-coords.location-animating {
+    @apply text-cyan-400;
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .location-button {
+    @apply px-3 py-1 text-xs uppercase tracking-wider;
+    @apply border border-white/30 rounded text-white/60;
+    @apply hover:border-white/60 hover:text-white transition-colors;
+  }
+
+  /* Location Picker Dropdown */
+  .location-picker {
+    @apply absolute bottom-full left-0 mb-2;
+    @apply bg-black/90 border border-white/20 rounded;
+    @apply flex flex-col min-w-48;
+  }
+
+  .location-option {
+    @apply px-4 py-2 text-left text-sm text-white/70;
+    @apply hover:bg-white/10 hover:text-white transition-colors;
+  }
+
+  .location-option:first-child {
+    @apply rounded-t;
+  }
+
+  .location-option:last-child {
+    @apply rounded-b;
+  }
+
+  /* Star Count Info */
+  .starfield-info {
+    @apply absolute bottom-8 right-4 text-white/40 text-xs;
+  }
+
+  /* Star Tooltip */
+  .starfield-tooltip {
+    @apply fixed z-50;
+    @apply bg-black/90 border border-white/30 rounded-lg px-4 py-3;
+    @apply pointer-events-none;
+    @apply backdrop-blur-sm shadow-lg;
+  }
+
+  .tooltip-name {
+    @apply text-white font-medium text-lg mb-1;
+  }
+
+  .tooltip-info {
+    @apply text-white/70 text-sm;
+  }
+
+  .tooltip-hint {
+    @apply text-white/40 text-xs mt-2 uppercase tracking-wider;
+  }
+
+  /* Display Options Panel */
+  .starfield-options {
+    @apply absolute top-1/2 right-4 -translate-y-1/2;
+    @apply bg-black/50 border border-white/10 rounded p-4;
+  }
+
+  .options-title {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-3;
+  }
+
+  .options-list {
+    @apply flex flex-col gap-2;
+  }
+
+  .option-item {
+    @apply flex items-center gap-3 text-sm text-white/70;
+  }
+
+  .option-checkbox {
+    @apply w-4 h-4 rounded border border-white/30;
+    @apply checked:bg-white checked:border-white;
+  }
+
+  /* =============================================================================
+     INTRO SEQUENCE
+     ============================================================================= */
+
+  .intro-overlay {
+    @apply absolute inset-0 flex flex-col items-center justify-center;
+    @apply cursor-pointer z-40;
+  }
+
+  .intro-text {
+    @apply text-center;
+  }
+
+  .intro-title {
+    @apply text-6xl md:text-8xl font-thin tracking-[0.3em] text-white;
+    text-shadow:
+      0 0 60px rgba(255, 255, 255, 0.5),
+      0 0 120px rgba(100, 150, 255, 0.3);
+    animation: intro-glow 3s ease-in-out infinite alternate;
+  }
+
+  .intro-subtitle {
+    @apply text-xl md:text-2xl font-light tracking-[0.2em] text-white/70;
+    animation: fade-in 1s ease-out;
+  }
+
+  .intro-text-fade-in {
+    animation: fade-in 1.5s ease-out;
+  }
+
+  .intro-skip {
+    @apply absolute bottom-8 text-white/40 text-sm tracking-wider;
+    animation: fade-in 2s ease-out 1s both;
+  }
+
+  /* =============================================================================
+     WELCOME INFO CARD - Vercel minimal style
+     ============================================================================= */
+
+  .welcome-card-container {
+    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40;
+    @apply pointer-events-none;
+    animation: welcome-appear 0.4s ease-out forwards;
+  }
+
+  .welcome-card {
+    @apply relative pointer-events-auto;
+    @apply p-6 rounded-lg;
+    @apply max-w-sm;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(12px);
+  }
+
+  .welcome-title {
+    @apply text-lg font-medium text-white text-center mb-3;
+    @apply tracking-tight;
+  }
+
+  .welcome-description {
+    @apply text-sm leading-relaxed text-neutral-400 text-center mb-4;
+  }
+
+  .welcome-stats {
+    @apply text-xs text-center py-2 px-3 mb-4 rounded;
+    @apply font-mono;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .welcome-hint {
+    @apply text-xs text-center text-neutral-500 mb-4;
+  }
+
+  .welcome-dismiss {
+    @apply w-full py-2 px-4 rounded;
+    @apply text-sm font-medium;
+    @apply transition-all duration-150;
+    background: #fff;
+    color: #000;
+  }
+
+  .welcome-dismiss:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .welcome-dismiss:active {
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Welcome card exit animation */
+  .welcome-card-container.exiting {
+    animation: welcome-disappear 0.3s ease-in forwards;
+  }
+
+  /* =============================================================================
+     STAR SYSTEM PAGE
+     ============================================================================= */
+
+  .starsystem-page {
+    @apply relative w-full h-full;
+  }
+
+  .starsystem-container {
+    @apply relative w-full h-full;
+  }
+
+  .starsystem-back-button {
+    @apply absolute top-4 left-4 z-50;
+    @apply px-4 py-2 text-sm text-white/70;
+    @apply bg-black/50 border border-white/20 rounded-lg;
+    @apply hover:bg-black/70 hover:text-white hover:border-white/40;
+    @apply transition-all backdrop-blur-sm;
+  }
+
+  .starsystem-back-link {
+    @apply inline-block mt-4 text-cyan-400 hover:text-cyan-300;
+  }
+
+  /* Star Info Panel - Top Left (below back button) */
+  .starsystem-info-panel {
+    @apply absolute top-16 left-4 z-40;
+    @apply bg-black/70 border border-white/20 rounded-lg;
+    @apply p-6 min-w-64 backdrop-blur-sm;
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .starsystem-star-name {
+    @apply text-3xl font-light text-white mb-4;
+    @apply tracking-wide;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+
+  .starsystem-star-details {
+    @apply flex flex-col gap-2 mb-4;
+  }
+
+  .star-detail {
+    @apply flex justify-between items-center text-sm;
+  }
+
+  .star-detail .detail-label {
+    @apply text-white/50;
+  }
+
+  .star-detail .detail-value {
+    @apply text-white font-mono;
+  }
+
+  .starsystem-planet-count {
+    @apply text-lg text-cyan-400 font-medium pt-2;
+    @apply border-t border-white/10;
+  }
+
+  /* Planets Panel - Bottom Left */
+  .starsystem-planets-panel {
+    @apply absolute bottom-4 left-4 z-40;
+    @apply bg-black/70 border border-white/20 rounded-lg;
+    @apply p-4 min-w-56 max-h-64 overflow-y-auto backdrop-blur-sm;
+    animation: fade-in 0.5s ease-out 0.2s both;
+  }
+
+  .planets-panel-title {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-3;
+  }
+
+  .planets-list {
+    @apply flex flex-col gap-1;
+  }
+
+  .planet-item {
+    @apply flex items-center gap-3 px-2 py-1.5 rounded;
+    @apply cursor-pointer transition-all;
+  }
+
+  .planet-item:hover,
+  .planet-item.hovered {
+    @apply bg-white/10;
+  }
+
+  .planet-item-link {
+    @apply flex items-center gap-3 w-full;
+    @apply text-inherit no-underline;
+  }
+
+  .planet-color-dot {
+    @apply w-3 h-3 rounded-full flex-shrink-0;
+  }
+
+  .planet-name {
+    @apply text-white text-sm flex-1 truncate;
+  }
+
+  .planet-type {
+    @apply text-white/40 text-xs;
+  }
+
+  /* Hint at bottom center */
+  .starsystem-hint {
+    @apply absolute bottom-4 left-1/2 -translate-x-1/2 z-30;
+    @apply text-white/30 text-xs tracking-wider;
+  }
+
+  /* Cursor-following tooltip for planets - full detail view */
+  .starsystem-cursor-tooltip {
+    @apply fixed z-50;
+    @apply bg-black/90 border border-white/30 rounded-lg;
+    @apply pointer-events-none;
+    @apply backdrop-blur-sm shadow-xl;
+    @apply min-w-56 max-w-72 p-4;
+    animation: fade-in 0.15s ease-out;
+  }
+
+  .cursor-tooltip-header {
+    @apply pb-3 mb-3 border-b border-white/10;
+  }
+
+  .cursor-tooltip-name {
+    @apply text-white font-semibold text-lg leading-tight;
+  }
+
+  .cursor-tooltip-type {
+    @apply text-cyan-400 text-sm mt-1;
+  }
+
+  .cursor-tooltip-details {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .cursor-tooltip-detail {
+    @apply flex justify-between items-center text-sm gap-4;
+  }
+
+  .cursor-tooltip-label {
+    @apply text-white/50 whitespace-nowrap;
+  }
+
+  .cursor-tooltip-value {
+    @apply text-white font-mono text-right;
+  }
+
+  .cursor-tooltip-hint {
+    @apply text-white/40 text-xs mt-3 pt-3 uppercase tracking-wider text-center;
+    @apply border-t border-white/10;
+  }
+
+  /* =============================================================================
+     STARS PAGE - GRID AND CARDS
+     ============================================================================= */
+
+  /* Controls Panel */
+  .stars-controls {
+    @apply mb-8 space-y-4;
+  }
+
+  .search-bar {
+    @apply w-full mb-4;
+  }
+
+  .search-input {
+    @apply w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg;
+    @apply text-white placeholder-white/40;
+    @apply focus:outline-none focus:border-white/40 focus:bg-white/10;
+    @apply transition-all;
+  }
+
+  .controls-row {
+    @apply flex flex-wrap gap-4 items-end;
+  }
+
+  .filter-group {
+    @apply flex flex-col gap-2;
+  }
+
+  .filter-label {
+    @apply text-xs uppercase tracking-wider text-white/60;
+  }
+
+  .class-buttons {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .class-button {
+    @apply px-3 py-1 text-sm rounded;
+    @apply border border-white/20 text-white/70;
+    @apply hover:border-white/40 hover:text-white;
+    @apply transition-all;
+  }
+
+  .class-button.active {
+    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+  }
+
+  .sort-select {
+    @apply px-3 py-2 bg-white/5 border border-white/20 rounded-lg;
+    @apply text-white text-sm;
+    @apply focus:outline-none focus:border-white/40;
+    @apply transition-all;
+  }
+
+  .clear-button {
+    @apply px-4 py-2 text-sm rounded-lg;
+    @apply border border-white/20 text-white/70;
+    @apply hover:border-white/40 hover:text-white;
+    @apply transition-all;
+  }
+
+  .results-info {
+    @apply text-sm text-white/50;
+  }
+
+  /* Stars Grid */
+  .stars-grid {
+    @apply grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .stars-grid-item {
+    @apply h-full;
+  }
+
+  .star-card-link {
+    @apply block h-full no-underline;
+  }
+
+  /* Star Card */
+  .star-card {
+    @apply h-full flex flex-col;
+    @apply bg-gradient-to-br from-white/5 to-white/5;
+    @apply border border-white/10 rounded-lg p-4;
+    @apply hover:border-white/20 hover:bg-gradient-to-br hover:from-white/10 hover:to-white/5;
+    @apply transition-all duration-300;
+    @apply cursor-pointer;
+  }
+
+  .star-card-header {
+    @apply flex items-center gap-3 mb-4;
+  }
+
+  .star-color-dot {
+    @apply w-4 h-4 rounded-full flex-shrink-0;
+  }
+
+  .star-card-name {
+    @apply text-lg font-medium text-white truncate;
+  }
+
+  .star-card-class-badge {
+    @apply inline-block px-2 py-1 bg-white/10 border border-white/20 rounded;
+    @apply text-xs font-mono text-cyan-400 mb-3;
+  }
+
+  .star-card-properties {
+    @apply flex-1 grid grid-cols-2 gap-3 mb-4;
+  }
+
+  .star-property {
+    @apply flex flex-col gap-1;
+  }
+
+  .property-label {
+    @apply text-xs uppercase tracking-wider text-white/40;
+  }
+
+  .property-value {
+    @apply text-sm font-mono text-white;
+  }
+
+  .star-card-planets {
+    @apply mt-4 pt-4 border-t border-white/10;
+  }
+
+  .planets-label {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-2;
+  }
+
+  .planets-list {
+    @apply flex flex-wrap gap-1;
+  }
+
+  .planet-tag {
+    @apply inline-block px-2 py-0.5 bg-white/5 border border-white/10 rounded;
+    @apply text-xs text-white/70 truncate;
+  }
+
+  .planet-tag-more {
+    @apply inline-block px-2 py-0.5 bg-white/5 border border-white/10 rounded;
+    @apply text-xs text-white/50 italic;
+  }
+
+  .star-card-footer {
+    @apply text-xs text-white/40 opacity-0 group-hover:opacity-100;
+    @apply transition-opacity;
+  }
+
+  .star-card-link-hint {
+    @apply text-white/40;
+  }
+
+  /* =============================================================================
+     PAGINATION
+     ============================================================================= */
+
+  .pagination-container {
+    @apply mt-12 flex flex-col md:flex-row items-center justify-center gap-4;
+    @apply py-8 px-4;
+  }
+
+  .pagination-button {
+    @apply px-4 py-2 rounded-lg;
+    @apply border border-white/20 text-white/70;
+    @apply hover:border-white/40 hover:text-white;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply transition-all;
+  }
+
+  .pagination-info {
+    @apply text-sm text-white/60;
+  }
+
+  .pagination-numbers {
+    @apply flex gap-2;
+  }
+
+  .pagination-number {
+    @apply w-10 h-10 rounded-lg;
+    @apply border border-white/20 text-white/70;
+    @apply hover:border-white/40 hover:text-white;
+    @apply transition-all;
+    @apply text-sm font-medium;
+  }
+
+  .pagination-number.active {
+    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+  }
+
+  /* =============================================================================
+     PLANETS PAGE - GRID AND CARDS
+     ============================================================================= */
+
+  /* Controls Panel */
+  .planets-controls {
+    @apply mb-8 space-y-4;
+  }
+
+  .type-buttons {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .type-button {
+    @apply px-3 py-1 text-sm rounded;
+    @apply border border-white/20 text-white/70;
+    @apply hover:border-white/40 hover:text-white;
+    @apply transition-all;
+  }
+
+  .type-button.active {
+    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+  }
+
+  .toggle-filters {
+    @apply flex flex-wrap gap-4 items-center;
+    @apply px-4 py-3 bg-white/5 rounded-lg border border-white/10;
+  }
+
+  .toggle-filter {
+    @apply flex items-center gap-2 cursor-pointer;
+    @apply text-sm text-white/70 hover:text-white transition-colors;
+  }
+
+  .toggle-checkbox {
+    @apply w-4 h-4 rounded border border-white/20;
+    @apply checked:bg-cyan-400 checked:border-cyan-400;
+    @apply cursor-pointer;
+  }
+
+  /* Planets Grid */
+  .planets-grid {
+    @apply grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .planets-grid-item {
+    @apply h-full;
+  }
+
+  .planet-card-link {
+    @apply block h-full no-underline;
+  }
+
+  /* Planet Card */
+  .planet-card {
+    @apply h-full flex flex-col;
+    @apply bg-gradient-to-br from-white/5 to-white/5;
+    @apply border border-white/10 rounded-lg p-4;
+    @apply hover:border-white/20 hover:bg-gradient-to-br hover:from-white/10 hover:to-white/5;
+    @apply transition-all duration-300;
+    @apply cursor-pointer;
+  }
+
+  .planet-card-header {
+    @apply flex items-center gap-3 mb-3;
+  }
+
+  .planet-star-dot {
+    @apply w-4 h-4 rounded-full flex-shrink-0;
+  }
+
+  .planet-card-title-group {
+    @apply flex-1 min-w-0;
+  }
+
+  .planet-card-name {
+    @apply text-lg font-medium text-white truncate;
+  }
+
+  .planet-card-host {
+    @apply text-xs text-white/50 uppercase tracking-wider truncate;
+  }
+
+  .planet-type-badge {
+    @apply inline-block px-2 py-1 bg-white/10 border border-white/20 rounded;
+    @apply text-xs font-mono text-cyan-400 mb-3;
+  }
+
+  .planet-card-properties {
+    @apply flex-1 grid grid-cols-2 gap-3 mb-4;
+  }
+
+  .planet-card-flags {
+    @apply flex flex-wrap gap-2 mb-3 pt-3 border-t border-white/10;
+  }
+
+  .flag-badge {
+    @apply inline-block px-2 py-1 rounded text-xs font-medium;
+    @apply border;
+  }
+
+  .flag-habitable {
+    @apply bg-green-500/20 border-green-400/50 text-green-300;
+  }
+
+  .flag-earth-like {
+    @apply bg-blue-500/20 border-blue-400/50 text-blue-300;
+  }
+
+  .flag-circumbinary {
+    @apply bg-purple-500/20 border-purple-400/50 text-purple-300;
+  }
+
+  .planet-card-footer {
+    @apply text-xs text-white/40 text-center;
+  }
+
+  /* =============================================================================
+     APOD PAGE - Astronomy Picture of the Day (Vercel Dark Style)
+     ============================================================================= */
+
+  .apod-page {
+    @apply w-full min-h-[calc(100vh-4rem)] flex flex-col items-center py-12 px-4;
+    background: #000;
+  }
+
+  .apod-container {
+    @apply w-full max-w-2xl;
+  }
+
+  .apod-title {
+    @apply text-lg font-medium text-center mb-8;
+    @apply tracking-tight text-neutral-400;
+  }
+
+  /* Loading State */
+  .apod-loading {
+    @apply flex flex-col items-center justify-center py-24;
+  }
+
+  .apod-loading-spinner {
+    @apply w-6 h-6 rounded-full border border-neutral-800;
+    border-top-color: #fff;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .apod-loading-text {
+    @apply mt-4 text-sm text-neutral-500;
+  }
+
+  /* Error State */
+  .apod-error {
+    @apply flex flex-col items-center justify-center py-16 px-6;
+    @apply rounded-lg;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .apod-error-text {
+    @apply text-sm text-red-400 mb-1;
+  }
+
+  .apod-error-detail {
+    @apply text-xs text-neutral-500;
+  }
+
+  /* Content */
+  .apod-content {
+    @apply w-full space-y-4;
+    animation: fade-in 0.4s ease-out;
+  }
+
+  /* Media Section */
+  .apod-media-wrapper {
+    @apply w-full rounded-lg overflow-hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .apod-figure {
+    @apply w-full relative overflow-hidden bg-neutral-950;
+  }
+
+  .apod-image {
+    @apply w-full h-auto max-h-[70vh] object-contain;
+    @apply cursor-pointer transition-opacity duration-200;
+  }
+
+  .apod-image:hover {
+    @apply opacity-90;
+  }
+
+  .apod-video-container {
+    @apply relative w-full pb-[56.25%];
+  }
+
+  .apod-iframe {
+    @apply absolute inset-0 w-full h-full;
+  }
+
+  .apod-video {
+    @apply w-full h-auto max-h-[70vh];
+  }
+
+  .apod-copyright {
+    @apply py-2 px-3 text-xs text-neutral-500;
+    @apply font-mono;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Info Section */
+  .apod-info {
+    @apply w-full rounded-lg p-5;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .apod-info-title {
+    @apply flex flex-col gap-1 mb-3;
+  }
+
+  .apod-date {
+    @apply text-xs font-mono text-neutral-500;
+  }
+
+  .apod-name {
+    @apply text-base font-medium text-white;
+    @apply leading-snug tracking-tight;
+  }
+
+  .apod-explanation {
+    @apply text-sm text-neutral-400 leading-relaxed;
+  }
+
+  /* Navigation */
+  .apod-navigation {
+    @apply flex justify-center gap-3 pt-4;
+  }
+
+  .apod-nav-button {
+    @apply flex items-center gap-2 px-4 py-2;
+    @apply text-xs font-medium;
+    @apply rounded-md;
+    @apply transition-all duration-150;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .apod-nav-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+
+  .apod-nav-button:active:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .apod-nav-button:disabled {
+    @apply opacity-30 cursor-not-allowed;
+  }
+
+  .apod-nav-icon {
+    @apply w-4 h-4;
+  }
+}
+
+/* =============================================================================
+   ANIMATIONS
+   ============================================================================= */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  to {
+    text-shadow:
+      0 0 20px rgba(255, 255, 255, 0.6),
+      0 0 30px rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes intro-glow {
+  from {
+    text-shadow:
+      0 0 60px rgba(255, 255, 255, 0.3),
+      0 0 120px rgba(100, 150, 255, 0.2);
+  }
+  to {
+    text-shadow:
+      0 0 80px rgba(255, 255, 255, 0.6),
+      0 0 160px rgba(100, 150, 255, 0.4);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes welcome-appear {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+}
+
+@keyframes welcome-disappear {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(-8px);
+  }
+}

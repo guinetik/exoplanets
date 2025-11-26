@@ -1,0 +1,63 @@
+import { lazy } from 'react';
+
+const Home = lazy(() => import('./Home'));
+const Stars = lazy(() => import('./Stars'));
+const Star = lazy(() => import('./Star'));
+const Planets = lazy(() => import('./Planets'));
+const Planet = lazy(() => import('./Planet'));
+const Apod = lazy(() => import('./Apod'));
+const About = lazy(() => import('./About'));
+
+export interface RouteConfig {
+  path: string;
+  element: React.LazyExoticComponent<React.ComponentType>;
+  labelKey: string;
+  showInNav: boolean;
+}
+
+export const routes: RouteConfig[] = [
+  {
+    path: '/',
+    element: Home,
+    labelKey: 'nav.home',
+    showInNav: true,
+  },
+  {
+    path: '/stars',
+    element: Stars,
+    labelKey: 'nav.stars',
+    showInNav: true,
+  },
+  {
+    path: '/stars/:starId',
+    element: Star,
+    labelKey: 'nav.stars',
+    showInNav: false,
+  },
+  {
+    path: '/planets',
+    element: Planets,
+    labelKey: 'nav.planets',
+    showInNav: true,
+  },
+  {
+    path: '/planets/:planetId',
+    element: Planet,
+    labelKey: 'nav.planets',
+    showInNav: false,
+  },
+  {
+    path: '/apod',
+    element: Apod,
+    labelKey: 'nav.apod',
+    showInNav: true,
+  },
+  {
+    path: '/about',
+    element: About,
+    labelKey: 'nav.about',
+    showInNav: true,
+  },
+];
+
+export const navRoutes = routes.filter((route) => route.showInNav);

@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Início",
+    "stars": "Estrelas",
+    "planets": "Planetas",
+    "apod": "Foto do Dia",
+    "about": "Sobre"
+  },
+  "pages": {
+    "home": {
+      "title": "Início",
+      "infoCard": {
+        "title": "Bem-vindo ao Cosmos",
+        "description": "Você está vendo o céu noturno da Terra — mas essas não são estrelas comuns. Cada ponto de luz representa uma estrela hospedeira de exoplanetas confirmada pelo arquivo da NASA.",
+        "stats": "Mais de {{starCount}} sistemas estelares abrigando {{planetCount}}+ mundos confirmados",
+        "hint": "Clique em qualquer estrela para explorar seu sistema planetário",
+        "dismiss": "Entendi"
+      }
+    },
+    "stars": {
+      "title": "Estrelas"
+    },
+    "star": {
+      "title": "Detalhes da Estrela"
+    },
+    "planets": {
+      "title": "Planetas"
+    },
+    "planet": {
+      "title": "Detalhes do Planeta"
+    },
+    "apod": {
+      "title": "Foto Astronômica do Dia",
+      "loading": "Carregando a maravilha cósmica de hoje...",
+      "yesterday": "Ontem",
+      "tomorrow": "Amanhã",
+      "error": "Não foi possível carregar a imagem",
+      "videoNotSupported": "Seu navegador não suporta a tag de vídeo.",
+      "viewFullSize": "Clique para ver em tamanho real"
+    },
+    "about": {
+      "title": "Sobre"
+    }
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Ocorreu um erro",
+    "notFound": "Página não encontrada"
+  }
+}

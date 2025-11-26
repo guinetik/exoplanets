@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Home",
+    "stars": "Stars",
+    "planets": "Planets",
+    "apod": "Pic of the Day",
+    "about": "About"
+  },
+  "pages": {
+    "home": {
+      "title": "Home",
+      "infoCard": {
+        "title": "Welcome to the Cosmos",
+        "description": "You're viewing the night sky from Earth — but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
+        "stats": "Over {{starCount}} stellar systems harboring {{planetCount}}+ confirmed worlds",
+        "hint": "Click any star to explore its planetary system",
+        "dismiss": "Got it"
+      }
+    },
+    "stars": {
+      "title": "Stars"
+    },
+    "star": {
+      "title": "Star Details"
+    },
+    "planets": {
+      "title": "Planets"
+    },
+    "planet": {
+      "title": "Planet Details"
+    },
+    "apod": {
+      "title": "Astronomy Picture of the Day",
+      "loading": "Loading today's cosmic wonder...",
+      "yesterday": "Yesterday",
+      "tomorrow": "Tomorrow",
+      "error": "Could not load the picture",
+      "videoNotSupported": "Your browser does not support the video tag.",
+      "viewFullSize": "Click to view full size"
+    },
+    "about": {
+      "title": "About"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "notFound": "Page not found"
+  }
+}
