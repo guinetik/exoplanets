@@ -26,12 +26,16 @@ interface StarfieldProps {
 }
 
 // Easing functions
-function easeOutCubic(t: number): number {
-  return 1 - Math.pow(1 - t, 3);
-}
-
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function easeInOutBack(t: number): number {
+  const c1 = 1.70158;
+  const c2 = c1 * 1.525;
+  return t < 0.5
+    ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
+    : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
 }
 
 interface IntroState {
@@ -141,54 +145,46 @@ const introPlanetFragmentShader = `
 `;
 
 /**
- * Intro Earth - starts centered, pans down to horizon position
+ * Intro Earth - centered planet that scales down and moves away
  * Uses procedural shader for realistic planet appearance
  */
-function IntroEarth({ opacity, swoopProgress }: { opacity: number; swoopProgress: number }) {
+function IntroEarth({ progress }: { progress: number }) {
   const groupRef = useRef<THREE.Group>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+
+  // Stable uniforms object - only created once
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uOpacity: { value: 1 },
+    }),
+    []
+  );
 
   useFrame((state, delta) => {
     if (groupRef.current) {
       groupRef.current.rotation.y += delta * 0.15;
     }
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-      materialRef.current.uniforms.uOpacity.value = opacity;
-    }
+    uniforms.uTime.value = state.clock.elapsedTime;
   });
 
-  if (opacity <= 0) return null;
-
-  // Animate from center of screen to horizon position
-  // Start: planet centered, visible in full
-  // End: large planet at bottom, only top arc visible (matching horizon Earth)
-  const startY = 0;         // Centered vertically
-  const endY = -600;        // Same as horizon Earth center
-  const startZ = -600;      // See whole planet but larger
-  const endZ = -100;        // Close for horizon
-  const startScale = 0.35;  // Larger but still see full planet
-  const endScale = 1.0;     // Full size matching horizon
-
-  const yPosition = startY + swoopProgress * (endY - startY);
-  const zPosition = startZ + swoopProgress * (endZ - startZ);
-  const scale = startScale + swoopProgress * (endScale - startScale);
+  // Don't render when fully transitioned
+  if (progress >= 1) return null;
 
   const baseRadius = 580;
 
+  // Animate: scale down and move away as progress goes 0 -> 1
+  const scale = 0.35 * (1 - progress);
+  const zPos = -600 - progress * 500; // Move further away
+
   return (
-    <group ref={groupRef} position={[0, yPosition, zPosition]} scale={[scale, scale, scale]}>
+    <group ref={groupRef} position={[0, 0, zPos]} scale={[scale, scale, scale]}>
       {/* Main Earth body with procedural shader */}
       <mesh>
         <sphereGeometry args={[baseRadius, 64, 64]} />
         <shaderMaterial
-          ref={materialRef}
           vertexShader={introPlanetVertexShader}
           fragmentShader={introPlanetFragmentShader}
-          uniforms={{
-            uTime: { value: 0 },
-            uOpacity: { value: opacity },
-          }}
+          uniforms={uniforms}
           transparent
         />
       </mesh>
@@ -199,7 +195,7 @@ function IntroEarth({ opacity, swoopProgress }: { opacity: number; swoopProgress
         <meshBasicMaterial
           color={0x4488ff}
           transparent
-          opacity={opacity * 0.15}
+          opacity={0.15}
           side={THREE.BackSide}
         />
       </mesh>
@@ -210,7 +206,7 @@ function IntroEarth({ opacity, swoopProgress }: { opacity: number; swoopProgress
         <meshBasicMaterial
           color={0x66aaff}
           transparent
-          opacity={opacity * 0.08}
+          opacity={0.08}
           side={THREE.BackSide}
         />
       </mesh>
@@ -233,11 +229,11 @@ function CameraController({
   const { camera, gl } = useThree();
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
-  const rotation = useRef({ azimuth: 180, altitude: -10 });
+  const rotation = useRef({ azimuth: 180, altitude: 10 });
 
   // Intro animation
   useFrame(() => {
-    const { phase, progress } = introState;
+    const { phase } = introState;
 
     if (phase === 'earth-spin' || phase === 'camera-swoop') {
       // Camera stays fixed at origin looking forward during intro
@@ -301,7 +297,10 @@ function CameraController({
       rotation.current.azimuth -= deltaX * 0.3;
       rotation.current.altitude += deltaY * 0.3;
       rotation.current.azimuth = ((rotation.current.azimuth % 360) + 360) % 360;
-      rotation.current.altitude = Math.max(-10, Math.min(90, rotation.current.altitude));
+      rotation.current.altitude = Math.max(
+        -10,
+        Math.min(90, rotation.current.altitude)
+      );
 
       previousMouse.current = { x: e.clientX, y: e.clientY };
       updateCameraPosition();
@@ -373,7 +372,6 @@ function BackgroundStars({ opacity }: { opacity: number }) {
   );
 }
 
-
 /**
  * Custom hook for intro sequence
  */
@@ -385,7 +383,7 @@ function useIntroSequence() {
 
   const phaseStartTime = useRef(Date.now());
 
-  const EARTH_SPIN_DURATION = 5000;  // Longer for letter animation
+  const EARTH_SPIN_DURATION = 5000; // Longer for letter animation
   const CAMERA_SWOOP_DURATION = 2500;
   const STARS_FADE_DURATION = 2000;
 
@@ -451,28 +449,22 @@ function useIntroSequence() {
         ? 1
         : 0;
 
-  // Intro Earth stays fully visible until fade is complete
-  const introEarthOpacity =
-    state.phase === 'complete'
-      ? 0
-      : 1;
-
-  const controlsEnabled = state.phase === 'complete';
-
-  // Progress of the swoop phase (0-1), used to animate Earth moving down to horizon
-  const swoopProgress =
+  // Intro Earth exit progress (0 = visible, 1 = gone)
+  // Exit during camera-swoop phase, before the overlay appears
+  const introEarthExitProgress =
     state.phase === 'camera-swoop'
-      ? easeOutCubic(state.progress)
+      ? easeInOutBack(state.progress)
       : state.phase === 'stars-fade' || state.phase === 'complete'
         ? 1
         : 0;
 
+  const controlsEnabled = state.phase === 'complete';
+
   return {
     state,
-    introEarthOpacity,
+    introEarthExitProgress,
     starsOpacity,
     controlsEnabled,
-    swoopProgress,
     skipIntro,
   };
 }
@@ -521,12 +513,15 @@ function useAnimatedLocation(initialLocation: ObserverLocation) {
     return () => cancelAnimationFrame(frameId);
   }, [isAnimating, targetLocation]);
 
-  const changeLocation = useCallback((newLocation: ObserverLocation) => {
-    startLocation.current = currentLocation;
-    animationStart.current = Date.now();
-    setTargetLocation(newLocation);
-    setIsAnimating(true);
-  }, [currentLocation]);
+  const changeLocation = useCallback(
+    (newLocation: ObserverLocation) => {
+      startLocation.current = currentLocation;
+      animationStart.current = Date.now();
+      setTargetLocation(newLocation);
+      setIsAnimating(true);
+    },
+    [currentLocation]
+  );
 
   return { currentLocation, changeLocation, isAnimating };
 }
@@ -541,15 +536,18 @@ interface WelcomeCardProps {
   isExiting: boolean;
 }
 
-function WelcomeCard({ starCount, planetCount, onDismiss, isExiting }: WelcomeCardProps) {
+function WelcomeCard({
+  starCount,
+  planetCount,
+  onDismiss,
+  isExiting,
+}: WelcomeCardProps) {
   const { t } = useTranslation();
 
   return (
     <div className={`welcome-card-container ${isExiting ? 'exiting' : ''}`}>
       <div className="welcome-card">
-        <h2 className="welcome-title">
-          {t('pages.home.infoCard.title')}
-        </h2>
+        <h2 className="welcome-title">{t('pages.home.infoCard.title')}</h2>
         <p className="welcome-description">
           {t('pages.home.infoCard.description')}
         </p>
@@ -559,9 +557,7 @@ function WelcomeCard({ starCount, planetCount, onDismiss, isExiting }: WelcomeCa
             planetCount: planetCount.toLocaleString(),
           })}
         </div>
-        <p className="welcome-hint">
-          {t('pages.home.infoCard.hint')}
-        </p>
+        <p className="welcome-hint">{t('pages.home.infoCard.hint')}</p>
         <button className="welcome-dismiss" onClick={onDismiss}>
           {t('pages.home.infoCard.dismiss')}
         </button>
@@ -574,23 +570,38 @@ function WelcomeCard({ starCount, planetCount, onDismiss, isExiting }: WelcomeCa
  * Main Starfield component
  */
 export function Starfield({ stars, onStarClick }: StarfieldProps) {
-  const { currentLocation: observer, changeLocation, isAnimating: isLocationAnimating } =
-    useAnimatedLocation(LOCATIONS['São Paulo']);
+  const {
+    currentLocation: observer,
+    changeLocation,
+    isAnimating: isLocationAnimating,
+  } = useAnimatedLocation(LOCATIONS['São Paulo']);
   const [date] = useState(() => new Date());
   const [bearing, setBearing] = useState({ azimuth: 180, altitude: -10 });
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [hoveredStar, setHoveredStar] = useState<Star | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [locationName, setLocationName] = useState('São Paulo');
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [isWelcomeCardExiting, setIsWelcomeCardExiting] = useState(false);
   const welcomeCardDismissed = useRef(false);
 
-  const { state, introEarthOpacity, starsOpacity, controlsEnabled, swoopProgress, skipIntro } = useIntroSequence();
+  const {
+    state,
+    introEarthExitProgress,
+    starsOpacity,
+    controlsEnabled,
+    skipIntro,
+  } = useIntroSequence();
 
   // Show welcome card when intro completes (only once)
   useEffect(() => {
-    if (state.phase === 'complete' && !welcomeCardDismissed.current && !showWelcomeCard) {
+    if (
+      state.phase === 'complete' &&
+      !welcomeCardDismissed.current &&
+      !showWelcomeCard
+    ) {
       const timer = setTimeout(() => {
         setShowWelcomeCard(true);
       }, 300);
@@ -617,11 +628,14 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     []
   );
 
-  const handleLocationChange = useCallback((name: string, location: ObserverLocation) => {
-    changeLocation(location);
-    setLocationName(name);
-    setShowLocationPicker(false);
-  }, [changeLocation]);
+  const handleLocationChange = useCallback(
+    (name: string, location: ObserverLocation) => {
+      changeLocation(location);
+      setLocationName(name);
+      setShowLocationPicker(false);
+    },
+    [changeLocation]
+  );
 
   const handleStarHover = useCallback(
     (star: Star | null, pos?: { x: number; y: number }) => {
@@ -657,8 +671,8 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         {/* Ambient light */}
         <ambientLight intensity={0.3} />
 
-        {/* Intro Earth (fades out) */}
-        <IntroEarth opacity={introEarthOpacity} swoopProgress={swoopProgress} />
+        {/* Intro Earth (scales down and moves away) */}
+        <IntroEarth progress={introEarthExitProgress} />
 
         {/* Main scene - only rendered after intro Earth fades */}
         {(state.phase === 'stars-fade' || state.phase === 'complete') && (
@@ -696,10 +710,12 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         <div className="starfield-bearing">
           <div className="bearing-title">Telescope Bearing</div>
           <div className="bearing-value">
-            <span className="bearing-icon">↔</span> {formatAzimuth(bearing.azimuth)}
+            <span className="bearing-icon">↔</span>{' '}
+            {formatAzimuth(bearing.azimuth)}
           </div>
           <div className="bearing-value">
-            <span className="bearing-icon">↕</span> {formatAltitude(bearing.altitude)}
+            <span className="bearing-icon">↕</span>{' '}
+            {formatAltitude(bearing.altitude)}
           </div>
         </div>
       )}
@@ -788,12 +804,19 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
               </span>
             </div>
           )}
-          {state.phase === 'camera-swoop' && (
-            <div className="intro-text">
+          {(state.phase === 'camera-swoop' || state.phase === 'stars-fade') && (
+            <div
+              className="intro-text"
+              style={{
+                opacity: state.phase === 'stars-fade' ? 1 - starsOpacity : 1,
+              }}
+            >
               <span className="intro-subtitle">Explore the cosmos</span>
             </div>
           )}
-          <div className="intro-skip">Click anywhere to skip</div>
+          {state.phase !== 'stars-fade' && (
+            <div className="intro-skip">Click anywhere to skip</div>
+          )}
         </div>
       )}
 

@@ -3,7 +3,7 @@
  * Renders satellites (ISS, etc.) cruising across the sky at realistic altitudes
  */
 
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -157,7 +157,7 @@ export function Satellites() {
           startPosition: new THREE.Vector3(startX, startY, startZ),
           direction,
           speed: SATELLITE_SPEED * (0.8 + Math.random() * 0.4),
-          createdAt: clockRef.current.elapsedTime,
+          createdAt: clockRef.current?.elapsedTime ?? 0,
           altitude: SATELLITE_ALTITUDE,
         };
 
