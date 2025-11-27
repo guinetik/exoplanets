@@ -9,7 +9,11 @@ import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { StellarBody } from '../../utils/solarSystem';
 import { shaderService } from '../../services/shaderService';
-import { createPlanetUniforms, getPlanetShaderType, getShaderFileName } from '../../utils/planetUniforms';
+import {
+  createPlanetUniforms,
+  getPlanetShaderType,
+  getShaderFileName,
+} from '../../utils/planetUniforms';
 
 // Speed multiplier for orbital animation (lower = slower, 1.0 = original speed)
 const ORBIT_SPEED = 0.15;
@@ -17,7 +21,10 @@ const ORBIT_SPEED = 0.15;
 interface CelestialBodyProps {
   body: StellarBody;
   isHovered: boolean;
-  onHover: (body: StellarBody | null, mousePos?: { x: number; y: number }) => void;
+  onHover: (
+    body: StellarBody | null,
+    mousePos?: { x: number; y: number }
+  ) => void;
   onClick?: (body: StellarBody) => void;
 }
 
@@ -34,11 +41,14 @@ export function CelestialBody({
   const orbitAngleRef = useRef(Math.random() * Math.PI * 2); // Random starting position
 
   // Star shader uniforms
-  const starUniforms = useMemo(() => ({
-    uStarColor: { value: new THREE.Color(body.color) },
-    uTime: { value: 0 },
-    uTemperature: { value: body.temperature ?? 5778 },
-  }), [body.color, body.temperature]);
+  const starUniforms = useMemo(
+    () => ({
+      uStarColor: { value: new THREE.Color(body.color) },
+      uTime: { value: 0 },
+      uTemperature: { value: body.temperature ?? 5778 },
+    }),
+    [body.color, body.temperature]
+  );
 
   // Planet shader uniforms using the factory (simple mode for StarSystem view)
   const planetUniforms = useMemo(() => {
@@ -64,20 +74,67 @@ export function CelestialBody({
     };
   }, [body.planetData, body.color, body.temperature, body.hasAtmosphere]);
 
-  // Get the appropriate planet shader
-  const planetShaderType = useMemo(() => getPlanetShaderType(body.planetType), [body.planetType]);
-  const planetFragShader = useMemo(() => getShaderFileName(planetShaderType), [planetShaderType]);
+  // Get the appropriate planet shader (prefer subtype for accuracy)
+  const planetShaderType = useMemo(
+    () => getPlanetShaderType(body.planetData?.planet_subtype, body.planetType),
+    [body.planetData?.planet_subtype, body.planetType]
+  );
+  const planetFragShader = useMemo(
+    () => getShaderFileName(planetShaderType),
+    [planetShaderType]
+  );
 
   // Animate orbit (pause when hovered)
   useFrame((state, delta) => {
-    if (body.type === 'planet' && groupRef.current && body.orbitPeriod > 0 && !isHovered) {
-      orbitAngleRef.current += (Math.PI * 2 * delta * ORBIT_SPEED) / (body.orbitPeriod / 60);
+    // Animate planets
+    if (
+      body.type === 'planet' &&
+      groupRef.current &&
+      body.orbitPeriod > 0 &&
+      !isHovered
+    ) {
+      orbitAngleRef.current +=
+        (Math.PI * 2 * delta * ORBIT_SPEED) / (body.orbitPeriod / 60);
     }
 
-    // Always update position (needed for initial placement)
+    // Animate stars in binary systems (both primary and companion orbit the barycenter)
+    if (
+      body.type === 'star' &&
+      body.orbitRadius > 0 &&
+      groupRef.current &&
+      body.orbitPeriod > 0
+    ) {
+      // Stars orbit faster than planets for visual effect
+      orbitAngleRef.current +=
+        (Math.PI * 2 * delta * ORBIT_SPEED * 2) / (body.orbitPeriod / 60);
+    }
+
+    // Update planet position - elliptical orbit with star at focus
     if (body.type === 'planet' && groupRef.current) {
-      const x = Math.cos(orbitAngleRef.current) * body.orbitRadius;
-      const z = Math.sin(orbitAngleRef.current) * body.orbitRadius;
+      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), 0.99);
+      const a = body.orbitRadius; // Semi-major axis
+      const b = a * Math.sqrt(1 - e * e); // Semi-minor axis
+      const focusOffset = a * e; // Distance from center to focus
+
+      // Parametric ellipse with star at focus
+      const x = a * Math.cos(orbitAngleRef.current) - focusOffset;
+      const z = b * Math.sin(orbitAngleRef.current);
+
+      groupRef.current.position.x = x;
+      groupRef.current.position.z = z;
+    }
+
+    // Update star positions in binary systems
+    // Primary star orbits one side, companion orbits opposite side (PI offset)
+    if (body.type === 'star' && body.orbitRadius > 0 && groupRef.current) {
+      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), 0.99);
+      const a = body.orbitRadius;
+      const b = a * Math.sqrt(1 - e * e);
+
+      // Companion orbits on opposite side (add PI to angle)
+      const angleOffset = body.isCompanionStar ? Math.PI : 0;
+      const x = a * Math.cos(orbitAngleRef.current + angleOffset);
+      const z = b * Math.sin(orbitAngleRef.current + angleOffset);
 
       groupRef.current.position.x = x;
       groupRef.current.position.z = z;
@@ -105,14 +162,15 @@ export function CelestialBody({
   const scale = isHovered ? 1.3 : 1;
 
   if (body.type === 'star') {
-    return (
-      <group>
+    // Star content - same for primary and companion
+    const StarContent = (
+      <>
         {/* Point light for illuminating planets */}
         <pointLight
           position={[0, 0, 0]}
           color={body.color}
-          intensity={2}
-          distance={50}
+          intensity={body.isCompanionStar ? 1.5 : 2}
+          distance={body.isCompanionStar ? 40 : 50}
         />
 
         {/* Outer glow - billboard always faces camera */}
@@ -163,8 +221,16 @@ export function CelestialBody({
             uniforms={starUniforms}
           />
         </mesh>
-      </group>
+      </>
     );
+
+    // Stars in binary systems orbit the barycenter, so wrap in a group with ref
+    if (body.orbitRadius > 0) {
+      return <group ref={groupRef}>{StarContent}</group>;
+    }
+
+    // Single star systems: star is stationary at center
+    return <group>{StarContent}</group>;
   }
 
   // Planet
@@ -177,14 +243,25 @@ export function CelestialBody({
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = 'pointer';
-          const clientX = (e as unknown as { clientX?: number }).clientX ?? e.nativeEvent?.clientX;
-          const clientY = (e as unknown as { clientY?: number }).clientY ?? e.nativeEvent?.clientY;
-          onHover(body, clientX && clientY ? { x: clientX, y: clientY } : undefined);
+          const clientX =
+            (e as unknown as { clientX?: number }).clientX ??
+            e.nativeEvent?.clientX;
+          const clientY =
+            (e as unknown as { clientY?: number }).clientY ??
+            e.nativeEvent?.clientY;
+          onHover(
+            body,
+            clientX && clientY ? { x: clientX, y: clientY } : undefined
+          );
         }}
         onPointerMove={(e) => {
           if (isHovered) {
-            const clientX = (e as unknown as { clientX?: number }).clientX ?? e.nativeEvent?.clientX;
-            const clientY = (e as unknown as { clientY?: number }).clientY ?? e.nativeEvent?.clientY;
+            const clientX =
+              (e as unknown as { clientX?: number }).clientX ??
+              e.nativeEvent?.clientX;
+            const clientY =
+              (e as unknown as { clientY?: number }).clientY ??
+              e.nativeEvent?.clientY;
             if (clientX && clientY) {
               onHover(body, { x: clientX, y: clientY });
             }
@@ -214,7 +291,10 @@ export function CelestialBody({
         <mesh rotation={[Math.PI / 2.5, 0, 0]}>
           <ringGeometry args={[body.diameter * 0.7, body.diameter * 1.2, 64]} />
           <meshBasicMaterial
-            color={new THREE.Color(body.color).lerp(new THREE.Color('#ffffff'), 0.4)}
+            color={new THREE.Color(body.color).lerp(
+              new THREE.Color('#ffffff'),
+              0.4
+            )}
             transparent
             opacity={0.5}
             side={THREE.DoubleSide}

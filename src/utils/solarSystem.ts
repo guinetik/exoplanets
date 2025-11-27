@@ -1,6 +1,7 @@
 /**
  * Solar System Generator
  * Converts star and planet data into 3D render data for Three.js
+ * Supports single stars, binary systems, and circumbinary planets
  */
 
 import type { Star, Exoplanet } from '../types';
@@ -25,8 +26,79 @@ export interface StellarBody {
   orbitPeriod: number; // in animation frames
   orbitTilt: number; // radians
   orbitEccentricity: number;
+  orbitArgOfPeriastron?: number; // radians - orientation of ellipse
   hasRings?: boolean;
   planetData?: Exoplanet;
+  // Binary star system properties
+  isPrimaryStar?: boolean;
+  isCompanionStar?: boolean;
+}
+
+// Binary system data from binary.json
+export interface BinaryStarData {
+  mass: number; // solar masses
+  radius: number; // solar radii
+  temperature: number; // K
+  luminosity: number; // solar luminosities
+}
+
+export interface BinaryOrbitData {
+  semiMajorAxis: number; // AU
+  period: number; // days
+  eccentricity: number; // 0-1
+  inclination: number; // degrees
+  argOfPeriastron: number; // degrees
+}
+
+export interface BinarySystemData {
+  hostname: string;
+  isCircumbinary: boolean;
+  numStars: number;
+  starA: BinaryStarData;
+  starB: BinaryStarData;
+  orbit: BinaryOrbitData;
+  _notes?: string;
+}
+
+// Cache for binary data
+let binaryDataCache: Map<string, BinarySystemData> | null = null;
+let binaryDataPromise: Promise<Map<string, BinarySystemData>> | null = null;
+
+/**
+ * Load binary system data from binary.json
+ */
+export async function loadBinaryData(): Promise<Map<string, BinarySystemData>> {
+  if (binaryDataCache) {
+    return binaryDataCache;
+  }
+
+  if (binaryDataPromise) {
+    return binaryDataPromise;
+  }
+
+  binaryDataPromise = fetch('/data/binary.json')
+    .then((response) => response.json())
+    .then((data: { systems: BinarySystemData[] }) => {
+      const map = new Map<string, BinarySystemData>();
+      for (const system of data.systems) {
+        map.set(system.hostname, system);
+      }
+      binaryDataCache = map;
+      return map;
+    })
+    .catch((error) => {
+      console.warn('Failed to load binary.json:', error);
+      return new Map<string, BinarySystemData>();
+    });
+
+  return binaryDataPromise;
+}
+
+/**
+ * Get binary data for a specific system (sync - uses cache)
+ */
+export function getBinaryData(hostname: string): BinarySystemData | undefined {
+  return binaryDataCache?.get(hostname);
 }
 
 // =============================================================================
@@ -46,6 +118,20 @@ const STELLAR_COLORS: Record<string, string> = {
   Y: '#ff4500', // Coolest brown dwarf
 };
 
+// Companion star colors - typically cooler/redder than primary
+const COMPANION_STAR_COLORS: Record<string, string> = {
+  O: '#aabfff', // Slightly cooler blue
+  B: '#cad7ff', // Blue-white to white
+  A: '#f8f7ff', // White to yellow-white
+  F: '#fff4ea', // Yellow-white to yellow
+  G: '#ffd2a1', // Yellow to orange
+  K: '#ffcc6f', // Orange to red
+  M: '#ff8c42', // Red to brown
+  L: '#ff6b35', // Brown dwarf
+  T: '#ff4500', // Cool brown dwarf
+  Y: '#cc3700', // Coolest brown dwarf
+};
+
 const PLANET_COLORS: Record<string, string[]> = {
   'Gas Giant': ['#c9a86c', '#deb887', '#d4a574', '#c19a6b', '#b8860b'],
   'Neptune-like': ['#4a90d9', '#5ba3e0', '#6bb5e8', '#3d7fc4', '#2e6eb0'],
@@ -53,7 +139,7 @@ const PLANET_COLORS: Record<string, string[]> = {
   'Super-Earth': ['#8b7355', '#9c8a6e', '#7a6548', '#6b5a3e', '#5c4d35'],
   'Earth-sized': ['#4a7c59', '#5a8c69', '#6a9c79', '#3a6c49', '#2a5c39'],
   'Sub-Earth': ['#a0522d', '#b0623d', '#c0724d', '#90421d', '#80320d'],
-  'Terrestrial': ['#cd853f', '#d4956a', '#daa576', '#c0764a', '#b06640'],
+  Terrestrial: ['#cd853f', '#d4956a', '#daa576', '#c0764a', '#b06640'],
 };
 
 // =============================================================================
@@ -64,6 +150,49 @@ function getStarColor(starClass: string | null): string {
   if (!starClass) return STELLAR_COLORS.G;
   const letter = starClass.charAt(0).toUpperCase();
   return STELLAR_COLORS[letter] || STELLAR_COLORS.G;
+}
+
+function getCompanionStarColor(starClass: string | null): string {
+  if (!starClass) return COMPANION_STAR_COLORS.K;
+  const letter = starClass.charAt(0).toUpperCase();
+  return COMPANION_STAR_COLORS[letter] || COMPANION_STAR_COLORS.K;
+}
+
+/**
+ * Get star color from temperature (for binary.json data)
+ */
+function getStarColorFromTemp(temperature: number): string {
+  // Approximate spectral class from temperature
+  if (temperature >= 30000) return STELLAR_COLORS.O;
+  if (temperature >= 10000) return STELLAR_COLORS.B;
+  if (temperature >= 7500) return STELLAR_COLORS.A;
+  if (temperature >= 6000) return STELLAR_COLORS.F;
+  if (temperature >= 5200) return STELLAR_COLORS.G;
+  if (temperature >= 3700) return STELLAR_COLORS.K;
+  if (temperature >= 2400) return STELLAR_COLORS.M;
+  if (temperature >= 1300) return STELLAR_COLORS.L;
+  if (temperature >= 550) return STELLAR_COLORS.T;
+  return STELLAR_COLORS.Y;
+}
+
+/**
+ * Scale stellar radius to visual diameter for rendering
+ */
+function radiusToVisualDiameter(radiusSolar: number): number {
+  // Use log scale for giant stars to keep visualization manageable
+  if (radiusSolar <= 5) {
+    return 2 + radiusSolar * 1.5;
+  }
+  return 2 + 5 * 1.5 + Math.log10(radiusSolar / 5) * 8;
+}
+
+/**
+ * Convert AU to visual units for orbit rendering
+ * Uses logarithmic scaling for better visualization of wide binaries
+ */
+function auToVisualOrbit(au: number, minRadius: number = 5): number {
+  // Log scale: compress large distances while keeping small ones visible
+  return Math.max(minRadius, 5 + Math.log10(1 + au * 10) * 8);
 }
 
 function getPlanetColor(planetType: string | null, index: number): string {
@@ -92,34 +221,141 @@ export function generateSolarSystem(
 ): StellarBody[] {
   const bodies: StellarBody[] = [];
 
-  // Star radius in solar radii (default to 1 if not available)
-  const starRadius = star.st_rad ?? 1;
-  // Star luminosity (log scale, default to 0 = 1 solar luminosity)
-  const starLum = star.st_lum ?? 0;
+  // Check if this is a binary/multiple star system
+  const isMultiStarSystem = star.sy_snum > 1;
 
-  // Scale star diameter - use log scale for giant stars to keep visualization manageable
-  // Small stars (< 5 R☉): linear scaling
-  // Giant stars (> 5 R☉): logarithmic scaling to prevent massive stars from dominating
-  const starDiameter = starRadius <= 5
-    ? 2 + starRadius * 1.5
-    : 2 + 5 * 1.5 + Math.log10(starRadius / 5) * 8;
+  // Try to get detailed binary data from binary.json
+  const binaryData = getBinaryData(star.hostname);
 
-  // Add the star
-  bodies.push({
-    id: star.id,
-    name: star.hostname,
-    displayName: star.hostname,
-    type: 'star',
-    diameter: starDiameter,
-    color: getStarColor(star.star_class),
-    emissive: getStarColor(star.star_class),
-    emissiveIntensity: 0.8 + Math.pow(10, starLum) * 0.2,
-    temperature: star.st_teff ?? 5778, // Default to Sun temperature
-    orbitRadius: 0,
-    orbitPeriod: 0,
-    orbitTilt: 0,
-    orbitEccentricity: 0,
-  });
+  // Use binary.json data if available, otherwise fall back to estimates
+  if (isMultiStarSystem && binaryData) {
+    // =========================================================================
+    // BINARY SYSTEM WITH DETAILED DATA
+    // =========================================================================
+    const { starA, starB, orbit } = binaryData;
+
+    // Calculate visual sizes
+    const starADiameter = radiusToVisualDiameter(starA.radius);
+    const starBDiameter = radiusToVisualDiameter(starB.radius);
+
+    // Binary orbit - convert AU to visual units
+    // Stars orbit around barycenter, distances inversely proportional to mass
+    const totalMass = starA.mass + starB.mass;
+    const massRatioA = starB.mass / totalMass; // Star A orbits closer if heavier
+    const massRatioB = starA.mass / totalMass;
+
+    const binaryVisualSeparation = auToVisualOrbit(
+      orbit.semiMajorAxis,
+      starADiameter + starBDiameter + 2
+    );
+
+    // Animation period - scale real period to reasonable animation speed
+    // ~40 day period = ~120 frames, scale logarithmically for longer periods
+    const animationPeriod = 120 * Math.log10(1 + orbit.period / 40);
+
+    // Convert argument of periastron to radians
+    const argOfPeriastronRad = (orbit.argOfPeriastron * Math.PI) / 180;
+
+    // Add primary star (Star A)
+    bodies.push({
+      id: star.id,
+      name: star.hostname,
+      displayName: `${star.hostname} A (Primary)`,
+      type: 'star',
+      diameter: starADiameter,
+      color: getStarColorFromTemp(starA.temperature),
+      emissive: getStarColorFromTemp(starA.temperature),
+      emissiveIntensity: 0.8 + Math.min(starA.luminosity * 0.1, 0.5),
+      temperature: starA.temperature,
+      orbitRadius: binaryVisualSeparation * massRatioA,
+      orbitPeriod: animationPeriod,
+      orbitTilt: ((90 - orbit.inclination) * Math.PI) / 180, // Convert to radians
+      orbitEccentricity: orbit.eccentricity,
+      orbitArgOfPeriastron: argOfPeriastronRad,
+      isPrimaryStar: true,
+      isCompanionStar: false,
+    });
+
+    // Add companion star (Star B)
+    bodies.push({
+      id: `${star.id}-B`,
+      name: `${star.hostname} B`,
+      displayName: `${star.hostname} B (Companion)`,
+      type: 'star',
+      diameter: starBDiameter,
+      color: getStarColorFromTemp(starB.temperature),
+      emissive: getStarColorFromTemp(starB.temperature),
+      emissiveIntensity: 0.8 + Math.min(starB.luminosity * 0.1, 0.5),
+      temperature: starB.temperature,
+      orbitRadius: binaryVisualSeparation * massRatioB,
+      orbitPeriod: animationPeriod, // Same period, opposite phase handled in renderer
+      orbitTilt: ((90 - orbit.inclination) * Math.PI) / 180,
+      orbitEccentricity: orbit.eccentricity,
+      orbitArgOfPeriastron: argOfPeriastronRad + Math.PI, // Opposite side
+      isPrimaryStar: false,
+      isCompanionStar: true,
+    });
+  } else {
+    // =========================================================================
+    // SINGLE STAR OR BINARY WITHOUT DETAILED DATA (fallback)
+    // =========================================================================
+    const starRadius = star.st_rad ?? 1;
+    const starLum = star.st_lum ?? 0;
+    const starDiameter = radiusToVisualDiameter(starRadius);
+
+    // For binary systems without data, estimate companion at 70% size
+    const companionDiameter = starDiameter * 0.7;
+    const binaryOrbitRadius = isMultiStarSystem ? starDiameter * 1.5 + 2 : 0;
+
+    // Add the primary star
+    bodies.push({
+      id: star.id,
+      name: star.hostname,
+      displayName: isMultiStarSystem
+        ? `${star.hostname} A (Primary)`
+        : star.hostname,
+      type: 'star',
+      diameter: starDiameter,
+      color: getStarColor(star.star_class),
+      emissive: getStarColor(star.star_class),
+      emissiveIntensity: 0.8 + Math.pow(10, starLum) * 0.2,
+      temperature: star.st_teff ?? 5778,
+      orbitRadius: isMultiStarSystem ? binaryOrbitRadius * 0.4 : 0,
+      orbitPeriod: isMultiStarSystem ? 120 : 0,
+      orbitTilt: 0,
+      orbitEccentricity: 0.1,
+      isPrimaryStar: true,
+      isCompanionStar: false,
+    });
+
+    // Add companion star for binary/multiple systems (estimated)
+    if (isMultiStarSystem) {
+      const companionTemp = (star.st_teff ?? 5778) * 0.85;
+
+      bodies.push({
+        id: `${star.id}-B`,
+        name: `${star.hostname} B`,
+        displayName: `${star.hostname} B (Companion)`,
+        type: 'star',
+        diameter: companionDiameter,
+        color: getCompanionStarColor(star.star_class),
+        emissive: getCompanionStarColor(star.star_class),
+        emissiveIntensity: 0.6 + Math.pow(10, starLum * 0.7) * 0.15,
+        temperature: companionTemp,
+        orbitRadius: binaryOrbitRadius * 0.6,
+        orbitPeriod: 120,
+        orbitTilt: 0,
+        orbitEccentricity: 0.1,
+        isPrimaryStar: false,
+        isCompanionStar: true,
+      });
+    }
+  }
+
+  // Calculate minimum planet orbit radius based on binary configuration
+  const binaryOuterRadius = bodies
+    .filter((b) => b.type === 'star')
+    .reduce((max, b) => Math.max(max, b.orbitRadius + b.diameter / 2), 0);
 
   // Sort planets by orbital distance
   const sortedPlanets = [...planets].sort((a, b) => {
@@ -128,22 +364,29 @@ export function generateSolarSystem(
     return aOrbit - bOrbit;
   });
 
+  // For circumbinary systems, planets need to orbit outside the binary pair
+  // Minimum safe orbit is typically 2-4x the binary separation
+  const minPlanetOrbitRadius = binaryOuterRadius * 2.5 + 2;
+
   // Add planets
   sortedPlanets.forEach((planet, index) => {
     // Planet radius in Jupiter radii (use Earth radii converted if Jupiter not available)
-    const planetRadJ = planet.pl_radj ?? (planet.pl_rade ? planet.pl_rade / 11.2 : 0.1);
+    const planetRadJ =
+      planet.pl_radj ?? (planet.pl_rade ? planet.pl_rade / 11.2 : 0.1);
 
     // Orbital properties
     const semiMajorAxis = planet.pl_orbsmax ?? (index + 1) * 0.5; // AU, default based on index
-    const orbitalPeriod = planet.pl_orbper ?? Math.pow(semiMajorAxis, 1.5) * 365; // Kepler's 3rd law fallback
+    const orbitalPeriod =
+      planet.pl_orbper ?? Math.pow(semiMajorAxis, 1.5) * 365; // Kepler's 3rd law fallback
     const eccentricity = planet.pl_orbeccen ?? 0.05;
 
     // Scale orbit radius for visualization (compress large distances)
-    // Use logarithmic scaling for better visualization
-    // Ensure orbit is always outside the star (star radius + padding + orbit distance)
-    const baseOrbitRadius = 5 + Math.log10(1 + semiMajorAxis * 10) * 8;
-    const minOrbitRadius = starDiameter / 2 + 2; // At least star radius + padding
-    const orbitRadius = Math.max(baseOrbitRadius, minOrbitRadius + index * 2);
+    // Ensure orbit is always outside the star(s)
+    const baseOrbitRadius = auToVisualOrbit(semiMajorAxis);
+    const orbitRadius = Math.max(
+      baseOrbitRadius,
+      minPlanetOrbitRadius + index * 2
+    );
 
     // Scale orbital period for animation (faster for outer planets too)
     const animationPeriod = 200 + Math.sqrt(orbitalPeriod) * 5;
@@ -155,7 +398,8 @@ export function generateSolarSystem(
     const diameter = clamp(0.3 + planetRadJ * 0.8, 0.2, 2.5);
 
     // Determine if planet should have rings (gas giants and ice giants)
-    const hasRings = planetType === 'Gas Giant' || planetType === 'Neptune-like';
+    const hasRings =
+      planetType === 'Gas Giant' || planetType === 'Neptune-like';
 
     // Estimate atmosphere based on planet type and size
     // Gas giants and ice giants always have thick atmospheres
@@ -198,7 +442,10 @@ export function generateSolarSystem(
 /**
  * Get a display-friendly value with units
  */
-export function formatStarProperty(key: string, value: number | string | null): string {
+export function formatStarProperty(
+  key: string,
+  value: number | string | null
+): string {
   if (value === null || value === undefined) return 'Unknown';
 
   const formatters: Record<string, (v: number) => string> = {

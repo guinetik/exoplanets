@@ -60,7 +60,13 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
 }
 
 // Camera controls with slow auto-rotation
-function CameraControls({ shouldAutoRotate, maxDistance }: { shouldAutoRotate: boolean; maxDistance: number }) {
+function CameraControls({
+  shouldAutoRotate,
+  maxDistance,
+}: {
+  shouldAutoRotate: boolean;
+  maxDistance: number;
+}) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
 
   // Auto-rotation
@@ -86,18 +92,27 @@ function CameraControls({ shouldAutoRotate, maxDistance }: { shouldAutoRotate: b
   );
 }
 
-export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: StarSystemProps) {
+export function StarSystem({
+  star,
+  planets,
+  onPlanetClick: _onPlanetClick,
+}: StarSystemProps) {
   const navigate = useNavigate();
   const [hoveredBody, setHoveredBody] = useState<StellarBody | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(
+    null
+  );
 
   // Generate solar system data
-  const bodies = useMemo(() => generateSolarSystem(star, planets), [star, planets]);
+  const bodies = useMemo(
+    () => generateSolarSystem(star, planets),
+    [star, planets]
+  );
 
   // Calculate camera distance based on outermost orbit AND star size
   const cameraDistance = useMemo(() => {
-    const maxOrbit = Math.max(...bodies.map(b => b.orbitRadius), 10);
-    const starBody = bodies.find(b => b.type === 'star');
+    const maxOrbit = Math.max(...bodies.map((b) => b.orbitRadius), 10);
+    const starBody = bodies.find((b) => b.type === 'star');
     const starDiameter = starBody?.diameter ?? 3;
 
     // Ensure camera is far enough to see the star + some orbits
@@ -108,21 +123,30 @@ export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: Sta
     return Math.max(minDistanceForStar, distanceForOrbits);
   }, [bodies]);
 
-  const handleBodyHover = useCallback((body: StellarBody | null, pos?: { x: number; y: number }) => {
-    setHoveredBody(body);
-    setMousePos(pos ?? null);
-  }, []);
+  const handleBodyHover = useCallback(
+    (body: StellarBody | null, pos?: { x: number; y: number }) => {
+      setHoveredBody(body);
+      setMousePos(pos ?? null);
+    },
+    []
+  );
 
-  const handleBodyClick = useCallback((body: StellarBody) => {
-    if (body.type === 'planet') {
-      navigate(`/planets/${nameToSlug(body.id)}`);
-    }
-  }, [navigate]);
+  const handleBodyClick = useCallback(
+    (body: StellarBody) => {
+      if (body.type === 'planet') {
+        navigate(`/planets/${nameToSlug(body.id)}`);
+      }
+    },
+    [navigate]
+  );
 
   return (
     <div className="starsystem-container">
       <Canvas
-        camera={{ position: [0, cameraDistance * 0.5, cameraDistance], fov: 50 }}
+        camera={{
+          position: [0, cameraDistance * 0.5, cameraDistance],
+          fov: 50,
+        }}
         style={{ background: 'black' }}
       >
         <Suspense fallback={null}>
@@ -153,7 +177,21 @@ export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: Sta
               <OrbitRing
                 key={`orbit-${body.id}`}
                 radius={body.orbitRadius}
+                eccentricity={body.orbitEccentricity}
                 isHighlighted={hoveredBody?.id === body.id}
+              />
+            ))}
+
+          {/* Render orbit rings for stars in binary systems */}
+          {bodies
+            .filter((b) => b.type === 'star' && b.orbitRadius > 0)
+            .map((body) => (
+              <OrbitRing
+                key={`orbit-${body.id}`}
+                radius={body.orbitRadius}
+                eccentricity={body.orbitEccentricity}
+                isHighlighted={hoveredBody?.id === body.id}
+                isBinaryOrbit
               />
             ))}
 
@@ -174,73 +212,94 @@ export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: Sta
       />
 
       {/* Cursor tooltip for hovered planet - shows all planet details */}
-      {hoveredBody && hoveredBody.type === 'planet' && mousePos && hoveredBody.planetData && (
-        <div
-          className="starsystem-cursor-tooltip"
-          style={{
-            left: mousePos.x + 20,
-            top: mousePos.y - 10,
-          }}
-        >
-          <div className="cursor-tooltip-header">
-            <div className="cursor-tooltip-name">{hoveredBody.planetData.pl_name}</div>
-            <div className="cursor-tooltip-type">{hoveredBody.planetData.planet_type}</div>
+      {hoveredBody &&
+        hoveredBody.type === 'planet' &&
+        mousePos &&
+        hoveredBody.planetData && (
+          <div
+            className="starsystem-cursor-tooltip"
+            style={{
+              left: mousePos.x + 20,
+              top: mousePos.y - 10,
+            }}
+          >
+            <div className="cursor-tooltip-header">
+              <div className="cursor-tooltip-name">
+                {hoveredBody.planetData.pl_name}
+              </div>
+              <div className="cursor-tooltip-type">
+                {hoveredBody.planetData.planet_type}
+              </div>
+            </div>
+
+            <div className="cursor-tooltip-details">
+              {hoveredBody.planetData.pl_rade && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Radius</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.pl_rade.toFixed(2)} R⊕
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.pl_bmasse && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Mass</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.pl_bmasse.toFixed(2)} M⊕
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.pl_orbper && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Orbital Period</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.pl_orbper.toFixed(2)} days
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.pl_orbsmax && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Semi-major Axis</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.pl_orbsmax.toFixed(3)} AU
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.pl_eqt && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Eq. Temperature</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.pl_eqt.toFixed(0)} K
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.disc_year && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Discovered</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.disc_year}
+                  </span>
+                </div>
+              )}
+
+              {hoveredBody.planetData.discoverymethod && (
+                <div className="cursor-tooltip-detail">
+                  <span className="cursor-tooltip-label">Method</span>
+                  <span className="cursor-tooltip-value">
+                    {hoveredBody.planetData.discoverymethod}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="cursor-tooltip-hint">Click to view details</div>
           </div>
-
-          <div className="cursor-tooltip-details">
-            {hoveredBody.planetData.pl_rade && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Radius</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.pl_rade.toFixed(2)} R⊕</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.pl_bmasse && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Mass</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.pl_bmasse.toFixed(2)} M⊕</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.pl_orbper && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Orbital Period</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.pl_orbper.toFixed(2)} days</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.pl_orbsmax && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Semi-major Axis</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.pl_orbsmax.toFixed(3)} AU</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.pl_eqt && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Eq. Temperature</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.pl_eqt.toFixed(0)} K</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.disc_year && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Discovered</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.disc_year}</span>
-              </div>
-            )}
-
-            {hoveredBody.planetData.discoverymethod && (
-              <div className="cursor-tooltip-detail">
-                <span className="cursor-tooltip-label">Method</span>
-                <span className="cursor-tooltip-value">{hoveredBody.planetData.discoverymethod}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="cursor-tooltip-hint">Click to view details</div>
-        </div>
-      )}
+        )}
     </div>
   );
 }
