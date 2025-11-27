@@ -33,11 +33,18 @@ export function StarCard({ star }: StarCardProps) {
         {/* Header */}
         <div className="star-card-header">
           <h3 className="star-card-name">{star.hostname}</h3>
-          {star.star_class && (
-            <div className="star-card-class-badge">
-              {star.star_class}
-            </div>
-          )}
+          <div className="star-card-badges">
+            {star.sy_snum > 1 && (
+              <div className="star-card-binary-badge">
+                {t('pages.starCard.binary', 'Binary')}
+              </div>
+            )}
+            {star.star_class && (
+              <div className="star-card-class-badge">
+                {star.star_class}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Star properties grid */}

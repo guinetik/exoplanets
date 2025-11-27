@@ -10,6 +10,7 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { pollService } from '../services';
 import { UserPrompt } from '../components/Reviews/UserPrompt';
+import { PlanetVisualization } from '../components/PlanetVisualization';
 import Spinner from '../components/Spinner';
 import type { Exoplanet, VoteCount } from '../types';
 import { nameToSlug } from '../utils/urlSlug';
@@ -267,6 +268,11 @@ function VoteCard({
       <div className="vote-rank">
         {isLeader && voteCount > 0 && <span className="vote-crown">👑</span>}
         #{rank}
+      </div>
+
+      {/* Planet Visualization */}
+      <div className="vote-card-visualization">
+        <PlanetVisualization planet={planet} size={64} />
       </div>
 
       {/* Planet Info */}
