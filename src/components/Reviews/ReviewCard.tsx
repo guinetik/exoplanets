@@ -12,8 +12,24 @@ interface ReviewCardProps {
 
 /**
  * Format timestamp to readable date
+ * Handles ancient dates (negative timestamps) with fun formatting
  */
 function formatDate(timestamp: number): string {
+  const now = Date.now();
+  const msPerYear = 365.25 * 24 * 60 * 60 * 1000;
+  const yearsAgo = (now - timestamp) / msPerYear;
+
+  // Ancient dates (more than 1000 years ago)
+  if (yearsAgo > 1000) {
+    const roundedYears = Math.round(yearsAgo);
+    if (roundedYears >= 1000000) {
+      return `~${(roundedYears / 1000000).toFixed(1)}M years ago`;
+    } else if (roundedYears >= 1000) {
+      return `~${(roundedYears / 1000).toFixed(1)}k years ago`;
+    }
+  }
+
+  // Normal dates
   const date = new Date(timestamp);
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
