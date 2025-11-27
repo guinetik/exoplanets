@@ -75,8 +75,53 @@ export const mockPlanet: Exoplanet = {
   y_pc: 5,
   z_pc: 7.07,
   distance_ly: 32.6,
+  // Boolean flags - Habitability
   is_habitable_zone: true,
   is_earth_like: false,
+  has_earth_like_insolation: true,
+  is_conservative_habitable: true,
+  is_optimistic_habitable: true,
+  is_top_habitable_candidate: true,
+  is_potentially_rocky: true,
+  // Boolean flags - Orbital
+  is_ultra_short_period: false,
+  is_short_period: false,
+  is_long_period: false,
+  is_eccentric_orbit: false,
+  is_circular_orbit: true,
+  is_likely_tidally_locked: false,
+  // Boolean flags - System
+  is_multi_planet_system: false,
+  is_rich_system: false,
+  is_only_known_planet: true,
+  is_circumbinary: false,
+  is_multi_star_system: false,
+  // Boolean flags - Distance
+  is_nearby: true,
+  is_very_nearby: true,
+  // Boolean flags - Detection
+  is_transiting: true,
+  has_rv_data: false,
+  has_ttv: false,
+  is_controversial: false,
+  // Boolean flags - Star
+  is_solar_analog: true,
+  is_sun_like_star: true,
+  is_red_dwarf_host: false,
+  is_young_system: false,
+  is_mature_system: true,
+  is_ancient_system: false,
+  is_metal_rich_star: false,
+  is_metal_poor_star: false,
+  // Boolean flags - Planet extremes
+  is_hot_jupiter: false,
+  is_hot_neptune: false,
+  is_ultra_hot: false,
+  is_frozen_world: false,
+  is_ultra_dense: false,
+  is_puffy: false,
+  is_super_massive: false,
+  is_lightweight: false,
 };
 
 export const mockPlanet2: Exoplanet = {

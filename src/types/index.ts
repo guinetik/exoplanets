@@ -108,9 +108,59 @@ export interface Exoplanet {
   // Distance in light-years
   distance_ly: number | null;
 
-  // Boolean flags
+  // Boolean flags - Habitability
   is_habitable_zone: boolean;
   is_earth_like: boolean;
+  has_earth_like_insolation: boolean;
+  is_conservative_habitable: boolean;
+  is_optimistic_habitable: boolean;
+  is_top_habitable_candidate: boolean;
+  is_potentially_rocky: boolean;
+
+  // Boolean flags - Orbital characteristics
+  is_ultra_short_period: boolean;
+  is_short_period: boolean;
+  is_long_period: boolean;
+  is_eccentric_orbit: boolean;
+  is_circular_orbit: boolean;
+  is_likely_tidally_locked: boolean;
+
+  // Boolean flags - System characteristics
+  is_multi_planet_system: boolean;
+  is_rich_system: boolean;
+  is_only_known_planet: boolean;
+  is_circumbinary: boolean;
+  is_multi_star_system: boolean;
+
+  // Boolean flags - Distance
+  is_nearby: boolean;
+  is_very_nearby: boolean;
+
+  // Boolean flags - Detection
+  is_transiting: boolean;
+  has_rv_data: boolean;
+  has_ttv: boolean;
+  is_controversial: boolean;
+
+  // Boolean flags - Star characteristics
+  is_solar_analog: boolean;
+  is_sun_like_star: boolean;
+  is_red_dwarf_host: boolean;
+  is_young_system: boolean;
+  is_mature_system: boolean;
+  is_ancient_system: boolean;
+  is_metal_rich_star: boolean;
+  is_metal_poor_star: boolean;
+
+  // Boolean flags - Planet characteristics
+  is_hot_jupiter: boolean;
+  is_hot_neptune: boolean;
+  is_ultra_hot: boolean;
+  is_frozen_world: boolean;
+  is_ultra_dense: boolean;
+  is_puffy: boolean;
+  is_super_massive: boolean;
+  is_lightweight: boolean;
 }
 
 export type PlanetType =

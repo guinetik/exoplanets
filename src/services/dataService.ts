@@ -5,6 +5,7 @@
 
 import type { Exoplanet, Star, FilterOptions, SortOptions } from '../types';
 import { createLogger } from '@guinetik/logger';
+import { nameToSlug } from '../utils/urlSlug';
 
 const logger = createLogger({ prefix: 'DataService' });
 
@@ -14,6 +15,8 @@ class DataService {
   private planets: Exoplanet[] = [];
   private stars: Map<string, Star> = new Map();
   private planetsByName: Map<string, Exoplanet> = new Map();
+  private planetsBySlug: Map<string, string> = new Map(); // slug -> planet name
+  private starsBySlug: Map<string, string> = new Map(); // slug -> star hostname
   private loaded = false;
 
   /**
@@ -90,8 +93,8 @@ class DataService {
       return null;
     }
 
-    // Boolean fields
-    if (header === 'is_habitable_zone' || header === 'is_earth_like') {
+    // Boolean fields (all is_* and has_* columns from the Python processing pipeline)
+    if (header.startsWith('is_') || header.startsWith('has_')) {
       return value === 'True' || value === 'true' || value === '1';
     }
 
@@ -126,9 +129,11 @@ class DataService {
    * Build lookup indexes for fast queries
    */
   private buildIndexes(): void {
-    // Index planets by name
+    // Index planets by name and slug
     for (const planet of this.planets) {
       this.planetsByName.set(planet.pl_name, planet);
+      const slug = nameToSlug(planet.pl_name);
+      this.planetsBySlug.set(slug, planet.pl_name);
     }
 
     // Group planets by host star
@@ -139,7 +144,7 @@ class DataService {
       starGroups.set(planet.hostname, existing);
     }
 
-    // Build star objects
+    // Build star objects and index by slug
     for (const [hostname, planets] of starGroups) {
       const first = planets[0];
       const star: Star = {
@@ -182,6 +187,8 @@ class DataService {
         cb_flag: planets.some(p => p.cb_flag === 1),
       };
       this.stars.set(hostname, star);
+      const slug = nameToSlug(hostname);
+      this.starsBySlug.set(slug, hostname);
     }
   }
 
@@ -203,6 +210,16 @@ class DataService {
 
   getPlanetByName(name: string): Exoplanet | undefined {
     return this.planetsByName.get(name);
+  }
+
+  /**
+   * Get a planet by its URL slug
+   * @param slug - The slug version of the planet name
+   * @returns The planet if found, undefined otherwise
+   */
+  getPlanetBySlug(slug: string): Exoplanet | undefined {
+    const name = this.planetsBySlug.get(slug);
+    return name ? this.planetsByName.get(name) : undefined;
   }
 
   getPlanetsByHost(hostname: string): Exoplanet[] {
@@ -268,6 +285,16 @@ class DataService {
 
   getStarByName(hostname: string): Star | undefined {
     return this.stars.get(hostname);
+  }
+
+  /**
+   * Get a star by its URL slug
+   * @param slug - The slug version of the star hostname
+   * @returns The star if found, undefined otherwise
+   */
+  getStarBySlug(slug: string): Star | undefined {
+    const hostname = this.starsBySlug.get(slug);
+    return hostname ? this.stars.get(hostname) : undefined;
   }
 
   // ===========================================================================
@@ -345,8 +372,13 @@ export const dataService = new DataService();
 
 // For testing purposes
 export function resetDataService(): void {
-  (dataService as unknown as { loaded: boolean; planets: Exoplanet[]; stars: Map<string, Star>; planetsByName: Map<string, Exoplanet> }).loaded = false;
+  (dataService as unknown as { loaded: boolean; planets: Exoplanet[]; stars: Map<string, Star>; planetsByName: Map<string, Exoplanet>; planetsBySlug: Map<string, string>; starsBySlug: Map<string, string> }).loaded = false;
   (dataService as unknown as { planets: Exoplanet[] }).planets = [];
   (dataService as unknown as { stars: Map<string, Star> }).stars = new Map();
   (dataService as unknown as { planetsByName: Map<string, Exoplanet> }).planetsByName = new Map();
+  (dataService as unknown as { planetsBySlug: Map<string, string> }).planetsBySlug = new Map();
+  (dataService as unknown as { starsBySlug: Map<string, string> }).starsBySlug = new Map();
 }
+
+// Export slug utility for use in components
+export { nameToSlug } from '../utils/urlSlug';
