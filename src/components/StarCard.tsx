@@ -19,21 +19,26 @@ export function StarCard({ star }: StarCardProps) {
       className="block h-full"
     >
       <div className="star-card">
-        {/* Color indicator dot */}
-        <div className="star-card-header">
+        {/* Star visualization thumbnail */}
+        <div className="star-card-visualization">
           <div
-            className="star-card-dot"
-            style={{ backgroundColor: colorRgb }}
+            className="star-visualization-dot"
+            style={{ 
+              backgroundColor: colorRgb,
+              boxShadow: `0 0 20px ${colorRgb}, 0 0 40px ${colorRgb}40`
+            }}
           />
-          <h3 className="star-card-name">{star.hostname}</h3>
         </div>
 
-        {/* Star class badge */}
-        {star.star_class && (
-          <div className="star-card-class-badge">
-            {star.star_class}
-          </div>
-        )}
+        {/* Header */}
+        <div className="star-card-header">
+          <h3 className="star-card-name">{star.hostname}</h3>
+          {star.star_class && (
+            <div className="star-card-class-badge">
+              {star.star_class}
+            </div>
+          )}
+        </div>
 
         {/* Star properties grid */}
         <div className="star-card-properties">

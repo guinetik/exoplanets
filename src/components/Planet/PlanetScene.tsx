@@ -88,8 +88,8 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const ringMaterialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Get shader type and file name
-  const shaderType = useMemo(() => getPlanetShaderType(planet.planet_type), [planet.planet_type]);
+  // Get shader type and file name (prefer subtype for accuracy)
+  const shaderType = useMemo(() => getPlanetShaderType(planet.planet_subtype, planet.planet_type), [planet.planet_subtype, planet.planet_type]);
   const fragShaderName = useMemo(() => getShaderFileName(shaderType), [shaderType]);
 
   // Create uniforms with detailed mode for the Planet page (full features)

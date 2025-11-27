@@ -6,8 +6,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../types';
-import { getStarColorHex } from '../utils/astronomy';
 import { nameToSlug } from '../utils/urlSlug';
+import { PlanetVisualization } from './PlanetVisualization';
 
 interface PlanetCardProps {
   planet: Exoplanet;
@@ -15,30 +15,27 @@ interface PlanetCardProps {
 
 export function PlanetCard({ planet }: PlanetCardProps) {
   const { t } = useTranslation();
-  const starColorHex = getStarColorHex(planet.star_class);
-  const starColorRgb = `rgb(${(starColorHex >> 16) & 255}, ${(starColorHex >> 8) & 255}, ${starColorHex & 255})`;
 
   return (
     <Link to={`/planets/${nameToSlug(planet.pl_name)}`} className="planet-card-link">
       <div className="planet-card">
-        {/* Header with star color and planet name */}
+        {/* Planet visualization thumbnail */}
+        <div className="planet-card-visualization">
+          <PlanetVisualization planet={planet} size={80} />
+        </div>
+
+        {/* Header */}
         <div className="planet-card-header">
-          <div
-            className="planet-star-dot"
-            style={{ backgroundColor: starColorRgb, boxShadow: `0 0 12px ${starColorRgb}` }}
-          />
           <div className="planet-card-title-group">
             <h3 className="planet-card-name">{planet.pl_name}</h3>
             <p className="planet-card-host">{planet.hostname}</p>
           </div>
+          {planet.planet_type && (
+            <div className="planet-type-badge">
+              {planet.planet_type}
+            </div>
+          )}
         </div>
-
-        {/* Planet type badge */}
-        {planet.planet_type && (
-          <div className="planet-type-badge">
-            {planet.planet_type}
-          </div>
-        )}
 
         {/* Planet properties grid */}
         <div className="planet-card-properties">
@@ -91,14 +88,75 @@ export function PlanetCard({ planet }: PlanetCardProps) {
 
         {/* Flags */}
         <div className="planet-card-flags">
+          {/* Habitability flags */}
           {planet.is_habitable_zone && (
             <span className="flag-badge flag-habitable">{t('pages.planetCard.flags.habitableZone')}</span>
           )}
           {planet.is_earth_like && (
             <span className="flag-badge flag-earth-like">{t('pages.planetCard.flags.earthLike')}</span>
           )}
+          {planet.is_top_habitable_candidate && (
+            <span className="flag-badge flag-top-candidate">{t('pages.planetCard.flags.topCandidate')}</span>
+          )}
+          {planet.is_potentially_rocky && (
+            <span className="flag-badge flag-rocky">{t('pages.planetCard.flags.potentiallyRocky')}</span>
+          )}
+          
+          {/* Extreme world flags */}
+          {planet.is_hot_jupiter && (
+            <span className="flag-badge flag-hot-jupiter">{t('pages.planetCard.flags.hotJupiter')}</span>
+          )}
+          {planet.is_hot_neptune && (
+            <span className="flag-badge flag-hot-neptune">{t('pages.planetCard.flags.hotNeptune')}</span>
+          )}
+          {planet.is_ultra_hot && (
+            <span className="flag-badge flag-ultra-hot">{t('pages.planetCard.flags.ultraHot')}</span>
+          )}
+          {planet.is_frozen_world && (
+            <span className="flag-badge flag-frozen">{t('pages.planetCard.flags.frozenWorld')}</span>
+          )}
+          {planet.is_ultra_dense && (
+            <span className="flag-badge flag-ultra-dense">{t('pages.planetCard.flags.ultraDense')}</span>
+          )}
+          {planet.is_puffy && (
+            <span className="flag-badge flag-puffy">{t('pages.planetCard.flags.puffy')}</span>
+          )}
+          
+          {/* Orbital flags */}
+          {planet.is_ultra_short_period && (
+            <span className="flag-badge flag-ultra-short">{t('pages.planetCard.flags.ultraShortPeriod')}</span>
+          )}
+          {planet.is_eccentric_orbit && (
+            <span className="flag-badge flag-eccentric">{t('pages.planetCard.flags.eccentricOrbit')}</span>
+          )}
+          {planet.is_likely_tidally_locked && (
+            <span className="flag-badge flag-tidally-locked">{t('pages.planetCard.flags.tidallyLocked')}</span>
+          )}
+          
+          {/* System flags */}
           {planet.cb_flag === 1 && (
             <span className="flag-badge flag-circumbinary">{t('pages.planetCard.flags.circumbinary')}</span>
+          )}
+          {planet.is_rich_system && (
+            <span className="flag-badge flag-rich-system">{t('pages.planetCard.flags.richSystem')}</span>
+          )}
+          
+          {/* Proximity flags */}
+          {planet.is_very_nearby && (
+            <span className="flag-badge flag-very-nearby">{t('pages.planetCard.flags.veryNearby')}</span>
+          )}
+          
+          {/* Star flags */}
+          {planet.is_solar_analog && (
+            <span className="flag-badge flag-solar-analog">{t('pages.planetCard.flags.solarAnalog')}</span>
+          )}
+          {planet.is_red_dwarf_host && (
+            <span className="flag-badge flag-red-dwarf">{t('pages.planetCard.flags.redDwarfHost')}</span>
+          )}
+          
+          {/* Detection flags */}
+          {planet.is_controversial && (
+            <span className="flag-badge flag-controversial">{t('pages.planetCard.flags.controversial')}</span>
           )}
         </div>
 
