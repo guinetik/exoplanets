@@ -280,6 +280,14 @@
     @apply bg-black/90 border border-white/30 rounded-lg px-4 py-3;
     @apply pointer-events-none;
     @apply backdrop-blur-sm shadow-lg;
+    transform: translateX(0);
+  }
+
+  /* Mobile: shift tooltip to the left to avoid finger blocking */
+  @media (max-width: 768px) {
+    .starfield-tooltip {
+      transform: translateX(-120%);
+    }
   }
 
   .tooltip-name {
@@ -330,28 +338,49 @@
     @apply text-center;
   }
 
-  .intro-title {
-    @apply text-6xl md:text-8xl font-thin tracking-[0.3em] text-white;
+  .intro-title-container {
+    @apply flex flex-col items-center gap-0 md:gap-4;
+  }
+
+  .intro-title-line {
+    @apply text-5xl md:text-8xl font-thin tracking-[0.2em] text-white;
     text-shadow:
-      0 0 60px rgba(255, 255, 255, 0.5),
-      0 0 120px rgba(100, 150, 255, 0.3);
+      0 0 30px rgba(0, 200, 255, 0.6),
+      0 0 60px rgba(0, 200, 255, 0.3),
+      inset 0 0 20px rgba(0, 200, 255, 0.1);
+    letter-spacing: 0.15em;
+    position: relative;
+  }
+
+  .intro-title-line-exo {
+    display: inline;
+  }
+
+  .intro-title-line-planets {
+    display: inline;
+    margin-left: 0.3em;
+  }
+
+  @media (max-width: 768px) {
+    .intro-title-line-exo {
+      display: block;
+    }
+
+    .intro-title-line-planets {
+      display: block;
+      margin-left: 0;
+    }
   }
 
   .intro-letter {
-    @apply inline-block opacity-0;
-    animation:
-      letter-reveal 0.5s ease-out forwards,
-      intro-glow 3s ease-in-out infinite alternate;
+    @apply inline-block;
+    animation: letter-fade-in 1.5s ease-in forwards;
+    opacity: 0;
   }
 
-  @keyframes letter-reveal {
-    0% {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    100% {
+  @keyframes letter-fade-in {
+    to {
       opacity: 1;
-      transform: translateY(0);
     }
   }
 
@@ -377,24 +406,24 @@
 
   .welcome-card {
     @apply relative pointer-events-auto;
-    @apply p-6 rounded-lg;
-    @apply max-w-sm;
+    @apply p-4 md:p-6 rounded-lg;
+    @apply w-11/12 max-w-sm;
     background: rgba(0, 0, 0, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(12px);
   }
 
   .welcome-title {
-    @apply text-lg font-medium text-white text-center mb-3;
+    @apply text-base md:text-lg font-medium text-white text-center mb-3;
     @apply tracking-tight;
   }
 
   .welcome-description {
-    @apply text-sm leading-relaxed text-neutral-400 text-center mb-4;
+    @apply text-xs md:text-sm leading-relaxed text-neutral-400 text-center mb-4;
   }
 
   .welcome-stats {
-    @apply text-xs text-center py-2 px-3 mb-4 rounded;
+    @apply text-xs text-center py-3 md:py-2 px-3 md:px-3 mb-4 rounded;
     @apply font-mono;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -406,7 +435,7 @@
   }
 
   .welcome-dismiss {
-    @apply w-full py-2 px-4 rounded;
+    @apply w-full py-3 md:py-2 px-4 rounded;
     @apply text-sm font-medium;
     @apply transition-all duration-150;
     background: #fff;
@@ -432,6 +461,27 @@
 
   .starsystem-page {
     @apply relative w-full h-full;
+  }
+
+  /* Hero Section */
+  .starsystem-hero-section {
+    @apply relative w-full h-full;
+  }
+
+  .starsystem-hero-header {
+    @apply absolute top-0 left-0 right-0 z-10;
+    @apply text-center py-8 px-4;
+    @apply pointer-events-none;
+  }
+
+  .starsystem-title {
+    @apply text-4xl md:text-5xl font-light text-white mb-2;
+    @apply tracking-wide;
+    text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+  }
+
+  .starsystem-subtitle {
+    @apply text-lg text-white/60;
   }
 
   .starsystem-container {
@@ -2585,4 +2635,145 @@
 
 .about-credits-author {
   @apply text-white/60;
+}
+
+/* =============================================================================
+   MOBILE OPTIMIZATIONS - Star and Planet Pages
+   ============================================================================= */
+
+/* Star Info Toggle Button - Mobile Only */
+.starsystem-info-toggle {
+  @apply absolute top-6 right-6 z-40;
+  @apply w-12 h-12 rounded-full bg-black/70 border border-white/30;
+  @apply flex items-center justify-center text-lg text-white;
+  @apply hover:bg-black/90 hover:border-white/50 transition-all;
+  @apply backdrop-blur-sm;
+}
+
+@media (min-width: 769px) {
+  .starsystem-info-toggle {
+    display: none;
+  }
+}
+
+/* Desktop Info Panel - always visible */
+.starsystem-info-panel-desktop {
+  @apply absolute top-16 left-4 z-40;
+  @apply bg-black/70 border border-white/20 rounded-lg;
+  @apply p-6 min-w-64 backdrop-blur-sm;
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Hide desktop panel on mobile */
+@media (max-width: 768px) {
+  .starsystem-info-panel-desktop {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+/* Mobile Info Panel - full screen overlay */
+.starsystem-info-panel-mobile {
+  @apply fixed inset-0 z-50;
+  @apply bg-black/95 backdrop-blur-md;
+  @apply p-6;
+  display: none; /* Hidden by default, React controls visibility */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Force hide on desktop */
+@media (min-width: 769px) {
+  .starsystem-info-panel-mobile {
+    display: none !important;
+  }
+}
+
+/* On mobile, let React control visibility through conditional rendering */
+@media (max-width: 768px) {
+  .starsystem-info-panel-mobile {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+.starsystem-info-panel-content {
+  @apply relative w-full max-w-sm;
+}
+
+@media (min-width: 769px) {
+  .starsystem-info-panel-content {
+    @apply max-w-none;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.starsystem-info-panel h2 {
+  @apply text-2xl font-bold mb-6 text-center;
+}
+
+.starsystem-info-close {
+  @apply absolute top-0 right-0;
+  @apply w-10 h-10 rounded-full bg-white/10 text-white;
+  @apply flex items-center justify-center text-xl;
+  @apply hover:bg-white/20 transition-colors;
+}
+
+.starsystem-info-content {
+  @apply w-full space-y-4 mt-4;
+}
+
+.starsystem-info-row {
+  @apply flex justify-between items-center;
+  @apply p-4 bg-white/5 rounded-lg border border-white/10;
+}
+
+.starsystem-info-row .label {
+  @apply text-white/70 text-sm font-medium;
+}
+
+.starsystem-info-row .value {
+  @apply text-white font-semibold;
+}
+
+/* Planet Hero Buttons Container */
+.planet-hero-buttons {
+  @apply absolute top-6 right-6 z-40 flex gap-3;
+}
+
+/* Planet Scroll-to-Stats Button */
+.planet-scroll-button {
+  @apply hidden md:hidden w-12 h-12 rounded-full;
+  @apply bg-black/70 border border-white/30 text-white;
+  @apply flex items-center justify-center text-lg;
+  @apply hover:bg-black/90 hover:border-white/50 transition-all;
+  @apply backdrop-blur-sm;
+  animation: bounce 2s infinite;
+}
+
+@media (max-width: 768px) {
+  .planet-scroll-button {
+    @apply flex;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }

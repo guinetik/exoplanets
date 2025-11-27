@@ -311,11 +311,45 @@ function CameraController({
       canvas.style.cursor = 'grab';
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      isDragging.current = true;
+      const touch = e.touches[0];
+      previousMouse.current = { x: touch.clientX, y: touch.clientY };
+    };
+
+    const handleTouchEnd = () => {
+      isDragging.current = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current || e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - previousMouse.current.x;
+      const deltaY = touch.clientY - previousMouse.current.y;
+
+      rotation.current.azimuth -= deltaX * 0.3;
+      rotation.current.altitude += deltaY * 0.3;
+      rotation.current.azimuth = ((rotation.current.azimuth % 360) + 360) % 360;
+      rotation.current.altitude = Math.max(
+        -10,
+        Math.min(90, rotation.current.altitude)
+      );
+
+      previousMouse.current = { x: touch.clientX, y: touch.clientY };
+      updateCameraPosition();
+    };
+
     canvas.style.cursor = 'grab';
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mousemove', handleMouseMove);
     canvas.addEventListener('mouseleave', handleMouseLeave);
+    canvas.addEventListener('touchstart', handleTouchStart);
+    canvas.addEventListener('touchend', handleTouchEnd);
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     // Set initial position
     updateCameraPosition();
@@ -325,6 +359,9 @@ function CameraController({
       canvas.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchmove', handleTouchMove);
     };
   }, [gl, camera, controlsEnabled, onBearingChange]);
 
@@ -725,8 +762,8 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         <div
           className="starfield-tooltip"
           style={{
-            left: mousePos.x + 20,
-            top: mousePos.y - 10,
+            left: `${mousePos.x + 20}px`,
+            top: `${mousePos.y - 10}px`,
           }}
         >
           <div className="tooltip-name">{hoveredStar.hostname}</div>
@@ -789,19 +826,34 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         <div className="intro-overlay" onClick={skipIntro}>
           {state.phase === 'earth-spin' && (
             <div className="intro-text">
-              <span className="intro-title">
-                {'EXOPLANETS'.split('').map((letter, i) => (
-                  <span
-                    key={i}
-                    className="intro-letter"
-                    style={{
-                      animationDelay: `${i * 0.3}s`,
-                    }}
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </span>
+              <div className="intro-title-container">
+                <div className="intro-title-line intro-title-line-exo">
+                  {'EXO'.split('').map((letter, i) => (
+                    <span
+                      key={i}
+                      className="intro-letter"
+                      style={{
+                        animationDelay: `${i * 0.25}s`,
+                      }}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </div>
+                <div className="intro-title-line intro-title-line-planets">
+                  {'PLANETS'.split('').map((letter, i) => (
+                    <span
+                      key={i}
+                      className="intro-letter"
+                      style={{
+                        animationDelay: `${3 * 0.25 + i * 0.25}s`,
+                      }}
+                    >
+                      {letter}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           {(state.phase === 'camera-swoop' || state.phase === 'stars-fade') && (

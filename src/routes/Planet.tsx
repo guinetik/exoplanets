@@ -3,7 +3,7 @@
  * Vertical stack: 3D planet on top, hero name centered, details below
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
@@ -63,9 +63,14 @@ export default function Planet() {
   const navigate = useNavigate();
   const { getPlanetBySlug, isLoading } = useData();
   const [showVizInfo, setShowVizInfo] = useState(false);
+  const detailsRef = useRef<HTMLDivElement>(null);
 
   // Get planet by slug from URL
   const planet = planetId ? getPlanetBySlug(planetId) : undefined;
+
+  const scrollToStats = () => {
+    detailsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Loading state
   if (isLoading) {
@@ -112,14 +117,23 @@ export default function Planet() {
           <PlanetScene planet={planet} />
         </div>
 
-        {/* Visualization Info Button - top right of hero */}
-        <button
-          className="viz-info-button"
-          onClick={() => setShowVizInfo(true)}
-          title={t('pages.planet.visualization.title')}
-        >
-          <span className="viz-info-icon">i</span>
-        </button>
+        {/* Buttons - top right of hero */}
+        <div className="planet-hero-buttons">
+          <button
+            className="viz-info-button"
+            onClick={() => setShowVizInfo(true)}
+            title={t('pages.planet.visualization.title')}
+          >
+            <span className="viz-info-icon">i</span>
+          </button>
+          <button
+            className="planet-scroll-button"
+            onClick={scrollToStats}
+            title={t('pages.planet.viewStats')}
+          >
+            <span className="planet-scroll-icon">↓</span>
+          </button>
+        </div>
 
         {/* Visualization Info Dialog */}
         <VisualizationInfoDialog isOpen={showVizInfo} onClose={() => setShowVizInfo(false)} />
@@ -140,7 +154,7 @@ export default function Planet() {
       </div>
 
       {/* Bottom: Details section */}
-      <div className="planet-details">
+      <div className="planet-details" ref={detailsRef}>
         <PlanetInfo planet={planet} />
       </div>
     </div>

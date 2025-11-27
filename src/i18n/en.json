@@ -71,7 +71,12 @@
         "message": "The star \"{{starId}}\" could not be found.",
         "returnToStarfield": "← Return to starfield"
       },
-      "backToStarfield": "← Back to Starfield"
+      "backToStarfield": "← Back to Starfield",
+      "showInfo": "Show star information",
+      "hideInfo": "Hide star information",
+      "distance": "Distance",
+      "planets": "Planets",
+      "spectralType": "Spectral Type"
     },
     "starSystem": {
       "info": {
@@ -138,6 +143,7 @@
       "back": "← Back",
       "exoplanet": "Exoplanet",
       "viewSystem": "View {{hostname}} System →",
+      "viewStats": "View planet statistics",
       "visualization": {
         "title": "How We Visualize This Planet",
         "intro": "Our planet visualizations are generated procedurally using real scientific data from NASA's Exoplanet Archive. Here's how different properties influence what you see:",

@@ -71,7 +71,12 @@
         "message": "A estrela \"{{starId}}\" não foi encontrada.",
         "returnToStarfield": "← Voltar ao campo estelar"
       },
-      "backToStarfield": "← Voltar ao Campo Estelar"
+      "backToStarfield": "← Voltar ao Campo Estelar",
+      "showInfo": "Mostrar informações da estrela",
+      "hideInfo": "Ocultar informações da estrela",
+      "distance": "Distância",
+      "planets": "Planetas",
+      "spectralType": "Tipo Espectral"
     },
     "starSystem": {
       "info": {
@@ -133,6 +138,7 @@
       "back": "← Voltar",
       "exoplanet": "Exoplaneta",
       "viewSystem": "Ver Sistema {{hostname}} →",
+      "viewStats": "Ver estatísticas do planeta",
       "visualization": {
         "title": "Como Visualizamos Este Planeta",
         "intro": "Nossas visualizações de planetas são geradas proceduralmente usando dados científicos reais do Arquivo de Exoplanetas da NASA. Veja como diferentes propriedades influenciam o que você vê:",

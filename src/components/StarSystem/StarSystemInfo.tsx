@@ -3,6 +3,7 @@
  * Overlay panel showing star and planet information
  */
 
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Star } from '../../types';
@@ -24,6 +25,20 @@ export function StarSystemInfo({
   onBodyHover,
 }: StarSystemInfoProps) {
   const { t } = useTranslation();
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Detect if screen is desktop size (>= 769px)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 769px)');
+    setIsDesktop(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
   const starBodies = bodies.filter((b) => b.type === 'star');
   const primaryStar = starBodies.find(
     (b) => b.isPrimaryStar || !b.isCompanionStar
@@ -34,8 +49,9 @@ export function StarSystemInfo({
 
   return (
     <>
-      {/* Star info panel - top left */}
-      <div className="starsystem-info-panel">
+      {/* Star info panel - top left - desktop only */}
+      {isDesktop && (
+        <div className="starsystem-info-panel">
         <h1 className="starsystem-star-name">
           {star.hostname}
           {isBinarySystem && (
@@ -133,9 +149,10 @@ export function StarSystemInfo({
             </span>
           )}
         </div>
-      </div>
+        </div>
+      )}
 
-      {/* Planets list - bottom left */}
+      {/* Planets list - bottom left - shown on desktop and mobile */}
       <div className="starsystem-planets-panel">
         <h2 className="planets-panel-title">
           {t('pages.starSystem.info.planetaryBodies')}
@@ -208,8 +225,10 @@ export function StarSystemInfo({
         </ul>
       </div>
 
-      {/* Instructions hint */}
-      <div className="starsystem-hint">{t('pages.starSystem.hint')}</div>
+      {/* Instructions hint - desktop only */}
+      {isDesktop && (
+        <div className="starsystem-hint">{t('pages.starSystem.hint')}</div>
+      )}
     </>
   );
 }
