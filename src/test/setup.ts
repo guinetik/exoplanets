@@ -1,5 +1,25 @@
 import '@testing-library/jest-dom';
 
+// Mock shaderService
+jest.mock('../services/shaderService', () => ({
+  shaderService: {
+    loadShaders: jest.fn().mockResolvedValue(undefined),
+    get: jest.fn().mockReturnValue(''),
+    isLoaded: jest.fn().mockReturnValue(true),
+    getAvailableShaders: jest.fn().mockReturnValue([]),
+  },
+}));
+
+// Mock loadBinaryData from solarSystem
+jest.mock('../utils/solarSystem', () => {
+  const actual = jest.requireActual('../utils/solarSystem');
+  return {
+    ...actual,
+    loadBinaryData: jest.fn().mockResolvedValue(new Map()),
+    getBinaryData: jest.fn().mockReturnValue(undefined),
+  };
+});
+
 // Mock i18next
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({

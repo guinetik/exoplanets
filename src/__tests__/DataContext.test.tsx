@@ -35,7 +35,7 @@ describe('DataContext', () => {
     });
 
     test('finishes loading after data fetch', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: true,
         text: () => Promise.resolve(mockCSV),
       });
@@ -52,7 +52,7 @@ describe('DataContext', () => {
 
   describe('Error Handling', () => {
     test('sets error on fetch failure', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         statusText: 'Not Found',
       });
@@ -67,7 +67,7 @@ describe('DataContext', () => {
     });
 
     test('sets error on network error', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       const { result } = renderHook(() => useData(), { wrapper });
 

@@ -78,7 +78,7 @@ describe('App', () => {
 
   describe('Error State', () => {
     it('shows error message on fetch failure', async () => {
-      mockFetch.mockResolvedValueOnce({
+      mockFetch.mockResolvedValue({
         ok: false,
         statusText: 'Not Found',
       });
