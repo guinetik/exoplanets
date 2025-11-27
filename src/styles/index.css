@@ -2824,3 +2824,266 @@
     transform: translateY(-8px);
   }
 }
+
+/* =============================================================================
+   SYSTEM OVERVIEW MODAL - Star System Details
+   ============================================================================= */
+
+/* System Overview Button - in header */
+.system-overview-btn {
+  @apply inline-block mt-4 px-4 py-2 text-sm;
+  @apply rounded-lg border border-white/20;
+  @apply text-white/70 bg-white/5 backdrop-blur-sm;
+  @apply hover:text-white hover:bg-white/10 hover:border-white/30;
+  @apply transition-all duration-200;
+  @apply pointer-events-auto;
+}
+
+/* Bodies Toggle Button - Mobile only */
+.bodies-toggle-btn {
+  @apply absolute bottom-6 right-6 z-40;
+  @apply w-12 h-12 rounded-full;
+  @apply border border-white/20 text-white bg-black/60 backdrop-blur-sm;
+  @apply flex items-center justify-center text-lg;
+  @apply hover:bg-black/80 hover:border-white/40;
+  @apply transition-all duration-200;
+}
+
+/* System Overview Modal Overlay - Full Screen Glassmorphism */
+.system-overview-overlay {
+  @apply fixed inset-0 z-50;
+  background: rgba(5, 5, 10, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  animation: fade-in 0.2s ease-out;
+}
+
+/* System Overview Modal - Full Screen Glassmorphism */
+.system-overview-modal {
+  @apply relative w-full h-full;
+  @apply overflow-hidden;
+  background: rgba(10, 10, 18, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: fade-in 0.3s ease-out;
+}
+
+.system-overview-close {
+  @apply absolute top-6 right-6 z-10;
+  @apply w-12 h-12 rounded-full;
+  @apply flex items-center justify-center text-2xl;
+  @apply text-white/50 hover:text-white hover:bg-white/10;
+  @apply transition-all duration-200;
+  @apply backdrop-blur-sm;
+}
+
+.system-overview-content {
+  @apply h-full overflow-y-auto p-6 md:p-12 lg:p-16;
+  @apply space-y-10 max-w-5xl mx-auto;
+  /* Add subtle inner glow for depth */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    transparent 10%,
+    transparent 90%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+}
+
+/* Modal Header */
+.system-overview-header {
+  @apply text-center pb-8 mb-4;
+  @apply border-b border-white/[0.1];
+  /* Subtle text shadow for readability over blur */
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+}
+
+.system-overview-title {
+  @apply text-4xl md:text-5xl lg:text-6xl font-light text-white mb-4;
+  @apply tracking-wide;
+}
+
+.system-overview-badges {
+  @apply flex flex-wrap justify-center gap-2;
+}
+
+.overview-badge {
+  @apply inline-block px-3 py-1 rounded-full text-xs font-medium;
+  @apply border backdrop-blur-sm;
+}
+
+.overview-badge.spectral {
+  @apply bg-cyan-500/10 border-cyan-400/30 text-cyan-400;
+}
+
+.overview-badge.binary {
+  @apply bg-amber-500/10 border-amber-400/30 text-amber-400;
+}
+
+.overview-badge.circumbinary {
+  @apply bg-purple-500/10 border-purple-400/30 text-purple-400;
+}
+
+/* Section Styles */
+.overview-section {
+  @apply space-y-4;
+}
+
+.overview-section-title {
+  @apply text-xs uppercase tracking-widest text-white/40 font-medium;
+}
+
+/* Stats Grid */
+.overview-stats-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.overview-stat {
+  @apply text-center p-4 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.overview-stat .stat-value {
+  @apply block text-2xl font-light text-white mb-1;
+}
+
+.overview-stat .stat-label {
+  @apply block text-xs text-white/40 uppercase tracking-wide;
+}
+
+/* Star Comparison */
+.star-comparison-container {
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.star-comparison-visual {
+  @apply flex items-center justify-center gap-8 md:gap-16 py-8;
+}
+
+.comparison-body {
+  @apply flex flex-col items-center gap-3;
+}
+
+.comparison-sphere {
+  @apply rounded-full flex-shrink-0;
+  box-shadow:
+    0 0 40px rgba(255, 200, 100, 0.3),
+    inset -10px -10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.comparison-sphere.sun {
+  box-shadow:
+    0 0 60px rgba(255, 244, 232, 0.4),
+    inset -10px -10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.comparison-label {
+  @apply text-sm font-medium text-white/80;
+}
+
+.comparison-stats {
+  @apply text-xs text-white/40 font-mono;
+}
+
+.comparison-vs {
+  @apply text-white/20 text-xl font-light;
+}
+
+.comparison-summary {
+  @apply text-center text-sm text-white/50 mt-4 pt-4;
+  @apply border-t border-white/[0.06];
+}
+
+/* Charts Grid */
+.overview-charts-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.overview-chart-card {
+  @apply p-4 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.overview-chart-card h3 {
+  @apply text-sm font-medium text-white/70 mb-4;
+}
+
+.chart-container {
+  @apply w-full;
+}
+
+.chart-container svg {
+  @apply w-full;
+}
+
+/* Position Grid */
+.overview-position-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+}
+
+.position-item {
+  @apply p-4 rounded-xl text-center;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.position-label {
+  @apply block text-xs text-white/40 uppercase tracking-wide mb-2;
+}
+
+.position-value {
+  @apply block text-sm font-mono text-white;
+}
+
+/* Discovery Grid */
+.overview-discovery-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.discovery-item {
+  @apply p-4 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.discovery-item.full-width {
+  @apply md:col-span-2;
+}
+
+.discovery-label {
+  @apply block text-xs text-white/40 uppercase tracking-wide mb-2;
+}
+
+.discovery-value {
+  @apply block text-lg font-light text-white;
+}
+
+.discovery-methods {
+  @apply flex flex-wrap gap-2;
+}
+
+.method-badge {
+  @apply inline-block px-2 py-1 rounded text-xs;
+  @apply bg-white/5 border border-white/10 text-white/70;
+}
+
+/* Properties Table */
+.overview-properties-table {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2;
+}
+
+.property-row {
+  @apply flex justify-between items-center py-3;
+  @apply border-b border-white/[0.04];
+}
+
+.property-label {
+  @apply text-sm text-white/50;
+}
+
+.property-value {
+  @apply text-sm text-white font-mono;
+}

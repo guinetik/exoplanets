@@ -97,7 +97,37 @@
         "circumbinary": "Circumbinary",
         "unknown": "Unknown"
       },
-      "hint": "Drag to rotate • Scroll to zoom • Hover planets for info"
+      "hint": "Drag to rotate • Scroll to zoom • Hover planets for info",
+      "showBodies": "Show planetary bodies",
+      "hideBodies": "Hide planetary bodies",
+      "systemOverview": {
+        "button": "System Overview",
+        "starComparison": "Star Comparison",
+        "systemStats": "System Statistics",
+        "habitableCandidates": "Habitable Candidates",
+        "lightYears": "Light Years",
+        "planetaryData": "Planetary Data",
+        "planetSizes": "Planet Sizes",
+        "orbitalDistances": "Orbital Distances",
+        "skyPosition": "Sky Position",
+        "rightAscension": "Right Ascension",
+        "declination": "Declination",
+        "galacticLat": "Galactic Latitude",
+        "galacticLon": "Galactic Longitude",
+        "discoveryInfo": "Discovery Information",
+        "firstDiscovery": "First Discovery",
+        "latestDiscovery": "Latest Discovery",
+        "methods": "Detection Methods",
+        "stellarProperties": "Stellar Properties",
+        "luminosity": "Luminosity",
+        "surfaceGravity": "Surface Gravity",
+        "metallicity": "Metallicity",
+        "rotationPeriod": "Rotation Period",
+        "sun": "Sun",
+        "largerThanSun": "{{times}}× larger than the Sun",
+        "smallerThanSun": "{{pct}}% smaller than the Sun",
+        "similarToSun": "Similar size to the Sun"
+      }
     },
     "planets": {
       "title": "Planets",

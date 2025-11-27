@@ -1,14 +1,17 @@
 /**
  * Star Page
- * Full-screen 3D visualization of a star system
+ * Full-screen 3D visualization of a star system with UI overlays
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import { StarSystem } from '../components/StarSystem';
-import type { Exoplanet } from '../types';
+import type { StellarBody } from '../components/StarSystem/StarSystem';
+import { PlanetaryBodiesPanel } from '../components/StarSystem/PlanetaryBodiesPanel';
+import { SystemOverviewModal } from '../components/StarSystem/SystemOverviewModal';
+import { generateSolarSystem } from '../utils/solarSystem';
 import { nameToSlug } from '../utils/urlSlug';
 
 export default function Star() {
@@ -16,18 +19,58 @@ export default function Star() {
   const { starId } = useParams();
   const navigate = useNavigate();
   const { getStarBySlug, getPlanetsByHost, isLoading } = useData();
-  const [showInfo, setShowInfo] = useState(false);
+
+  // UI state
+  const [showSystemOverview, setShowSystemOverview] = useState(false);
+  const [showBodiesPanel, setShowBodiesPanel] = useState(false);
+  const [hoveredBody, setHoveredBody] = useState<StellarBody | null>(null);
+  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   // Get star and its planets by slug
   const star = starId ? getStarBySlug(starId) : undefined;
   const planets = star ? getPlanetsByHost(star.hostname) : [];
 
-  const handlePlanetClick = useCallback(
-    (planet: Exoplanet) => {
-      navigate(`/planets/${nameToSlug(planet.pl_name)}`);
+  // Generate bodies for the panel (same data as StarSystem uses)
+  const bodies = useMemo(() => {
+    if (!star) return [];
+    return generateSolarSystem(star, planets);
+  }, [star, planets]);
+
+  // Detect desktop for bodies panel visibility
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 769px)');
+    setIsDesktop(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Handle body hover from 3D scene
+  const handleBodyHover = useCallback(
+    (body: StellarBody | null, pos?: { x: number; y: number }) => {
+      setHoveredBody(body);
+      setMousePos(pos ?? null);
+    },
+    []
+  );
+
+  // Handle body click - navigate to planet page
+  const handleBodyClick = useCallback(
+    (body: StellarBody) => {
+      if (body.type === 'planet') {
+        navigate(`/planets/${nameToSlug(body.id)}`);
+      }
     },
     [navigate]
   );
+
+  // Check if this is a binary system
+  const isBinarySystem = star ? star.sy_snum > 1 : false;
 
   if (isLoading) {
     return (
@@ -69,6 +112,13 @@ export default function Star() {
             {star.distance_ly && ` • ${star.distance_ly.toFixed(2)} ly`}
             {planets.length > 0 && ` • ${planets.length} ${planets.length === 1 ? t('pages.starSystem.info.planet') : t('pages.starSystem.info.planets')}`}
           </p>
+          {/* System Overview button */}
+          <button
+            className="system-overview-btn"
+            onClick={() => setShowSystemOverview(true)}
+          >
+            {t('pages.starSystem.systemOverview.button')}
+          </button>
         </div>
 
         {/* Back button */}
@@ -76,59 +126,134 @@ export default function Star() {
           {t('pages.star.backToStarfield')}
         </Link>
 
-        {/* Main star system visualization */}
+        {/* Main star system visualization (pure 3D) */}
         <StarSystem
           star={star}
           planets={planets}
-          onPlanetClick={handlePlanetClick}
+          hoveredBody={hoveredBody}
+          onBodyHover={handleBodyHover}
+          onBodyClick={handleBodyClick}
+        />
+
+        {/* Planetary Bodies Panel - always visible on desktop, toggleable on mobile */}
+        {(isDesktop || showBodiesPanel) && (
+          <PlanetaryBodiesPanel
+            bodies={bodies}
+            hoveredBody={hoveredBody}
+            onBodyHover={(body) => handleBodyHover(body)}
+            isBinarySystem={isBinarySystem}
+          />
+        )}
+
+        {/* Mobile toggle for bodies panel */}
+        {!isDesktop && (
+          <button
+            className="bodies-toggle-btn"
+            onClick={() => setShowBodiesPanel(!showBodiesPanel)}
+            title={showBodiesPanel ? t('pages.starSystem.hideBodies') : t('pages.starSystem.showBodies')}
+          >
+            {showBodiesPanel ? '✕' : '☰'}
+          </button>
+        )}
+
+        {/* Cursor tooltip for hovered planet */}
+        {hoveredBody &&
+          hoveredBody.type === 'planet' &&
+          mousePos &&
+          hoveredBody.planetData && (
+            <div
+              className="starsystem-cursor-tooltip"
+              style={{
+                left: mousePos.x + 20,
+                top: mousePos.y - 10,
+              }}
+            >
+              <div className="cursor-tooltip-header">
+                <div className="cursor-tooltip-name">
+                  {hoveredBody.planetData.pl_name}
+                </div>
+                <div className="cursor-tooltip-type">
+                  {hoveredBody.planetData.planet_type}
+                </div>
+              </div>
+
+              <div className="cursor-tooltip-details">
+                {hoveredBody.planetData.pl_rade && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Radius</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.pl_rade.toFixed(2)} R⊕
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.pl_bmasse && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Mass</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.pl_bmasse.toFixed(2)} M⊕
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.pl_orbper && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Orbital Period</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.pl_orbper.toFixed(2)} days
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.pl_orbsmax && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Semi-major Axis</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.pl_orbsmax.toFixed(3)} AU
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.pl_eqt && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Eq. Temperature</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.pl_eqt.toFixed(0)} K
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.disc_year && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Discovered</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.disc_year}
+                    </span>
+                  </div>
+                )}
+
+                {hoveredBody.planetData.discoverymethod && (
+                  <div className="cursor-tooltip-detail">
+                    <span className="cursor-tooltip-label">Method</span>
+                    <span className="cursor-tooltip-value">
+                      {hoveredBody.planetData.discoverymethod}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="cursor-tooltip-hint">Click to view details</div>
+            </div>
+          )}
+
+        {/* System Overview Modal */}
+        <SystemOverviewModal
+          star={star}
+          planets={planets}
+          isOpen={showSystemOverview}
+          onClose={() => setShowSystemOverview(false)}
         />
       </section>
-
-      {/* Info toggle button - mobile only */}
-      <button
-        className="starsystem-info-toggle"
-        onClick={() => setShowInfo(!showInfo)}
-        title={showInfo ? t('pages.star.hideInfo') : t('pages.star.showInfo')}
-      >
-        {showInfo ? '✕' : 'ℹ'}
-      </button>
-
-      {/* Mobile Info Panel - toggle with button */}
-      {showInfo && (
-        <div 
-          className="starsystem-info-panel-mobile" 
-          style={{ display: 'flex' }}
-          onClick={() => setShowInfo(false)}
-        >
-          <div className="starsystem-info-panel-content" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="starsystem-info-close"
-              onClick={() => setShowInfo(false)}
-            >
-              ✕
-            </button>
-            <h2>{star?.hostname}</h2>
-            <div className="starsystem-info-content">
-              <div className="starsystem-info-row">
-                <span className="label">{t('pages.star.distance')}</span>
-                <span className="value">
-                  {star?.distance_ly ? `${star.distance_ly.toFixed(2)} ly` : 'N/A'}
-                </span>
-              </div>
-              <div className="starsystem-info-row">
-                <span className="label">{t('pages.star.planets')}</span>
-                <span className="value">{planets.length}</span>
-              </div>
-              {star?.star_class && (
-                <div className="starsystem-info-row">
-                  <span className="label">{t('pages.star.spectralType')}</span>
-                  <span className="value">{star.star_class}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
