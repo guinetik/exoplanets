@@ -339,7 +339,9 @@
 
   .intro-letter {
     @apply inline-block opacity-0;
-    animation: letter-reveal 0.5s ease-out forwards, intro-glow 3s ease-in-out infinite alternate;
+    animation:
+      letter-reveal 0.5s ease-out forwards,
+      intro-glow 3s ease-in-out infinite alternate;
   }
 
   @keyframes letter-reveal {
@@ -457,7 +459,7 @@
   }
 
   .starsystem-star-name {
-    @apply text-3xl font-light text-white mb-4;
+    @apply text-3xl uppercase font-light text-white mb-4;
     @apply tracking-wide;
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
   }
@@ -519,7 +521,7 @@
   }
 
   .planet-name {
-    @apply text-white text-sm flex-1 truncate;
+    @apply text-white text-sm flex-1 truncate uppercase;
   }
 
   .planet-type {
@@ -547,7 +549,7 @@
   }
 
   .cursor-tooltip-name {
-    @apply text-white font-semibold text-lg leading-tight;
+    @apply text-white font-semibold text-lg leading-tight uppercase;
   }
 
   .cursor-tooltip-type {
@@ -840,7 +842,7 @@
   }
 
   .planet-card-name {
-    @apply text-lg font-medium text-white truncate;
+    @apply text-lg font-medium text-white truncate uppercase;
   }
 
   .planet-card-host {
@@ -885,20 +887,6 @@
      APOD PAGE - Astronomy Picture of the Day (Vercel Dark Style)
      ============================================================================= */
 
-  .apod-page {
-    @apply w-full min-h-[calc(100vh-4rem)] flex flex-col items-center py-12 px-4;
-    background: #000;
-  }
-
-  .apod-container {
-    @apply w-full max-w-2xl;
-  }
-
-  .apod-title {
-    @apply text-lg font-medium text-center mb-8;
-    @apply tracking-tight text-neutral-400;
-  }
-
   /* Loading State */
   .apod-loading {
     @apply flex flex-col items-center justify-center py-24;
@@ -936,7 +924,7 @@
     animation: fade-in 0.4s ease-out;
   }
 
-  /* Media Section */
+  /* Media Section - Fluid container */
   .apod-media-wrapper {
     @apply w-full rounded-lg overflow-hidden;
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -947,8 +935,9 @@
   }
 
   .apod-image {
-    @apply w-full h-auto max-h-[70vh] object-contain;
+    @apply w-full h-auto object-contain;
     @apply cursor-pointer transition-opacity duration-200;
+    max-height: 80vh;
   }
 
   .apod-image:hover {
@@ -964,7 +953,8 @@
   }
 
   .apod-video {
-    @apply w-full h-auto max-h-[70vh];
+    @apply w-full h-auto;
+    max-height: 80vh;
   }
 
   .apod-copyright {
@@ -1029,6 +1019,245 @@
 
   .apod-nav-icon {
     @apply w-4 h-4;
+  }
+
+  /* =============================================================================
+     PLANET DETAIL PAGE - Vertical Stack Layout
+     ============================================================================= */
+
+  .planet-page {
+    @apply relative w-full h-full overflow-y-auto;
+    background: #000;
+  }
+
+  .planet-loading {
+    @apply flex flex-col items-center justify-center h-full gap-4;
+  }
+
+  .planet-not-found {
+    @apply flex flex-col items-center justify-center h-full gap-4 text-center;
+  }
+
+  .planet-not-found h1 {
+    @apply text-2xl text-white;
+  }
+
+  .planet-not-found p {
+    @apply text-white/60;
+  }
+
+  .planet-back-link {
+    @apply text-cyan-400 hover:text-cyan-300 transition-colors;
+  }
+
+  .planet-back-button {
+    @apply absolute top-4 left-4 z-50;
+    @apply px-4 py-2 text-sm text-white/70;
+    @apply bg-black/50 border border-white/20 rounded-lg;
+    @apply hover:bg-black/70 hover:text-white hover:border-white/40;
+    @apply transition-all backdrop-blur-sm;
+  }
+
+  /* Hero section: 3D planet + centered title - big cover style */
+  .planet-hero {
+    @apply relative w-full;
+    height: 85vh;
+    min-height: 600px;
+  }
+
+  .planet-canvas-container {
+    @apply absolute inset-0;
+  }
+
+  /* Hero text overlay - centered at bottom of hero */
+  .planet-hero-text {
+    @apply absolute bottom-8 left-0 right-0;
+    @apply text-center z-10;
+    @apply pointer-events-none;
+  }
+
+  .planet-hero-title {
+    @apply text-5xl md:text-6xl lg:text-7xl font-light text-white mb-2 uppercase;
+    @apply tracking-wide;
+    text-shadow:
+      0 0 40px rgba(255, 255, 255, 0.5),
+      0 0 80px rgba(100, 150, 255, 0.3);
+    animation: fade-in 0.8s ease-out;
+  }
+
+  .planet-hero-subtitle {
+    @apply text-xl md:text-2xl text-cyan-400 mb-4;
+    animation: fade-in 0.8s ease-out 0.2s both;
+  }
+
+  .planet-hero-link {
+    @apply inline-block text-sm text-white/50 hover:text-white;
+    @apply transition-colors pointer-events-auto;
+    animation: fade-in 0.8s ease-out 0.4s both;
+  }
+
+  /* Details section below hero */
+  .planet-details {
+    @apply w-full max-w-4xl mx-auto px-6 py-12;
+  }
+
+  .planet-info-container {
+    @apply space-y-8;
+  }
+
+  /* Section styles */
+  .planet-info-section {
+    @apply p-6 rounded-lg;
+    @apply bg-white/5 border border-white/10;
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .planet-info-section-title {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-4;
+  }
+
+  /* Properties table */
+  .planet-properties-table {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2;
+  }
+
+  .planet-property-row {
+    @apply flex justify-between items-center py-2;
+    @apply border-b border-white/5;
+  }
+
+  .planet-property-label {
+    @apply text-sm text-white/50;
+  }
+
+  .planet-property-value {
+    @apply text-sm text-white font-mono;
+  }
+
+  /* Flags */
+  .planet-flags {
+    @apply flex flex-wrap gap-2 justify-center;
+  }
+
+  .planet-flag {
+    @apply inline-block px-3 py-1 rounded text-xs font-medium;
+    @apply border;
+  }
+
+  .planet-flag.flag-habitable {
+    @apply bg-green-500/20 border-green-400/50 text-green-300;
+  }
+
+  .planet-flag.flag-earth-like {
+    @apply bg-blue-500/20 border-blue-400/50 text-blue-300;
+  }
+
+  /* Reviews placeholder */
+  .planet-reviews-placeholder {
+    @apply p-6 rounded-lg text-center;
+    @apply bg-white/5 border border-white/10;
+  }
+
+  .reviews-placeholder-text {
+    @apply text-white/50 mb-4;
+  }
+
+  .reviews-placeholder-button {
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply bg-white/10 border border-white/20 text-white/50;
+    @apply cursor-not-allowed;
+  }
+
+  /* Earth comparison hint */
+  .earth-comparison-hint {
+    @apply text-xs text-white/40 mb-3;
+  }
+
+  /* Earth indicator emoji in property labels */
+  .earth-indicator {
+    @apply ml-1 cursor-help opacity-60;
+    font-size: 0.75rem;
+  }
+
+  .earth-indicator:hover {
+    @apply opacity-100;
+  }
+
+  /* Visualization Info Button - small, top right of hero */
+  .viz-info-button {
+    @apply absolute top-4 right-4 w-8 h-8 rounded-full z-20;
+    @apply flex items-center justify-center;
+    @apply bg-black/40 border border-white/20 text-white/60;
+    @apply hover:bg-black/60 hover:text-white hover:border-white/40;
+    @apply transition-all duration-200;
+    backdrop-filter: blur(4px);
+  }
+
+  .viz-info-icon {
+    @apply text-sm font-semibold;
+  }
+
+  /* Visualization Info Dialog */
+  .viz-dialog-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background: rgba(10, 10, 15, 0.9);
+    backdrop-filter: blur(8px);
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .viz-dialog {
+    @apply relative max-w-lg w-full p-6 rounded-xl;
+    background: linear-gradient(
+      135deg,
+      rgba(20, 20, 30, 0.98) 0%,
+      rgba(15, 15, 25, 0.98) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+    @apply max-h-[80vh] overflow-y-auto;
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .viz-dialog-close {
+    @apply absolute top-3 right-3 w-7 h-7 rounded-full;
+    @apply flex items-center justify-center text-lg;
+    @apply text-white/40 hover:text-white hover:bg-white/10;
+    @apply transition-colors duration-200;
+  }
+
+  .viz-dialog-title {
+    @apply text-base font-medium text-white/90 mb-4 pr-8;
+    @apply uppercase tracking-wider;
+    font-size: 0.7rem;
+  }
+
+  .viz-dialog-content {
+    @apply space-y-3 text-sm text-white/60;
+  }
+
+  .viz-dialog-content > p {
+    @apply leading-relaxed text-xs;
+  }
+
+  .viz-method-section {
+    @apply p-3 rounded-lg;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .viz-method-section h4 {
+    @apply text-white/80 font-medium mb-1 text-sm;
+  }
+
+  .viz-method-section p {
+    @apply text-white/50 text-xs leading-relaxed;
+  }
+
+  .viz-disclaimer {
+    @apply text-xs text-white/30 italic pt-3 mt-3;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -1110,4 +1339,332 @@
     opacity: 0;
     transform: translate(-50%, -50%) translateY(-8px);
   }
+}
+
+/* =============================================================================
+   HABITABILITY PAGE
+   ============================================================================= */
+
+.habitability-page {
+  @apply w-full min-h-screen;
+  background: #000;
+}
+
+/* Hero Section */
+.habitability-hero-section {
+  @apply relative w-full;
+}
+
+.habitability-hero-header {
+  @apply absolute top-0 left-0 right-0 z-10;
+  @apply text-center py-8 px-4;
+  @apply pointer-events-none;
+}
+
+.habitability-title {
+  @apply text-4xl md:text-5xl font-light text-white mb-2;
+  @apply tracking-wide;
+  text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+}
+
+.habitability-subtitle {
+  @apply text-lg text-white/60;
+}
+
+/* Galaxy View Container */
+.galaxy-view-container {
+  @apply relative w-full;
+  height: 70vh;
+  min-height: 500px;
+}
+
+.galaxy-canvas {
+  @apply absolute inset-0;
+}
+
+/* Galaxy Controls Overlay */
+.galaxy-controls {
+  @apply absolute bottom-4 left-4 z-10;
+}
+
+.filter-buttons {
+  @apply flex flex-wrap gap-2 mb-2;
+}
+
+.filter-btn {
+  @apply px-3 py-1.5 text-sm rounded-lg;
+  @apply bg-black/60 border border-white/20 text-white/70;
+  @apply hover:bg-black/80 hover:border-white/40 hover:text-white;
+  @apply transition-all backdrop-blur-sm;
+}
+
+.filter-btn.active {
+  @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+}
+
+.galaxy-hint {
+  @apply text-xs text-white/40;
+}
+
+/* Galaxy Legend */
+.galaxy-legend {
+  @apply absolute bottom-4 right-4 z-10;
+  @apply bg-black/60 border border-white/20 rounded-lg p-3;
+  @apply backdrop-blur-sm;
+}
+
+.legend-item {
+  @apply flex items-center gap-2 text-xs text-white/70 py-1;
+}
+
+.legend-dot {
+  @apply w-3 h-3 rounded-full;
+}
+
+.legend-dot.top {
+  background: #ffd700;
+}
+
+.legend-dot.habitable-earthlike {
+  background: #00ff88;
+}
+
+.legend-dot.habitable {
+  background: #00ccff;
+}
+
+.legend-dot.other {
+  background: #666666;
+}
+
+/* Galaxy Callouts */
+.galaxy-callouts {
+  @apply absolute top-4 right-4 z-10;
+  @apply flex flex-col gap-2;
+}
+
+.galaxy-callout {
+  @apply bg-black/60 border border-white/20 rounded-lg px-4 py-3;
+  @apply backdrop-blur-sm;
+  @apply transition-all duration-200;
+}
+
+.galaxy-callout.clickable {
+  @apply cursor-pointer;
+}
+
+.galaxy-callout.clickable:hover {
+  @apply bg-black/80 border-cyan-500/50;
+  @apply scale-105;
+}
+
+.callout-label {
+  @apply block text-xs text-white/50 mb-1;
+}
+
+.callout-value {
+  @apply block text-sm text-cyan-400 font-medium;
+}
+
+.galaxy-callout.clickable:hover .callout-value {
+  @apply text-cyan-300;
+}
+
+.callout-distance,
+.callout-score {
+  @apply block text-xs text-white/50 mt-1;
+}
+
+/* Galaxy Tooltip */
+.galaxy-tooltip {
+  @apply fixed z-50 pointer-events-none;
+  @apply bg-black/90 border border-white/30 rounded-lg px-3 py-2;
+  @apply backdrop-blur-sm shadow-lg;
+}
+
+.galaxy-tooltip .tooltip-name {
+  @apply text-white font-medium text-sm;
+}
+
+.galaxy-tooltip .tooltip-score {
+  @apply text-cyan-400 text-xs;
+}
+
+.galaxy-tooltip .tooltip-distance {
+  @apply text-white/50 text-xs;
+}
+
+.galaxy-tooltip .tooltip-badge {
+  @apply inline-block mt-1 mr-1 px-1.5 py-0.5 rounded text-xs;
+}
+
+.galaxy-tooltip .tooltip-badge.habitable {
+  @apply bg-green-500/20 text-green-300;
+}
+
+.galaxy-tooltip .tooltip-badge.earth-like {
+  @apply bg-blue-500/20 text-blue-300;
+}
+
+/* Stats Bar */
+.habitability-stats-bar {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4;
+  @apply max-w-5xl mx-auto px-4 py-8;
+}
+
+.stat-item {
+  @apply text-center p-4 rounded-lg;
+  @apply bg-white/5 border border-white/10;
+}
+
+.stat-item.highlight {
+  @apply border-cyan-400/30 bg-cyan-400/5;
+}
+
+.stat-value {
+  @apply text-3xl font-light text-white mb-1;
+}
+
+.stat-label {
+  @apply text-xs uppercase tracking-wider text-white/50;
+}
+
+.stat-sublabel {
+  @apply text-xs text-cyan-400 mt-1 truncate;
+}
+
+/* Charts Section */
+.habitability-charts-section {
+  @apply max-w-6xl mx-auto px-4 py-8;
+}
+
+.section-title {
+  @apply text-2xl font-light text-white mb-6;
+}
+
+.section-description {
+  @apply text-white/60 mb-6;
+}
+
+.charts-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+}
+
+/* Insight Cards */
+.insight-card {
+  @apply p-5 rounded-lg;
+  @apply bg-white/5 border border-white/10;
+}
+
+.insight-card .card-title {
+  @apply text-base font-medium text-white mb-2;
+}
+
+.insight-card .card-description {
+  @apply text-sm text-white/50 mb-4;
+}
+
+/* D3 Chart Container */
+.d3-chart-container {
+  @apply w-full;
+}
+
+/* Candidates Section */
+.habitability-candidates-section {
+  @apply max-w-6xl mx-auto px-4 py-8;
+}
+
+.candidates-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4;
+}
+
+/* Candidate Card */
+.candidate-card {
+  @apply relative block p-4 rounded-lg;
+  @apply bg-gradient-to-br from-white/5 to-white/5;
+  @apply border border-white/10;
+  @apply hover:border-cyan-400/50 hover:from-white/10 hover:to-white/5;
+  @apply transition-all duration-300;
+  @apply no-underline;
+}
+
+.candidate-rank {
+  @apply absolute top-2 right-2 text-xs font-mono;
+  @apply px-2 py-0.5 rounded bg-white/10 text-white/50;
+}
+
+.candidate-content {
+  @apply space-y-2;
+}
+
+.candidate-name {
+  @apply text-base font-medium text-white truncate pr-10;
+}
+
+.candidate-score {
+  @apply flex items-baseline gap-1;
+}
+
+.candidate-score .score-value {
+  @apply text-2xl font-light text-cyan-400;
+}
+
+.candidate-score .score-label {
+  @apply text-sm text-white/40;
+}
+
+.candidate-details {
+  @apply flex flex-wrap gap-2 text-xs text-white/50;
+}
+
+.candidate-details .detail-item {
+  @apply px-2 py-0.5 bg-white/5 rounded;
+}
+
+.candidate-badges {
+  @apply flex flex-wrap gap-1 pt-2;
+}
+
+.candidate-badges .badge {
+  @apply text-xs px-2 py-0.5 rounded;
+}
+
+.candidate-badges .badge.habitable {
+  @apply bg-green-500/20 text-green-300;
+}
+
+.candidate-badges .badge.earth-like {
+  @apply bg-blue-500/20 text-blue-300;
+}
+
+.candidate-hover {
+  @apply absolute bottom-2 right-2 text-xs text-cyan-400;
+  @apply opacity-0 transition-opacity;
+}
+
+.candidate-card:hover .candidate-hover {
+  @apply opacity-100;
+}
+
+/* Methodology Section */
+.habitability-methodology-section {
+  @apply max-w-4xl mx-auto px-4 py-8 pb-16;
+}
+
+.methodology-card {
+  @apply p-6 rounded-lg;
+  @apply bg-white/5 border border-white/10;
+}
+
+.methodology-intro {
+  @apply text-white/70 mb-4;
+}
+
+.methodology-list {
+  @apply space-y-2;
+}
+
+.methodology-list li {
+  @apply text-sm text-white/50 pl-4;
+  @apply border-l-2 border-white/20;
 }
