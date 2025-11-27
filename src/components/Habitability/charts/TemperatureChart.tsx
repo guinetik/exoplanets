@@ -26,9 +26,7 @@ export default function TemperatureChart({ data }: TemperatureChartProps) {
         {t('pages.habitability.insights.temperature.description')}
       </p>
       <D3Chart aspectRatio={2}>
-        {(dimensions) => (
-          <TempScatter data={data} {...dimensions} />
-        )}
+        {(dimensions) => <TempScatter data={data} {...dimensions} />}
       </D3Chart>
     </div>
   );
@@ -42,6 +40,7 @@ interface TempScatterProps {
 
 function TempScatter({ data, width, height }: TempScatterProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!svgRef.current || width === 0) return;
@@ -58,18 +57,18 @@ function TempScatter({ data, width, height }: TempScatterProps) {
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
     // Sample data for performance (max 2000 points)
-    const sampledData = data.length > 2000
-      ? data.filter((_, i) => i % Math.ceil(data.length / 2000) === 0)
-      : data;
+    const sampledData =
+      data.length > 2000
+        ? data.filter((_, i) => i % Math.ceil(data.length / 2000) === 0)
+        : data;
 
     // Scales
-    const x = d3.scaleLog()
-      .domain([50, d3.max(data, d => d.temp) || 3000])
+    const x = d3
+      .scaleLog()
+      .domain([50, d3.max(data, (d) => d.temp) || 3000])
       .range([0, innerWidth]);
 
-    const y = d3.scaleLinear()
-      .domain([0, 100])
-      .range([innerHeight, 0]);
+    const y = d3.scaleLinear().domain([0, 100]).range([innerHeight, 0]);
 
     // Goldilocks zone (200-320K)
     const goldilocksMin = 200;
@@ -90,13 +89,14 @@ function TempScatter({ data, width, height }: TempScatterProps) {
       .attr('fill', CHART_COLORS.secondary)
       .attr('font-size', '11px')
       .attr('font-weight', 'bold')
-      .text('Goldilocks Zone');
+      .text(t('pages.habitability.charts.goldilocksZone'));
 
     // Grid lines
     g.append('g')
       .attr('class', 'grid')
       .call(
-        d3.axisLeft(y)
+        d3
+          .axisLeft(y)
           .tickSize(-innerWidth)
           .tickFormat(() => '')
       )
@@ -111,30 +111,30 @@ function TempScatter({ data, width, height }: TempScatterProps) {
       .data(sampledData)
       .join('circle')
       .attr('class', 'point')
-      .attr('cx', d => x(d.temp))
-      .attr('cy', d => y(d.score))
-      .attr('r', d => d.isHabitable ? 3 : 1.5)
-      .attr('fill', d => {
+      .attr('cx', (d) => x(d.temp))
+      .attr('cy', (d) => y(d.score))
+      .attr('r', (d) => (d.isHabitable ? 3 : 1.5))
+      .attr('fill', (d) => {
         if (d.isHabitable && d.isEarthLike) return CHART_COLORS.secondary;
         if (d.isHabitable) return CHART_COLORS.primary;
         return CHART_COLORS.muted;
       })
-      .attr('opacity', d => d.isHabitable ? 0.8 : 0.3);
+      .attr('opacity', (d) => (d.isHabitable ? 0.8 : 0.3));
 
     // X Axis (log scale)
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(
-        d3.axisBottom(x)
+        d3
+          .axisBottom(x)
           .tickValues([100, 200, 500, 1000, 2000])
-          .tickFormat(d => `${d}K`)
+          .tickFormat((d) => `${d}K`)
       )
       .selectAll('text')
       .attr('fill', CHART_COLORS.axis)
       .attr('font-size', '11px');
 
-    g.selectAll('.domain, .tick line')
-      .attr('stroke', CHART_COLORS.axis);
+    g.selectAll('.domain, .tick line').attr('stroke', CHART_COLORS.axis);
 
     // Y Axis
     g.append('g')
@@ -150,7 +150,7 @@ function TempScatter({ data, width, height }: TempScatterProps) {
       .attr('text-anchor', 'middle')
       .attr('fill', CHART_COLORS.text)
       .attr('font-size', '12px')
-      .text('Temperature (K)');
+      .text(t('pages.habitability.charts.axes.temperature'));
 
     g.append('text')
       .attr('transform', 'rotate(-90)')
@@ -159,9 +159,8 @@ function TempScatter({ data, width, height }: TempScatterProps) {
       .attr('text-anchor', 'middle')
       .attr('fill', CHART_COLORS.text)
       .attr('font-size', '12px')
-      .text('Habitability Score');
-
-  }, [data, width, height]);
+      .text(t('pages.habitability.charts.axes.habitabilityScore'));
+  }, [data, width, height, t]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }

@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import D3Chart, { CHART_COLORS } from './D3Chart';
 import type { HabitabilityBreakdown as HabitabilityBreakdownData } from '../../../utils/habitabilityAnalytics';
@@ -60,6 +61,7 @@ function HabitabilityBreakdownSVG({
   totalPlanets,
 }: HabitabilityBreakdownSVGProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!svgRef.current || data.length === 0) return;
@@ -103,21 +105,27 @@ function HabitabilityBreakdownSVG({
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
       .on('mouseover', function (event, d) {
-        d3.select(this).transition().duration(200).attr('d', arcHover(d) as string);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('d', arcHover(d) as string);
 
         // Show tooltip
         tooltip
           .style('opacity', 1)
           .html(
             `<strong>${d.data.category}</strong><br/>` +
-              `${d.data.count.toLocaleString()} planets<br/>` +
+              `${d.data.count.toLocaleString()} ${t('pages.habitability.charts.breakdown.planets')}<br/>` +
               `${d.data.pct.toFixed(2)}%`
           )
           .style('left', `${event.offsetX + 10}px`)
           .style('top', `${event.offsetY - 10}px`);
       })
       .on('mouseout', function (_, d) {
-        d3.select(this).transition().duration(200).attr('d', arc(d) as string);
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('d', arc(d) as string);
         tooltip.style('opacity', 0);
       });
 
@@ -128,7 +136,7 @@ function HabitabilityBreakdownSVG({
       .attr('fill', CHART_COLORS.text)
       .attr('font-size', 14)
       .attr('dy', -10)
-      .text('Total');
+      .text(t('pages.habitability.charts.breakdown.total'));
 
     g.append('text')
       .attr('text-anchor', 'middle')
@@ -158,7 +166,7 @@ function HabitabilityBreakdownSVG({
     return () => {
       tooltip.remove();
     };
-  }, [data, width, height, totalPlanets]);
+  }, [data, width, height, totalPlanets, t]);
 
   return <svg ref={svgRef} width={width} height={height} />;
 }

@@ -16,11 +16,7 @@ export default function TopCandidates({ candidates }: TopCandidatesProps) {
   return (
     <div className="candidates-grid">
       {candidates.map((planet, index) => (
-        <CandidateCard
-          key={planet.pl_name}
-          planet={planet}
-          rank={index + 1}
-        />
+        <CandidateCard key={planet.pl_name} planet={planet} rank={index + 1} />
       ))}
     </div>
   );
@@ -47,7 +43,9 @@ function CandidateCard({ planet, rank }: CandidateCardProps) {
         <h4 className="candidate-name">{planet.pl_name}</h4>
 
         <div className="candidate-score">
-          <span className="score-value">{planet.habitability_score.toFixed(1)}</span>
+          <span className="score-value">
+            {planet.habitability_score.toFixed(1)}
+          </span>
           <span className="score-label">/ 100</span>
         </div>
 
@@ -58,7 +56,7 @@ function CandidateCard({ planet, rank }: CandidateCardProps) {
           {planet.distance_ly && (
             <span className="detail-item">
               {t('pages.habitability.candidates.distance', {
-                distance: planet.distance_ly.toFixed(1)
+                distance: planet.distance_ly.toFixed(1),
               })}
             </span>
           )}
@@ -69,10 +67,14 @@ function CandidateCard({ planet, rank }: CandidateCardProps) {
 
         <div className="candidate-badges">
           {planet.is_habitable_zone && (
-            <span className="badge habitable">Habitable Zone</span>
+            <span className="badge habitable">
+              {t('pages.habitability.charts.badges.habitableZone')}
+            </span>
           )}
           {planet.is_earth_like && (
-            <span className="badge earth-like">Earth-like</span>
+            <span className="badge earth-like">
+              {t('pages.habitability.charts.badges.earthLike')}
+            </span>
           )}
         </div>
       </div>

@@ -8,7 +8,11 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import type { SpatialPoint, HabitabilityStats, SpatialFilter } from '../../../utils/habitabilityAnalytics';
+import type {
+  SpatialPoint,
+  HabitabilityStats,
+  SpatialFilter,
+} from '../../../utils/habitabilityAnalytics';
 import { filterSpatialData } from '../../../utils/habitabilityAnalytics';
 import { nameToSlug } from '../../../utils/urlSlug';
 import HabitablePlanetCloud from './HabitablePlanetCloud';
@@ -19,7 +23,10 @@ interface HabitableGalaxyViewProps {
   stats: HabitabilityStats;
 }
 
-export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyViewProps) {
+export default function HabitableGalaxyView({
+  data,
+  stats,
+}: HabitableGalaxyViewProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<SpatialFilter>('all');
@@ -28,16 +35,22 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
 
   const filteredData = filterSpatialData(data, filter);
 
-  const handlePlanetClick = useCallback((planet: SpatialPoint) => {
-    navigate(`/planets/${nameToSlug(planet.name)}`);
-  }, [navigate]);
+  const handlePlanetClick = useCallback(
+    (planet: SpatialPoint) => {
+      navigate(`/planets/${nameToSlug(planet.name)}`);
+    },
+    [navigate]
+  );
 
-  const handlePlanetHover = useCallback((planet: SpatialPoint | null, pos?: { x: number; y: number }) => {
-    setHoveredPlanet(planet);
-    if (pos) {
-      setTooltipPos(pos);
-    }
-  }, []);
+  const handlePlanetHover = useCallback(
+    (planet: SpatialPoint | null, pos?: { x: number; y: number }) => {
+      setHoveredPlanet(planet);
+      if (pos) {
+        setTooltipPos(pos);
+      }
+    },
+    []
+  );
 
   return (
     <div className="galaxy-view-container">
@@ -90,15 +103,17 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
       {/* Filter Controls Overlay */}
       <div className="galaxy-controls">
         <div className="filter-buttons">
-          {(['all', 'habitable', 'earthLike', 'top20'] as SpatialFilter[]).map((f) => (
-            <button
-              key={f}
-              className={`filter-btn ${filter === f ? 'active' : ''}`}
-              onClick={() => setFilter(f)}
-            >
-              {t(`pages.habitability.galaxy.filters.${f}`)}
-            </button>
-          ))}
+          {(['all', 'habitable', 'earthLike', 'top20'] as SpatialFilter[]).map(
+            (f) => (
+              <button
+                key={f}
+                className={`filter-btn ${filter === f ? 'active' : ''}`}
+                onClick={() => setFilter(f)}
+              >
+                {t(`pages.habitability.galaxy.filters.${f}`)}
+              </button>
+            )
+          )}
         </div>
         <p className="galaxy-hint">{t('pages.habitability.galaxy.hint')}</p>
       </div>
@@ -111,7 +126,9 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
         </div>
         <div className="legend-item">
           <span className="legend-dot habitable-earthlike" />
-          <span>{t('pages.habitability.galaxy.legend.habitableEarthLike')}</span>
+          <span>
+            {t('pages.habitability.galaxy.legend.habitableEarthLike')}
+          </span>
         </div>
         <div className="legend-item">
           <span className="legend-dot habitable" />
@@ -129,13 +146,17 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
         {stats.nearestHabitable && (
           <div
             className="galaxy-callout clickable"
-            onClick={() => navigate(`/planets/${nameToSlug(stats.nearestHabitable!.name)}`)}
+            onClick={() =>
+              navigate(`/planets/${nameToSlug(stats.nearestHabitable!.name)}`)
+            }
           >
-            <span className="callout-label">{t('pages.habitability.stats.nearest')}:</span>
+            <span className="callout-label">
+              {t('pages.habitability.stats.nearest')}:
+            </span>
             <span className="callout-value">{stats.nearestHabitable.name}</span>
             <span className="callout-distance">
               {t('pages.habitability.galaxy.distance', {
-                distance: stats.nearestHabitable.distanceLy.toFixed(1)
+                distance: stats.nearestHabitable.distanceLy.toFixed(1),
               })}
             </span>
           </div>
@@ -145,11 +166,19 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
         {stats.topScorerName && (
           <div
             className="galaxy-callout clickable"
-            onClick={() => navigate(`/planets/${nameToSlug(stats.topScorerName)}`)}
+            onClick={() =>
+              navigate(`/planets/${nameToSlug(stats.topScorerName)}`)
+            }
           >
-            <span className="callout-label">{t('pages.habitability.stats.topScore')}:</span>
+            <span className="callout-label">
+              {t('pages.habitability.stats.topScore')}:
+            </span>
             <span className="callout-value">{stats.topScorerName}</span>
-            <span className="callout-score">Score: {stats.topScore.toFixed(1)}</span>
+            <span className="callout-score">
+              {t('pages.habitability.charts.score', {
+                score: stats.topScore.toFixed(1),
+              })}
+            </span>
           </div>
         )}
       </div>
@@ -164,15 +193,24 @@ export default function HabitableGalaxyView({ data, stats }: HabitableGalaxyView
           }}
         >
           <div className="tooltip-name">{hoveredPlanet.name}</div>
-          <div className="tooltip-score">Score: {hoveredPlanet.score.toFixed(1)}</div>
+          <div className="tooltip-score">
+            {t('pages.habitability.charts.score', {
+              score: hoveredPlanet.score.toFixed(1),
+            })}
+          </div>
           <div className="tooltip-distance">
-            {hoveredPlanet.distanceLy.toFixed(1)} light-years
+            {hoveredPlanet.distanceLy.toFixed(1)}{' '}
+            {t('pages.habitability.charts.lightYears')}
           </div>
           {hoveredPlanet.isHabitable && (
-            <div className="tooltip-badge habitable">Habitable Zone</div>
+            <div className="tooltip-badge habitable">
+              {t('pages.habitability.charts.badges.habitableZone')}
+            </div>
           )}
           {hoveredPlanet.isEarthLike && (
-            <div className="tooltip-badge earth-like">Earth-like</div>
+            <div className="tooltip-badge earth-like">
+              {t('pages.habitability.charts.badges.earthLike')}
+            </div>
           )}
         </div>
       )}
