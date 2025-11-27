@@ -1,33 +1,37 @@
 /**
  * PlanetaryBodiesPanel Component
  * Displays a list of celestial bodies (stars and planets) in a star system
- * with hover interactions and click navigation
+ * with hover interactions and click-to-focus behavior
  */
 
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { StellarBody } from '../../utils/solarSystem';
-import { nameToSlug } from '../../utils/urlSlug';
 
 interface PlanetaryBodiesPanelProps {
   /** All celestial bodies in the system */
   bodies: StellarBody[];
   /** Currently hovered body (for highlighting) */
   hoveredBody: StellarBody | null;
+  /** Currently focused body (camera zoomed to it) */
+  focusedBody?: StellarBody | null;
   /** Callback when a body is hovered */
   onBodyHover: (body: StellarBody | null) => void;
+  /** Callback when a body is clicked (triggers zoom, or navigate if already focused) */
+  onBodyClick?: (body: StellarBody) => void;
   /** Whether this is a binary star system */
   isBinarySystem?: boolean;
 }
 
 /**
  * Panel showing all celestial bodies in a star system
- * Supports hover highlighting and click navigation to planet details
+ * Click to zoom camera to body, click again to navigate (planets) or open modal (stars)
  */
 export function PlanetaryBodiesPanel({
   bodies,
   hoveredBody,
+  focusedBody,
   onBodyHover,
+  onBodyClick,
   isBinarySystem = false,
 }: PlanetaryBodiesPanelProps) {
   const { t } = useTranslation();
@@ -40,6 +44,16 @@ export function PlanetaryBodiesPanel({
   const companionStars = starBodies.filter((b) => b.isCompanionStar);
   const planetBodies = bodies.filter((b) => b.type === 'planet');
 
+  /**
+   * Get CSS classes for a body item based on hover/focus state
+   */
+  const getItemClasses = (body: StellarBody) => {
+    const classes = ['planet-item'];
+    if (hoveredBody?.id === body.id) classes.push('hovered');
+    if (focusedBody?.id === body.id) classes.push('focused');
+    return classes.join(' ');
+  };
+
   return (
     <div className="starsystem-planets-panel">
       <h2 className="planets-panel-title">
@@ -50,9 +64,10 @@ export function PlanetaryBodiesPanel({
         {/* Primary star entry */}
         {primaryStar && (
           <li
-            className={`planet-item ${hoveredBody?.id === primaryStar.id ? 'hovered' : ''}`}
+            className={getItemClasses(primaryStar)}
             onMouseEnter={() => onBodyHover(primaryStar)}
             onMouseLeave={() => onBodyHover(null)}
+            onClick={() => onBodyClick?.(primaryStar)}
           >
             <span
               className="planet-color-dot"
@@ -64,6 +79,9 @@ export function PlanetaryBodiesPanel({
                 ? t('pages.starSystem.info.primaryStar')
                 : t('pages.starSystem.info.star')}
             </span>
+            {focusedBody?.id === primaryStar.id && (
+              <span className="focus-indicator">●</span>
+            )}
           </li>
         )}
 
@@ -71,9 +89,10 @@ export function PlanetaryBodiesPanel({
         {companionStars.map((companionStar) => (
           <li
             key={companionStar.id}
-            className={`planet-item ${hoveredBody?.id === companionStar.id ? 'hovered' : ''}`}
+            className={getItemClasses(companionStar)}
             onMouseEnter={() => onBodyHover(companionStar)}
             onMouseLeave={() => onBodyHover(null)}
+            onClick={() => onBodyClick?.(companionStar)}
           >
             <span
               className="planet-color-dot"
@@ -83,31 +102,33 @@ export function PlanetaryBodiesPanel({
             <span className="planet-type">
               {t('pages.starSystem.info.companionStar')}
             </span>
+            {focusedBody?.id === companionStar.id && (
+              <span className="focus-indicator">●</span>
+            )}
           </li>
         ))}
 
-        {/* Planet entries - link to planet page */}
+        {/* Planet entries - click to focus, click again to navigate */}
         {planetBodies.map((body) => (
           <li
             key={body.id}
-            className={`planet-item ${hoveredBody?.id === body.id ? 'hovered' : ''}`}
+            className={getItemClasses(body)}
             onMouseEnter={() => onBodyHover(body)}
             onMouseLeave={() => onBodyHover(null)}
+            onClick={() => onBodyClick?.(body)}
           >
-            <Link
-              to={`/planets/${nameToSlug(body.id)}`}
-              className="planet-item-link"
-            >
-              <span
-                className="planet-color-dot"
-                style={{ backgroundColor: body.color }}
-              />
-              <span className="planet-name">{body.name}</span>
-              <span className="planet-type">
-                {body.planetData?.planet_type ||
-                  t('pages.starSystem.info.planet')}
-              </span>
-            </Link>
+            <span
+              className="planet-color-dot"
+              style={{ backgroundColor: body.color }}
+            />
+            <span className="planet-name">{body.name}</span>
+            <span className="planet-type">
+              {body.planetData?.planet_type ||
+                t('pages.starSystem.info.planet')}
+            </span>
+            {focusedBody?.id === body.id && (
+              <span className="focus-indicator">●</span>
+            )}
           </li>
         ))}
       </ul>

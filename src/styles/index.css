@@ -591,6 +591,15 @@
     @apply bg-white/10;
   }
 
+  .planet-item.focused {
+    @apply bg-cyan-500/20 border-l-2 border-cyan-400;
+  }
+
+  .planet-item .focus-indicator {
+    @apply text-cyan-400 text-xs ml-auto;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
   .planet-item-link {
     @apply flex items-center gap-3 w-full;
     @apply text-inherit no-underline;

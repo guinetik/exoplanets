@@ -26,6 +26,8 @@ interface CelestialBodyProps {
     mousePos?: { x: number; y: number }
   ) => void;
   onClick?: (body: StellarBody) => void;
+  /** Callback to report current position each frame (for camera tracking) */
+  onPositionUpdate?: (id: string, position: THREE.Vector3) => void;
 }
 
 export function CelestialBody({
@@ -33,6 +35,7 @@ export function CelestialBody({
   isHovered,
   onHover,
   onClick,
+  onPositionUpdate,
 }: CelestialBodyProps) {
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -95,14 +98,13 @@ export function CelestialBody({
     [planetShaderType]
   );
 
-  // Animate orbit (pause when hovered)
+  // Animate orbit - always keep moving (no pause on hover/focus)
   useFrame((state, delta) => {
-    // Animate planets
+    // Animate planets - always orbit
     if (
       body.type === 'planet' &&
       groupRef.current &&
-      body.orbitPeriod > 0 &&
-      !isHovered
+      body.orbitPeriod > 0
     ) {
       orbitAngleRef.current +=
         (Math.PI * 2 * delta * ORBIT_SPEED) / (body.orbitPeriod / 60);
@@ -151,8 +153,13 @@ export function CelestialBody({
       groupRef.current.position.z = z;
     }
 
-    // Rotate on own axis (also pause when hovered)
-    if (meshRef.current && !isHovered) {
+    // Report current position for camera tracking
+    if (groupRef.current && onPositionUpdate) {
+      onPositionUpdate(body.id, groupRef.current.position);
+    }
+
+    // Rotate on own axis - always spin
+    if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.2;
     }
 
@@ -259,7 +266,8 @@ export function CelestialBody({
     }
 
     // Single star systems: star is stationary at center
-    return <group>{StarContent}</group>;
+    // Still use groupRef for position tracking (position 0,0,0)
+    return <group ref={groupRef}>{StarContent}</group>;
   }
 
   // Planet

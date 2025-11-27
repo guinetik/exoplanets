@@ -26,6 +26,7 @@ export default function Star() {
   const [hoveredBody, setHoveredBody] = useState<StellarBody | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [focusedBody, setFocusedBody] = useState<StellarBody | null>(null);
 
   // Get star and its planets by slug
   const star = starId ? getStarBySlug(starId) : undefined;
@@ -59,15 +60,36 @@ export default function Star() {
     []
   );
 
-  // Handle body click - navigate to planet page
+  /**
+   * Handle body click - implements zoom-to-body behavior
+   * First click: zoom camera to body
+   * Second click on same body: navigate (planet) or open modal (star)
+   */
   const handleBodyClick = useCallback(
     (body: StellarBody) => {
-      if (body.type === 'planet') {
-        navigate(`/planets/${nameToSlug(body.id)}`);
+      // If clicking the same body that's already focused
+      if (focusedBody?.id === body.id) {
+        if (body.type === 'planet') {
+          // Navigate to planet detail page
+          navigate(`/planets/${nameToSlug(body.id)}`);
+        } else if (body.type === 'star') {
+          // Open system overview modal
+          setShowSystemOverview(true);
+        }
+      } else {
+        // Focus on this body (triggers camera zoom)
+        setFocusedBody(body);
       }
     },
-    [navigate]
+    [focusedBody, navigate]
   );
+
+  /**
+   * Handle background click - zoom back to default view
+   */
+  const handleBackgroundClick = useCallback(() => {
+    setFocusedBody(null);
+  }, []);
 
   // Check if this is a binary system
   const isBinarySystem = star ? star.sy_snum > 1 : false;
@@ -131,8 +153,10 @@ export default function Star() {
           star={star}
           planets={planets}
           hoveredBody={hoveredBody}
+          focusedBody={focusedBody}
           onBodyHover={handleBodyHover}
           onBodyClick={handleBodyClick}
+          onBackgroundClick={handleBackgroundClick}
         />
 
         {/* Planetary Bodies Panel - always visible on desktop, toggleable on mobile */}
@@ -140,7 +164,9 @@ export default function Star() {
           <PlanetaryBodiesPanel
             bodies={bodies}
             hoveredBody={hoveredBody}
+            focusedBody={focusedBody}
             onBodyHover={(body) => handleBodyHover(body)}
+            onBodyClick={handleBodyClick}
             isBinarySystem={isBinarySystem}
           />
         )}

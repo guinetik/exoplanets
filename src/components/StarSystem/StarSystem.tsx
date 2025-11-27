@@ -4,14 +4,23 @@
  * All UI overlays should be handled by the parent page
  */
 
-import { useMemo, useCallback, Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useMemo, useCallback, Suspense, useRef, createContext, useContext } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { Star, Exoplanet } from '../../types';
 import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
+
+/** Context for sharing body positions between components */
+interface BodyPositionsContextType {
+  positions: React.MutableRefObject<Map<string, THREE.Vector3>>;
+  registerPosition: (id: string, position: THREE.Vector3) => void;
+}
+
+const BodyPositionsContext = createContext<BodyPositionsContextType | null>(null);
 
 interface StarSystemProps {
   /** Star data */
@@ -20,10 +29,14 @@ interface StarSystemProps {
   planets: Exoplanet[];
   /** Currently hovered body (controlled by parent) */
   hoveredBody?: StellarBody | null;
+  /** Currently focused body for camera zoom */
+  focusedBody?: StellarBody | null;
   /** Callback when a body is hovered */
   onBodyHover?: (body: StellarBody | null, mousePos?: { x: number; y: number }) => void;
   /** Callback when a body is clicked */
   onBodyClick?: (body: StellarBody) => void;
+  /** Callback when clicking empty space (background) */
+  onBackgroundClick?: () => void;
 }
 
 // Static background stars - no animation, attached to camera
@@ -64,23 +77,89 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
   );
 }
 
-// Camera controls with slow auto-rotation
+/**
+ * Camera controls with auto-rotation and focus-on-body animation
+ */
 function CameraControls({
   shouldAutoRotate,
   maxDistance,
+  focusedBody,
+  defaultPosition,
+  onBackgroundClick,
 }: {
   shouldAutoRotate: boolean;
   maxDistance: number;
+  focusedBody?: StellarBody | null;
+  defaultPosition: THREE.Vector3;
+  onBackgroundClick?: () => void;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
+  const { camera } = useThree();
+  const positionsContext = useContext(BodyPositionsContext);
+  
+  // Store the default target (center of system)
+  const defaultTarget = useRef(new THREE.Vector3(0, 0, 0));
+  
+  // Animation state
+  const isAnimating = useRef(false);
+  const animationProgress = useRef(0);
 
-  // Auto-rotation
   useFrame((_, delta) => {
-    if (controlsRef.current && shouldAutoRotate) {
-      controlsRef.current.setAzimuthalAngle(
-        controlsRef.current.getAzimuthalAngle() + delta * 0.1
-      );
-      controlsRef.current.update();
+    if (!controlsRef.current) return;
+
+    if (focusedBody && positionsContext) {
+      // Get the current position of the focused body
+      const bodyPosition = positionsContext.positions.current.get(focusedBody.id);
+      
+      if (bodyPosition) {
+        isAnimating.current = true;
+        // Ramp up animation progress quickly (controls how tightly we follow)
+        animationProgress.current = Math.min(animationProgress.current + delta * 3, 1);
+        
+        // Calculate camera offset based on body size
+        const offsetDistance = focusedBody.diameter * 4;
+        
+        // Position camera behind and above the body, looking at it
+        // The offset is relative to the body's position, so camera follows
+        const targetCameraPos = new THREE.Vector3(
+          bodyPosition.x,
+          bodyPosition.y + offsetDistance * 0.4,
+          bodyPosition.z + offsetDistance
+        );
+        
+        // Start with faster chase, then tighten follow once arrived
+        // This lets the camera catch up to the moving planet smoothly
+        const baseLerp = 0.06;
+        const followLerp = 0.12;
+        const lerpFactor = baseLerp + animationProgress.current * (followLerp - baseLerp);
+        
+        // Smoothly chase the camera position to follow the body
+        camera.position.lerp(targetCameraPos, lerpFactor);
+        
+        // Keep controls target locked on the body (slightly faster for smooth look-at)
+        controlsRef.current.target.lerp(bodyPosition, lerpFactor * 1.5);
+        controlsRef.current.update();
+      }
+    } else {
+      // Return to default view
+      if (isAnimating.current || animationProgress.current > 0) {
+        animationProgress.current = Math.max(animationProgress.current - delta * 2, 0);
+        
+        // Lerp back to default position
+        camera.position.lerp(defaultPosition, 0.03);
+        controlsRef.current.target.lerp(defaultTarget.current, 0.03);
+        controlsRef.current.update();
+        
+        if (animationProgress.current <= 0) {
+          isAnimating.current = false;
+        }
+      } else if (shouldAutoRotate) {
+        // Normal auto-rotation when not animating
+        controlsRef.current.setAzimuthalAngle(
+          controlsRef.current.getAzimuthalAngle() + delta * 0.1
+        );
+        controlsRef.current.update();
+      }
     }
   });
 
@@ -90,10 +169,32 @@ function CameraControls({
       enablePan={true}
       enableZoom={true}
       enableRotate={true}
-      minDistance={5}
+      minDistance={2}
       maxDistance={maxDistance}
       autoRotate={false}
     />
+  );
+}
+
+/**
+ * Invisible plane to catch background clicks
+ */
+function BackgroundClickPlane({ onClick }: { onClick?: () => void }) {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  return (
+    <mesh
+      ref={meshRef}
+      position={[0, 0, -100]}
+      onClick={(e) => {
+        // Only trigger if clicking the background, not a body
+        e.stopPropagation();
+        onClick?.();
+      }}
+    >
+      <planeGeometry args={[2000, 2000]} />
+      <meshBasicMaterial transparent opacity={0} />
+    </mesh>
   );
 }
 
@@ -108,9 +209,22 @@ export function StarSystem({
   star,
   planets,
   hoveredBody,
+  focusedBody,
   onBodyHover,
   onBodyClick,
+  onBackgroundClick,
 }: StarSystemProps) {
+  // Ref map to track body positions in real-time
+  const bodyPositionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
+  
+  // Context value for sharing positions
+  const positionsContextValue = useMemo(() => ({
+    positions: bodyPositionsRef,
+    registerPosition: (id: string, position: THREE.Vector3) => {
+      bodyPositionsRef.current.set(id, position.clone());
+    },
+  }), []);
+
   // Generate solar system data
   const bodies = useMemo(
     () => generateSolarSystem(star, planets),
@@ -130,6 +244,12 @@ export function StarSystem({
 
     return Math.max(minDistanceForStar, distanceForOrbits);
   }, [bodies]);
+
+  // Default camera position
+  const defaultCameraPosition = useMemo(
+    () => new THREE.Vector3(0, cameraDistance * 0.5, cameraDistance),
+    [cameraDistance]
+  );
 
   const handleBodyHover = useCallback(
     (body: StellarBody | null, pos?: { x: number; y: number }) => {
@@ -153,63 +273,71 @@ export function StarSystem({
           fov: 50,
         }}
         style={{ background: 'black' }}
+        onPointerMissed={() => onBackgroundClick?.()}
       >
-        <Suspense fallback={null}>
-          {/* Ambient light for base visibility */}
-          <ambientLight intensity={0.6} />
+        <BodyPositionsContext.Provider value={positionsContextValue}>
+          <Suspense fallback={null}>
+            {/* Ambient light for base visibility */}
+            <ambientLight intensity={0.6} />
 
-          {/* Hemisphere light for better planet illumination */}
-          <hemisphereLight args={['#ffffff', '#444444', 0.5]} />
+            {/* Hemisphere light for better planet illumination */}
+            <hemisphereLight args={['#ffffff', '#444444', 0.5]} />
 
-          {/* Space background with static stars */}
-          <BackgroundStars count={3000} />
+            {/* Space background with static stars */}
+            <BackgroundStars count={3000} />
 
-          {/* Render all celestial bodies */}
-          {bodies.map((body) => (
-            <CelestialBody
-              key={body.id}
-              body={body}
-              isHovered={hoveredBody?.id === body.id}
-              onHover={handleBodyHover}
-              onClick={handleBodyClick}
+            {/* Render all celestial bodies */}
+            {bodies.map((body) => (
+              <CelestialBody
+                key={body.id}
+                body={body}
+                isHovered={hoveredBody?.id === body.id}
+                onHover={handleBodyHover}
+                onClick={handleBodyClick}
+                onPositionUpdate={positionsContextValue.registerPosition}
+              />
+            ))}
+
+            {/* Render orbit rings for planets */}
+            {bodies
+              .filter((b) => b.type === 'planet')
+              .map((body) => (
+                <OrbitRing
+                  key={`orbit-${body.id}`}
+                  radius={body.orbitRadius}
+                  eccentricity={body.orbitEccentricity}
+                  isHighlighted={hoveredBody?.id === body.id}
+                />
+              ))}
+
+            {/* Render orbit rings for stars in binary systems */}
+            {bodies
+              .filter((b) => b.type === 'star' && b.orbitRadius > 0)
+              .map((body) => (
+                <OrbitRing
+                  key={`orbit-${body.id}`}
+                  radius={body.orbitRadius}
+                  eccentricity={body.orbitEccentricity}
+                  isHighlighted={hoveredBody?.id === body.id}
+                  isBinaryOrbit
+                />
+              ))}
+
+            {/* Camera controls with focus animation */}
+            <CameraControls
+              shouldAutoRotate={!hoveredBody && !focusedBody}
+              maxDistance={cameraDistance * 3}
+              focusedBody={focusedBody}
+              defaultPosition={defaultCameraPosition}
+              onBackgroundClick={onBackgroundClick}
             />
-          ))}
-
-          {/* Render orbit rings for planets */}
-          {bodies
-            .filter((b) => b.type === 'planet')
-            .map((body) => (
-              <OrbitRing
-                key={`orbit-${body.id}`}
-                radius={body.orbitRadius}
-                eccentricity={body.orbitEccentricity}
-                isHighlighted={hoveredBody?.id === body.id}
-              />
-            ))}
-
-          {/* Render orbit rings for stars in binary systems */}
-          {bodies
-            .filter((b) => b.type === 'star' && b.orbitRadius > 0)
-            .map((body) => (
-              <OrbitRing
-                key={`orbit-${body.id}`}
-                radius={body.orbitRadius}
-                eccentricity={body.orbitEccentricity}
-                isHighlighted={hoveredBody?.id === body.id}
-                isBinaryOrbit
-              />
-            ))}
-
-          {/* Camera controls */}
-          <CameraControls
-            shouldAutoRotate={!hoveredBody}
-            maxDistance={cameraDistance * 3}
-          />
-        </Suspense>
+          </Suspense>
+        </BodyPositionsContext.Provider>
       </Canvas>
     </div>
   );
 }
+
 
 // Re-export StellarBody type for parent components
 export type { StellarBody } from '../../utils/solarSystem';
