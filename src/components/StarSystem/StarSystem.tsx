@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { Star, Exoplanet } from '../../types';
 import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
+import { nameToSlug } from '../../utils/urlSlug';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
 import { StarSystemInfo } from './StarSystemInfo';
@@ -114,7 +115,7 @@ export function StarSystem({ star, planets, onPlanetClick: _onPlanetClick }: Sta
 
   const handleBodyClick = useCallback((body: StellarBody) => {
     if (body.type === 'planet') {
-      navigate(`/planets/${encodeURIComponent(body.id)}`);
+      navigate(`/planets/${nameToSlug(body.id)}`);
     }
   }, [navigate]);
 

@@ -233,7 +233,7 @@ export default function Planets() {
           <div className="spinner-orbit">
             <div className="spinner-planet" />
           </div>
-          <div className="spinner-text">Loading planets...</div>
+          <div className="spinner-text">{t('pages.planets.loading')}</div>
         </div>
       </div>
     );
@@ -243,7 +243,7 @@ export default function Planets() {
     return (
       <div className="error-container">
         <div className="error-content">
-          <h1 className="error-title">Error Loading Planets</h1>
+          <h1 className="error-title">{t('pages.planets.errorTitle')}</h1>
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -267,7 +267,7 @@ export default function Planets() {
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Search planets by name or host star..."
+            placeholder={t('pages.planets.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="search-input"
@@ -278,7 +278,7 @@ export default function Planets() {
         <div className="controls-row">
           {/* Planet Type Filter */}
           <div className="filter-group">
-            <label className="filter-label">Planet Type:</label>
+            <label className="filter-label">{t('pages.planets.filters.planetType')}</label>
             <div className="type-buttons">
               {planetTypes.map((type) => (
                 <button
@@ -294,7 +294,7 @@ export default function Planets() {
 
           {/* Star Class Filter */}
           <div className="filter-group">
-            <label className="filter-label">Star Class:</label>
+            <label className="filter-label">{t('pages.planets.filters.starClass')}</label>
             <div className="class-buttons">
               {starClasses.map((starClass) => (
                 <button
@@ -310,18 +310,18 @@ export default function Planets() {
 
           {/* Sort Dropdown */}
           <div className="filter-group">
-            <label className="filter-label">Sort by:</label>
+            <label className="filter-label">{t('pages.planets.filters.sortBy')}</label>
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value as SortOption)}
               className="sort-select"
             >
-              <option value="name">Name</option>
-              <option value="distance">Distance</option>
-              <option value="mass">Mass</option>
-              <option value="radius">Radius</option>
-              <option value="discoveryYear">Discovery Date</option>
-              <option value="habitability">Habitability Score</option>
+              <option value="name">{t('pages.planets.sort.name')}</option>
+              <option value="distance">{t('pages.planets.sort.distance')}</option>
+              <option value="mass">{t('pages.planets.sort.mass')}</option>
+              <option value="radius">{t('pages.planets.sort.radius')}</option>
+              <option value="discoveryYear">{t('pages.planets.sort.discoveryYear')}</option>
+              <option value="habitability">{t('pages.planets.sort.habitability')}</option>
             </select>
           </div>
         </div>
@@ -335,7 +335,7 @@ export default function Planets() {
               onChange={handleHabitableToggle}
               className="toggle-checkbox"
             />
-            <span>Habitable Zone Only</span>
+            <span>{t('pages.planets.filters.habitableOnly')}</span>
           </label>
           <label className="toggle-filter">
             <input
@@ -344,22 +344,25 @@ export default function Planets() {
               onChange={handleEarthLikeToggle}
               className="toggle-checkbox"
             />
-            <span>Earth-like Only</span>
+            <span>{t('pages.planets.filters.earthLikeOnly')}</span>
           </label>
         </div>
 
         {/* Clear Button */}
         {hasFilters && (
           <button onClick={clearFilters} className="clear-button">
-            Clear Filters
+            {t('pages.planets.filters.clearFilters')}
           </button>
         )}
 
         {/* Results Counter */}
         <div className="results-info">
-          Showing {startIndex + 1}–{Math.min(endIndex, filteredPlanets.length)}{' '}
-          of {filteredPlanets.length} planet
-          {filteredPlanets.length !== 1 ? 's' : ''} ({allPlanets.length} total)
+          {t(filteredPlanets.length !== 1 ? 'pages.planets.results.showing_plural' : 'pages.planets.results.showing', {
+            start: startIndex + 1,
+            end: Math.min(endIndex, filteredPlanets.length),
+            filtered: filteredPlanets.length
+          })}{' '}
+          {t('pages.planets.results.total', { total: allPlanets.length })}
         </div>
       </div>
 
@@ -382,11 +385,11 @@ export default function Planets() {
                 disabled={validPage === 1}
                 className="pagination-button"
               >
-                ← Previous
+                {t('pages.planets.pagination.previous')}
               </button>
 
               <div className="pagination-info">
-                Page {validPage} of {totalPages}
+                {t('pages.planets.pagination.pageOf', { current: validPage, total: totalPages })}
               </div>
 
               {/* Page number buttons */}
@@ -423,14 +426,14 @@ export default function Planets() {
                 disabled={validPage === totalPages}
                 className="pagination-button"
               >
-                Next →
+                {t('pages.planets.pagination.next')}
               </button>
             </div>
           )}
         </>
       ) : (
         <div className="placeholder">
-          No planets match your filters. Try adjusting your search.
+          {t('pages.planets.results.noResults')}
         </div>
       )}
     </div>

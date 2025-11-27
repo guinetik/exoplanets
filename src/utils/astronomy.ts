@@ -67,7 +67,7 @@ export const ASTRONOMY_CONSTANTS = {
   // Default values
   DEFAULT_SPHERE_RADIUS: 1,
   DEFAULT_STAR_RADIUS: 100,
-  HORIZON_ALTITUDE_THRESHOLD: 0,
+  HORIZON_ALTITUDE_THRESHOLD: -5,
 
   // Trigonometric bounds for edge cases
   COSINE_MAX: 1,

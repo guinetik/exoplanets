@@ -18,6 +18,7 @@ interface DataContextValue {
   // Planet queries
   getAllPlanets: () => Exoplanet[];
   getPlanetByName: (name: string) => Exoplanet | undefined;
+  getPlanetBySlug: (slug: string) => Exoplanet | undefined;
   getPlanetsByHost: (hostname: string) => Exoplanet[];
   filterPlanets: (options: FilterOptions) => Exoplanet[];
   sortPlanets: (planets: Exoplanet[], options: SortOptions) => Exoplanet[];
@@ -26,6 +27,7 @@ interface DataContextValue {
   // Star queries
   getAllStars: () => Star[];
   getStarByName: (hostname: string) => Star | undefined;
+  getStarBySlug: (slug: string) => Star | undefined;
   searchStars: (query: string) => Star[];
 
   // Special queries
@@ -75,6 +77,7 @@ export function DataProvider({ children }: DataProviderProps) {
     // Planet queries
     getAllPlanets: () => dataService.getAllPlanets(),
     getPlanetByName: (name) => dataService.getPlanetByName(name),
+    getPlanetBySlug: (slug) => dataService.getPlanetBySlug(slug),
     getPlanetsByHost: (hostname) => dataService.getPlanetsByHost(hostname),
     filterPlanets: (options) => dataService.filterPlanets(options),
     sortPlanets: (planets, options) => dataService.sortPlanets(planets, options),
@@ -83,6 +86,7 @@ export function DataProvider({ children }: DataProviderProps) {
     // Star queries
     getAllStars: () => dataService.getAllStars(),
     getStarByName: (hostname) => dataService.getStarByName(hostname),
+    getStarBySlug: (slug) => dataService.getStarBySlug(slug),
     searchStars: (query) => dataService.searchStars(query),
 
     // Special queries

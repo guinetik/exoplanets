@@ -145,9 +145,8 @@ export default function Apod() {
   };
 
   return (
-    <main className="apod-page">
-      <div className="apod-container">
-        <h1 className="apod-title">{t('pages.apod.title')}</h1>
+    <div className="page-container">
+      <h1 className="page-title">{t('pages.apod.title')}</h1>
 
         {/* Loading State */}
         {loading && (
@@ -209,8 +208,7 @@ export default function Apod() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }
 

@@ -9,35 +9,10 @@ import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { StellarBody } from '../../utils/solarSystem';
 import { shaderService } from '../../services/shaderService';
+import { createPlanetUniforms, getPlanetShaderType, getShaderFileName } from '../../utils/planetUniforms';
 
 // Speed multiplier for orbital animation (lower = slower, 1.0 = original speed)
 const ORBIT_SPEED = 0.15;
-
-// Determine which fragment shader to use based on planet type
-function getPlanetShaderType(planetType?: string): 'gasGiant' | 'iceGiant' | 'rocky' {
-  switch (planetType) {
-    case 'Gas Giant':
-      return 'gasGiant';
-    case 'Neptune-like':
-    case 'Sub-Neptune':
-      return 'iceGiant';
-    default:
-      // Earth-sized, Super-Earth, Sub-Earth, Terrestrial
-      return 'rocky';
-  }
-}
-
-// Generate a deterministic seed from planet name (0-1 range)
-function generateSeed(name: string): number {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    const char = name.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  // Normalize to 0-1 range
-  return Math.abs(hash % 1000) / 1000;
-}
 
 interface CelestialBodyProps {
   body: StellarBody;
@@ -65,28 +40,33 @@ export function CelestialBody({
     uTemperature: { value: body.temperature ?? 5778 },
   }), [body.color, body.temperature]);
 
-  // Generate unique seed from planet name
-  const planetSeed = useMemo(() => generateSeed(body.name), [body.name]);
-
-  // Planet shader uniforms
-  const planetUniforms = useMemo(() => ({
-    uBaseColor: { value: new THREE.Color(body.color) },
-    uTime: { value: 0 },
-    uTemperature: { value: body.temperature ?? 300 },
-    uHasAtmosphere: { value: body.hasAtmosphere ?? 0.5 },
-    uSeed: { value: planetSeed },
-  }), [body.color, body.temperature, body.hasAtmosphere, planetSeed]);
+  // Planet shader uniforms using the factory (simple mode for StarSystem view)
+  const planetUniforms = useMemo(() => {
+    if (body.planetData) {
+      // Use real exoplanet data for data-driven visuals
+      return createPlanetUniforms({
+        planet: body.planetData,
+        detailLevel: 'simple', // Color-focused, performant for StarSystem
+        starTemp: body.planetData.st_teff ?? undefined,
+      });
+    }
+    // Fallback for bodies without full exoplanet data
+    return {
+      uBaseColor: { value: new THREE.Color(body.color) },
+      uTime: { value: 0 },
+      uTemperature: { value: body.temperature ?? 300 },
+      uHasAtmosphere: { value: body.hasAtmosphere ?? 0.5 },
+      uSeed: { value: Math.random() },
+      uDensity: { value: 0.5 },
+      uInsolation: { value: 0.5 },
+      uStarTemp: { value: 5778 },
+      uDetailLevel: { value: 0.0 },
+    };
+  }, [body.planetData, body.color, body.temperature, body.hasAtmosphere]);
 
   // Get the appropriate planet shader
   const planetShaderType = useMemo(() => getPlanetShaderType(body.planetType), [body.planetType]);
-  const planetFragShader = useMemo(() => {
-    const shaderMap = {
-      gasGiant: 'gasGiantFrag',
-      iceGiant: 'iceGiantFrag',
-      rocky: 'rockyFrag',
-    };
-    return shaderMap[planetShaderType];
-  }, [planetShaderType]);
+  const planetFragShader = useMemo(() => getShaderFileName(planetShaderType), [planetShaderType]);
 
   // Animate orbit (pause when hovered)
   useFrame((state, delta) => {

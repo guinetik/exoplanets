@@ -140,7 +140,7 @@ export default function Stars() {
           <div className="spinner-orbit">
             <div className="spinner-planet" />
           </div>
-          <div className="spinner-text">Loading stars...</div>
+          <div className="spinner-text">{t('pages.stars.loading')}</div>
         </div>
       </div>
     );
@@ -150,7 +150,7 @@ export default function Stars() {
     return (
       <div className="error-container">
         <div className="error-content">
-          <h1 className="error-title">Error Loading Stars</h1>
+          <h1 className="error-title">{t('pages.stars.errorTitle')}</h1>
           <p className="error-message">{error}</p>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function Stars() {
         <div className="search-bar">
           <input
             type="text"
-            placeholder="Search stars by name..."
+            placeholder={t('pages.stars.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="search-input"
@@ -178,7 +178,7 @@ export default function Stars() {
         <div className="controls-row">
           {/* Star Class Filter */}
           <div className="filter-group">
-            <label className="filter-label">Star Class:</label>
+            <label className="filter-label">{t('pages.stars.filters.starClass')}</label>
             <div className="class-buttons">
               {starClasses.map((starClass) => (
                 <button
@@ -194,32 +194,35 @@ export default function Stars() {
 
           {/* Sort Dropdown */}
           <div className="filter-group">
-            <label className="filter-label">Sort by:</label>
+            <label className="filter-label">{t('pages.stars.filters.sortBy')}</label>
             <select
               value={sortBy}
               onChange={(e) => handleSortChange(e.target.value as SortOption)}
               className="sort-select"
             >
-              <option value="name">Name</option>
-              <option value="distance">Distance</option>
-              <option value="planets">Planet Count</option>
-              <option value="temperature">Temperature</option>
+              <option value="name">{t('pages.stars.sort.name')}</option>
+              <option value="distance">{t('pages.stars.sort.distance')}</option>
+              <option value="planets">{t('pages.stars.sort.planets')}</option>
+              <option value="temperature">{t('pages.stars.sort.temperature')}</option>
             </select>
           </div>
 
           {/* Clear Button */}
           {(selectedClasses.length > 0 || searchQuery) && (
             <button onClick={clearFilters} className="clear-button">
-              Clear Filters
+              {t('pages.stars.filters.clearFilters')}
             </button>
           )}
         </div>
 
         {/* Results Counter */}
         <div className="results-info">
-          Showing {startIndex + 1}–{Math.min(endIndex, filteredStars.length)} of{' '}
-          {filteredStars.length} star{filteredStars.length !== 1 ? 's' : ''} (
-          {allStars.length} total)
+          {t(filteredStars.length !== 1 ? 'pages.stars.results.showing_plural' : 'pages.stars.results.showing', {
+            start: startIndex + 1,
+            end: Math.min(endIndex, filteredStars.length),
+            filtered: filteredStars.length
+          })}{' '}
+          {t('pages.stars.results.total', { total: allStars.length })}
         </div>
       </div>
 
@@ -242,11 +245,11 @@ export default function Stars() {
                 disabled={validPage === 1}
                 className="pagination-button"
               >
-                ← Previous
+                {t('pages.stars.pagination.previous')}
               </button>
 
               <div className="pagination-info">
-                Page {validPage} of {totalPages}
+                {t('pages.stars.pagination.pageOf', { current: validPage, total: totalPages })}
               </div>
 
               {/* Page number buttons */}
@@ -283,14 +286,14 @@ export default function Stars() {
                 disabled={validPage === totalPages}
                 className="pagination-button"
               >
-                Next →
+                {t('pages.stars.pagination.next')}
               </button>
             </div>
           )}
         </>
       ) : (
         <div className="placeholder">
-          No stars match your filters. Try adjusting your search.
+          {t('pages.stars.results.noResults')}
         </div>
       )}
     </div>

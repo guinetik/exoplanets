@@ -154,8 +154,8 @@ export function generateSolarSystem(
     // Scale planet size (with reasonable bounds)
     const diameter = clamp(0.3 + planetRadJ * 0.8, 0.2, 2.5);
 
-    // Determine if planet should have rings (gas giants sometimes)
-    const hasRings = planetType === 'Gas Giant' && index % 3 === 1;
+    // Determine if planet should have rings (gas giants and ice giants)
+    const hasRings = planetType === 'Gas Giant' || planetType === 'Neptune-like';
 
     // Estimate atmosphere based on planet type and size
     // Gas giants and ice giants always have thick atmospheres
