@@ -77,24 +77,37 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
   );
 }
 
+/** Baseline aspect ratio - the "reference" viewport for camera distance calculations */
+const BASELINE_ASPECT = 1.5;
+
 /**
- * Camera controls with auto-rotation and focus-on-body animation
+ * Calculates responsive multiplier based on viewport aspect ratio.
+ * Fully proportional: zooms out on narrow screens, zooms in on wide screens.
+ * @param aspect - Current viewport aspect ratio (width/height)
+ * @returns Multiplier for camera distance (>1 = zoom out, <1 = zoom in)
+ */
+function getResponsiveMultiplier(aspect: number): number {
+  return BASELINE_ASPECT / aspect;
+}
+
+/**
+ * Camera controls with auto-rotation, focus-on-body animation,
+ * and responsive adjustment for different screen aspect ratios
  */
 function CameraControls({
   shouldAutoRotate,
   maxDistance,
   focusedBody,
-  defaultPosition,
-  onBackgroundClick,
+  baseCameraDistance,
 }: {
   shouldAutoRotate: boolean;
   maxDistance: number;
   focusedBody?: StellarBody | null;
-  defaultPosition: THREE.Vector3;
-  onBackgroundClick?: () => void;
+  /** Base camera distance before responsive adjustment */
+  baseCameraDistance: number;
 }) {
   const controlsRef = useRef<OrbitControlsImpl>(null);
-  const { camera } = useThree();
+  const { camera, viewport } = useThree();
   const positionsContext = useContext(BodyPositionsContext);
   
   // Store the default target (center of system)
@@ -103,9 +116,44 @@ function CameraControls({
   // Animation state
   const isAnimating = useRef(false);
   const animationProgress = useRef(0);
+  
+  // Track last responsive multiplier to detect viewport changes
+  const lastMultiplier = useRef(1);
+  // Track if we're currently adjusting for a resize
+  const isResizeAdjusting = useRef(false);
 
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
+    
+    // Calculate responsive multiplier based on current viewport aspect ratio
+    const aspect = viewport.width / viewport.height;
+    const responsiveMultiplier = getResponsiveMultiplier(aspect);
+    
+    // Detect if the viewport aspect ratio changed significantly (resize event)
+    const multiplierDelta = Math.abs(responsiveMultiplier - lastMultiplier.current);
+    if (multiplierDelta > 0.01) {
+      isResizeAdjusting.current = true;
+    }
+    
+    // Calculate the responsive camera distance and default position
+    const responsiveDistance = baseCameraDistance * responsiveMultiplier;
+    const defaultPosition = new THREE.Vector3(
+      0,
+      responsiveDistance * 0.5,
+      responsiveDistance
+    );
+    
+    // Smoothly transition multiplier for fluid resize behavior
+    lastMultiplier.current = THREE.MathUtils.lerp(
+      lastMultiplier.current,
+      responsiveMultiplier,
+      0.1
+    );
+    
+    // Stop resize adjustment once we've caught up
+    if (multiplierDelta < 0.001) {
+      isResizeAdjusting.current = false;
+    }
 
     if (focusedBody && positionsContext) {
       // Get the current position of the focused body
@@ -141,11 +189,11 @@ function CameraControls({
         controlsRef.current.update();
       }
     } else {
-      // Return to default view
+      // Return to default view (or adjust for responsive changes)
       if (isAnimating.current || animationProgress.current > 0) {
         animationProgress.current = Math.max(animationProgress.current - delta * 2, 0);
         
-        // Lerp back to default position
+        // Lerp back to responsive default position
         camera.position.lerp(defaultPosition, 0.03);
         controlsRef.current.target.lerp(defaultTarget.current, 0.03);
         controlsRef.current.update();
@@ -153,8 +201,14 @@ function CameraControls({
         if (animationProgress.current <= 0) {
           isAnimating.current = false;
         }
+      } else if (isResizeAdjusting.current) {
+        // Only adjust camera when viewport aspect ratio is actively changing
+        // This preserves user's manual camera position during normal interaction
+        camera.position.lerp(defaultPosition, 0.02);
+        controlsRef.current.target.lerp(defaultTarget.current, 0.02);
+        controlsRef.current.update();
       } else if (shouldAutoRotate) {
-        // Normal auto-rotation when not animating
+        // Normal auto-rotation when not animating or resizing
         controlsRef.current.setAzimuthalAngle(
           controlsRef.current.getAzimuthalAngle() + delta * 0.1
         );
@@ -231,8 +285,9 @@ export function StarSystem({
     [star, planets]
   );
 
-  // Calculate camera distance based on outermost orbit AND star size
-  const cameraDistance = useMemo(() => {
+  // Calculate base camera distance based on outermost orbit AND star size
+  // This is the desktop baseline - responsive adjustments happen inside CameraControls
+  const baseCameraDistance = useMemo(() => {
     const maxOrbit = Math.max(...bodies.map((b) => b.orbitRadius), 10);
     const starBody = bodies.find((b) => b.type === 'star');
     const starDiameter = starBody?.diameter ?? 3;
@@ -245,11 +300,16 @@ export function StarSystem({
     return Math.max(minDistanceForStar, distanceForOrbits);
   }, [bodies]);
 
-  // Default camera position
-  const defaultCameraPosition = useMemo(
-    () => new THREE.Vector3(0, cameraDistance * 0.5, cameraDistance),
-    [cameraDistance]
-  );
+  // Initial camera position for Canvas (will be adjusted responsively by CameraControls)
+  // Use a conservative multiplier for initial render to avoid flash on mobile
+  const initialCameraDistance = useMemo(() => {
+    // Check if we're on a narrow screen initially
+    const aspect = typeof window !== 'undefined' 
+      ? window.innerWidth / window.innerHeight 
+      : BASELINE_ASPECT;
+    const multiplier = getResponsiveMultiplier(aspect);
+    return baseCameraDistance * multiplier;
+  }, [baseCameraDistance]);
 
   const handleBodyHover = useCallback(
     (body: StellarBody | null, pos?: { x: number; y: number }) => {
@@ -269,7 +329,7 @@ export function StarSystem({
     <div className="starsystem-container">
       <Canvas
         camera={{
-          position: [0, cameraDistance * 0.5, cameraDistance],
+          position: [0, initialCameraDistance * 0.5, initialCameraDistance],
           fov: 50,
         }}
         style={{ background: 'black' }}
@@ -323,13 +383,12 @@ export function StarSystem({
                 />
               ))}
 
-            {/* Camera controls with focus animation */}
+            {/* Camera controls with focus animation and responsive adjustment */}
             <CameraControls
               shouldAutoRotate={!hoveredBody && !focusedBody}
-              maxDistance={cameraDistance * 3}
+              maxDistance={baseCameraDistance * 3}
               focusedBody={focusedBody}
-              defaultPosition={defaultCameraPosition}
-              onBackgroundClick={onBackgroundClick}
+              baseCameraDistance={baseCameraDistance}
             />
           </Suspense>
         </BodyPositionsContext.Provider>
