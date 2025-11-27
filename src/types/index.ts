@@ -324,3 +324,35 @@ export interface ApodErrorResponse {
 }
 
 export type ApodResponse = ApodSuccessResponse | ApodErrorResponse;
+
+// =============================================================================
+// REVIEW TYPES (matches legacy Firebase schema)
+// =============================================================================
+
+/**
+ * User profile for reviews
+ * Matches legacy Firestore 'users' collection
+ */
+export interface ReviewUser {
+  uid: string;           // UUID generated locally
+  authProvider: string;  // "anonymous" for no-login users
+  name: string;          // Display name
+  email: string;         // Empty string for anonymous users
+  avatar: string;        // DiceBear avatar URL
+}
+
+/**
+ * Planet review
+ * Matches legacy Firestore 'reviews' collection
+ */
+export interface PlanetReview {
+  id?: string;           // Firestore doc ID (auto-generated)
+  date: number;          // Timestamp in milliseconds
+  planet: string;        // Planet name as ID
+  rate: number;          // 1-5 star rating
+  title: string;         // Review title
+  text: string;          // Review body
+  userid: string;        // Reference to user's uid
+  // Joined field (populated on fetch, not stored in DB)
+  author?: ReviewUser;
+}
