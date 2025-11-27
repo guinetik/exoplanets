@@ -60,7 +60,8 @@
         "planets": "Planets",
         "vMagnitude": "V Magnitude"
       },
-      "viewSystem": "View system →"
+      "viewSystem": "View system →",
+      "binary": "Binary"
     },
     "star": {
       "title": "Star Details",
@@ -337,7 +338,71 @@
       "viewFullSize": "Click to view full size"
     },
     "about": {
-      "title": "About"
+      "title": "About",
+      "subtitle": "Exploring 6,000+ confirmed worlds beyond our solar system",
+      "exploration": {
+        "title": "The Story of Exoplanet Exploration",
+        "timeline": {
+          "1992": {
+            "title": "First Exoplanets",
+            "desc": "Wolszczan & Frail discover the first confirmed exoplanets orbiting a pulsar, proving planets exist beyond our solar system."
+          },
+          "1995": {
+            "title": "51 Pegasi b",
+            "desc": "Mayor & Queloz detect the first exoplanet around a Sun-like star, earning them the 2019 Nobel Prize in Physics."
+          },
+          "2009": {
+            "title": "Kepler Launches",
+            "desc": "NASA's Kepler space telescope begins its mission, eventually discovering over 2,700 confirmed exoplanets."
+          },
+          "2016": {
+            "title": "Proxima Centauri b",
+            "desc": "Discovery of an Earth-sized planet in the habitable zone of our nearest stellar neighbor, just 4.2 light-years away."
+          },
+          "2018": {
+            "title": "TESS Mission",
+            "desc": "The Transiting Exoplanet Survey Satellite begins an all-sky survey, finding planets around the brightest nearby stars."
+          },
+          "today": {
+            "title": "5,700+ Worlds",
+            "desc": "We've now confirmed thousands of exoplanets, with many more candidates awaiting verification. The search continues."
+          }
+        }
+      },
+      "project": {
+        "title": "Project Evolution",
+        "author_message": "Greetings, Travelers! Guinetik here 👩‍🚀, your guide to the stars and beyond. I'm a software engineer and space enthusiast, and this project is a labor of love. It started as a way to learn Firebase — I thought, why not use NASA's exoplanet dataset to build a TripAdvisor for the stars, where future space travelers could leave reviews about the planets they visit? We began with TESS data and a simple catalog. Then I wanted to learn Three.js, so I gave this old project a complete makeover — adding 3D procedural planets, custom shaders, habitability scoring, and much more. Welcome aboard!",
+        "legacy": {
+          "name": "TESS Explorer (2022)",
+          "features": [
+            "227 confirmed TESS exoplanets",
+            "Basic planetary catalog",
+            "Firebase for reviews",
+            "Simple React + Vite setup"
+          ]
+        },
+        "current": {
+          "name": "NASA Exoplanet Explorer (2025)",
+          "features": [
+            "6,000+ exoplanets from NASA archive",
+            "4,500+ host stars with classifications",
+            "3D WebGL + custom GLSL shaders",
+            "Procedural planet visualization",
+            "Habitability scoring algorithm",
+            "Firebase Auth + Firestore",
+            "Binary star system support",
+            "Bilingual (EN/PT)"
+          ]
+        }
+      },
+      "tech": {
+        "title": "Built With"
+      },
+      "credits": {
+        "builtBy": "Built by",
+        "dataFrom": "Data from",
+        "year": "2024"
+      }
     },
     "habitability": {
       "title": "Habitability Analysis",
