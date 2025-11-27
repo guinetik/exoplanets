@@ -69,7 +69,12 @@ export default function Planet() {
   const planet = planetId ? getPlanetBySlug(planetId) : undefined;
 
   const scrollToStats = () => {
-    detailsRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (detailsRef.current) {
+      const offset = 120; // Keep title visible
+      const elementPosition = detailsRef.current.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
   };
 
   // Loading state
@@ -117,23 +122,14 @@ export default function Planet() {
           <PlanetScene planet={planet} />
         </div>
 
-        {/* Buttons - top right of hero */}
-        <div className="planet-hero-buttons">
-          <button
-            className="viz-info-button"
-            onClick={() => setShowVizInfo(true)}
-            title={t('pages.planet.visualization.title')}
-          >
-            <span className="viz-info-icon">i</span>
-          </button>
-          <button
-            className="planet-scroll-button"
-            onClick={scrollToStats}
-            title={t('pages.planet.viewStats')}
-          >
-            <span className="planet-scroll-icon">↓</span>
-          </button>
-        </div>
+        {/* Visualization info button - top right of hero */}
+        <button
+          className="viz-info-button"
+          onClick={() => setShowVizInfo(true)}
+          title={t('pages.planet.visualization.title')}
+        >
+          <span className="viz-info-icon">i</span>
+        </button>
 
         {/* Visualization Info Dialog */}
         <VisualizationInfoDialog isOpen={showVizInfo} onClose={() => setShowVizInfo(false)} />
@@ -142,14 +138,22 @@ export default function Planet() {
         <div className="planet-hero-text">
           <h1 className="planet-hero-title">{planet.pl_name}</h1>
           <p className="planet-hero-subtitle">{planet.planet_type || t('pages.planet.exoplanet')}</p>
-          {planet.hostname && (
-            <Link
-              to={`/stars/${nameToSlug(planet.hostname)}`}
+          <div className="planet-hero-links">
+            <button
               className="planet-hero-link"
+              onClick={scrollToStats}
             >
-              {t('pages.planet.viewSystem', { hostname: planet.hostname })}
-            </Link>
-          )}
+              {t('pages.planet.viewStats')} ↓
+            </button>
+            {planet.hostname && (
+              <Link
+                to={`/stars/${nameToSlug(planet.hostname)}`}
+                className="planet-hero-link"
+              >
+                {t('pages.planet.viewSystem', { hostname: planet.hostname })}
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

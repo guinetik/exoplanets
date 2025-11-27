@@ -496,6 +496,13 @@
     @apply transition-all backdrop-blur-sm;
   }
 
+  /* Hide back button on mobile to avoid overlapping with title */
+  @media (max-width: 768px) {
+    .starsystem-back-button {
+      display: none;
+    }
+  }
+
   .starsystem-back-link {
     @apply inline-block mt-4 text-cyan-400 hover:text-cyan-300;
   }
@@ -1197,7 +1204,7 @@
      ============================================================================= */
 
   .planet-page {
-    @apply relative w-full h-full overflow-y-auto;
+    @apply relative w-full min-h-full;
     background: #000;
   }
 
@@ -1232,8 +1239,8 @@
   /* Hero section: 3D planet + centered title - big cover style */
   .planet-hero {
     @apply relative w-full;
-    height: 85vh;
-    min-height: 600px;
+    height: 60vh;
+    min-height: 400px;
   }
 
   .planet-canvas-container {
@@ -1242,7 +1249,7 @@
 
   /* Hero text overlay - centered at bottom of hero */
   .planet-hero-text {
-    @apply absolute bottom-8 left-0 right-0;
+    @apply absolute bottom-4 left-0 right-0;
     @apply text-center z-10;
     @apply pointer-events-none;
   }
@@ -1261,15 +1268,21 @@
     animation: fade-in 0.8s ease-out 0.2s both;
   }
 
+  .planet-hero-links {
+    @apply flex flex-col items-center gap-2;
+    @apply pointer-events-auto;
+  }
+
   .planet-hero-link {
     @apply inline-block text-sm text-white/50 hover:text-white;
-    @apply transition-colors pointer-events-auto;
+    @apply transition-colors cursor-pointer;
+    @apply bg-transparent border-none;
     animation: fade-in 0.8s ease-out 0.4s both;
   }
 
   /* Details section below hero */
   .planet-details {
-    @apply w-full max-w-4xl mx-auto px-6 py-12;
+    @apply w-full max-w-4xl mx-auto px-6 py-6;
   }
 
   .planet-info-container {
