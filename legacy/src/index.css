@@ -1,7 +1,0 @@
-@import url(./styles/motion.css);
-@import url(./styles/components.css);
-@import url(./styles/app.css);
-@import url(./styles/bg.css);
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
