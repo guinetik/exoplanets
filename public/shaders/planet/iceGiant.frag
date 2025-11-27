@@ -9,6 +9,12 @@ uniform float uTemperature;
 uniform float uHasAtmosphere; // Unused but passed from component
 uniform float uSeed; // Unique seed per planet for color variation
 
+// New data-driven uniforms
+uniform float uDensity;      // 0-1 normalized (affects band smoothness and storm frequency)
+uniform float uInsolation;   // 0-1 normalized (affects atmospheric activity)
+uniform float uStarTemp;     // Host star temperature in Kelvin (for lighting tint)
+uniform float uDetailLevel;  // 0=simple colors for StarSystem, 1=full detail for Planet page
+
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -125,6 +131,25 @@ const float RGB2HSV_EPSILON = 1.0e-10; // Prevents division by zero
 // --- View Direction for Lighting ---
 const vec3 VIEW_DIRECTION = vec3(0.0, 0.0, 1.0); // Direction toward camera
 
+// --- Density Effects ---
+// Low density = smoother, more diffuse bands (puffy atmosphere)
+// High density = sharper bands, more defined features
+const float DENSITY_BAND_SHARPNESS_MIN = 0.15;  // Very smooth bands for low density
+const float DENSITY_BAND_SHARPNESS_MAX = 0.4;   // Sharper bands for high density
+const float DENSITY_SPOT_SIZE_MULT = 0.5;       // Density affects storm size
+
+// --- Insolation Effects ---
+// Higher insolation = more active atmosphere, brighter clouds
+const float INSOL_ACTIVITY_MULT = 1.5;          // Activity boost from high insolation
+const float INSOL_HAZE_BOOST = 0.2;             // Extra haze opacity from high insolation
+const float INSOL_GLOW_BOOST = 0.15;            // Extra edge glow from high insolation
+
+// --- Star Temperature Effects (Kelvin) ---
+const float STAR_TEMP_RED_DWARF = 3500.0;       // M-type stars
+const float STAR_TEMP_SUN = 5778.0;             // G-type (Sun-like)
+const float STAR_TEMP_HOT = 8000.0;             // A/B-type stars
+const float STAR_TINT_STRENGTH = 0.35;          // How much star color affects surface (increased for visibility)
+
 // =============================================================================
 // Noise Functions
 // =============================================================================
@@ -201,6 +226,27 @@ vec3 rgb2hsv(vec3 rgb) {
 }
 
 // =============================================================================
+// Star Temperature to Color Tint
+// =============================================================================
+
+vec3 getStarTint(float starTemp) {
+    // Red dwarf (M-type): warm orange-red tint
+    vec3 redDwarfTint = vec3(1.0, 0.7, 0.5);
+    // Sun-like (G-type): neutral warm yellow
+    vec3 sunTint = vec3(1.0, 0.98, 0.95);
+    // Hot star (A/B-type): cool blue-white
+    vec3 hotStarTint = vec3(0.85, 0.9, 1.0);
+
+    if (starTemp < STAR_TEMP_SUN) {
+        float t = smoothstep(STAR_TEMP_RED_DWARF, STAR_TEMP_SUN, starTemp);
+        return mix(redDwarfTint, sunTint, t);
+    } else {
+        float t = smoothstep(STAR_TEMP_SUN, STAR_TEMP_HOT, starTemp);
+        return mix(sunTint, hotStarTint, t);
+    }
+}
+
+// =============================================================================
 // Main Fragment Shader
 // =============================================================================
 
@@ -228,23 +274,36 @@ void main() {
 
     // === ATMOSPHERIC BANDS ===
     // LEARNING: Ice giants have gentle, smooth bands - less pronounced than gas giants
-    // We use smoothstep for softer transitions between bands
+    // Density affects band sharpness: low density = smoother, high density = sharper
 
+    float bandSharpness = mix(DENSITY_BAND_SHARPNESS_MIN, DENSITY_BAND_SHARPNESS_MAX, uDensity);
     float bandFrequency = BAND_FREQ_BASE + uSeed * BAND_FREQ_SEED_RANGE;
     float bandPattern = sin(latitude * BAND_PI * bandFrequency + uSeed * BAND_SEED_PHASE)
             * BAND_AMPLITUDE + BAND_OFFSET;
-    float bands = smoothstep(BAND_SMOOTHSTEP_LOW, BAND_SMOOTHSTEP_HIGH, bandPattern);
+    // Adjust smoothstep range based on density (smaller range = sharper bands)
+    float bandLow = 0.5 - bandSharpness;
+    float bandHigh = 0.5 + bandSharpness;
+    float bands = smoothstep(bandLow, bandHigh, bandPattern);
 
-    // === ATMOSPHERIC FLOW / WIND PATTERNS ===
+    // === ATMOSPHERIC FLOW / WIND PATTERNS - detailed mode only ===
     // Add dynamic movement to make the atmosphere feel alive
-    float flowPattern = snoise(vec2(vUv.x * FLOW_NOISE_SCALE_X + uTime * FLOW_TIME_SPEED + uSeed * FLOW_SEED_SCALE,
-                latitude * FLOW_LATITUDE_SCALE)) * FLOW_STRENGTH;
-    bands += flowPattern;
+    if (uDetailLevel > 0.5) {
+        // Insolation affects atmospheric activity
+        float activityMult = 1.0 + (uInsolation - 0.5) * INSOL_ACTIVITY_MULT;
+        float flowPattern = snoise(vec2(vUv.x * FLOW_NOISE_SCALE_X + uTime * FLOW_TIME_SPEED * activityMult + uSeed * FLOW_SEED_SCALE,
+                    latitude * FLOW_LATITUDE_SCALE)) * FLOW_STRENGTH;
+        bands += flowPattern;
+    }
 
     // === HIGH ALTITUDE HAZE / CLOUDS ===
-    float hazePattern = snoise(vec2(vUv.x * HAZE_NOISE_SCALE_X + uTime * HAZE_TIME_SPEED,
-                vUv.y * HAZE_NOISE_SCALE_Y + uSeed * HAZE_SEED_SCALE)) * 0.5 + 0.5;
-    float hazeMask = smoothstep(HAZE_THRESHOLD_LOW, HAZE_THRESHOLD_HIGH, hazePattern) * HAZE_LAYER_OPACITY;
+    // Insolation boosts haze visibility (more energy = more atmospheric activity)
+    float hazeOpacity = HAZE_LAYER_OPACITY + uInsolation * INSOL_HAZE_BOOST;
+    float hazeMask = 0.0;
+    if (uDetailLevel > 0.5) {
+        float hazePattern = snoise(vec2(vUv.x * HAZE_NOISE_SCALE_X + uTime * HAZE_TIME_SPEED,
+                    vUv.y * HAZE_NOISE_SCALE_Y + uSeed * HAZE_SEED_SCALE)) * 0.5 + 0.5;
+        hazeMask = smoothstep(HAZE_THRESHOLD_LOW, HAZE_THRESHOLD_HIGH, hazePattern) * hazeOpacity;
+    }
 
     // === COLOR PALETTE ===
     vec3 deepColor = variedBaseColor * DEEP_COLOR_BRIGHTNESS;
@@ -255,25 +314,31 @@ void main() {
     // Mix based on band pattern
     vec3 atmosphereColor = mix(deepColor, brightColor, bands);
 
-    // === METHANE TINT / ATMOSPHERIC ABSORPTION ===
+    // === METHANE TINT / ATMOSPHERIC ABSORPTION - detailed mode only ===
     // Ice giants have methane in their atmosphere which creates a blue-green tint
-    float methanePattern = snoise(vec2(vUv.x * METHANE_NOISE_SCALE_X + uSeed * METHANE_SEED_SCALE,
-                vUv.y * METHANE_NOISE_SCALE_Y + uTime * METHANE_TIME_SPEED))
-            * 0.5 + 0.5;
-    vec3 methaneTint = vec3(METHANE_RED, METHANE_GREEN, METHANE_BLUE);
-    atmosphereColor *= mix(vec3(1.0), methaneTint, methanePattern * METHANE_BLEND_STRENGTH);
+    if (uDetailLevel > 0.5) {
+        float methanePattern = snoise(vec2(vUv.x * METHANE_NOISE_SCALE_X + uSeed * METHANE_SEED_SCALE,
+                    vUv.y * METHANE_NOISE_SCALE_Y + uTime * METHANE_TIME_SPEED))
+                * 0.5 + 0.5;
+        vec3 methaneTint = vec3(METHANE_RED, METHANE_GREEN, METHANE_BLUE);
+        atmosphereColor *= mix(vec3(1.0), methaneTint, methanePattern * METHANE_BLEND_STRENGTH);
+    }
 
     // === ADD HAZE LAYER ===
     atmosphereColor = mix(atmosphereColor, whiteHazeColor * variedBaseColor, hazeMask);
 
-    // === DARK SPOTS / STORM FEATURES ===
+    // === DARK SPOTS / STORM FEATURES - detailed mode only ===
     // Position dark spots based on seed for uniqueness per planet
-    vec2 spotCenter = vec2(SPOT_CENTER_X_OFFSET + fract(uSeed * SPOT_CENTER_X_SEED) * SPOT_CENTER_X_RANGE,
-            SPOT_CENTER_Y_OFFSET + fract(uSeed * SPOT_CENTER_Y_SEED) * SPOT_CENTER_Y_RANGE);
-    float spotDistance = length(vUv - spotCenter);
-    float spotSize = SPOT_SIZE_BASE + fract(uSeed * SPOT_SIZE_SEED) * SPOT_SIZE_RANGE;
-    float spotMask = smoothstep(spotSize + SPOT_EDGE_SOFTNESS, spotSize, spotDistance);
-    atmosphereColor *= (1.0 - spotMask * SPOT_DARKNESS);
+    // Density affects storm size: higher density = larger, more defined storms
+    if (uDetailLevel > 0.5) {
+        vec2 spotCenter = vec2(SPOT_CENTER_X_OFFSET + fract(uSeed * SPOT_CENTER_X_SEED) * SPOT_CENTER_X_RANGE,
+                SPOT_CENTER_Y_OFFSET + fract(uSeed * SPOT_CENTER_Y_SEED) * SPOT_CENTER_Y_RANGE);
+        float spotDistance = length(vUv - spotCenter);
+        float densitySpotMult = 1.0 + (uDensity - 0.5) * DENSITY_SPOT_SIZE_MULT;
+        float spotSize = (SPOT_SIZE_BASE + fract(uSeed * SPOT_SIZE_SEED) * SPOT_SIZE_RANGE) * densitySpotMult;
+        float spotMask = smoothstep(spotSize + SPOT_EDGE_SOFTNESS, spotSize, spotDistance);
+        atmosphereColor *= (1.0 - spotMask * SPOT_DARKNESS);
+    }
 
     // === LIMB DARKENING ===
     // Ice giants have strong atmospheric scattering, creating pronounced limb darkening
@@ -283,9 +348,16 @@ void main() {
 
     // === ATMOSPHERIC GLOW AT EDGES ===
     // Add subtle glow effect at the planet's limb from atmospheric scattering
+    // Insolation boosts the glow (more energy = brighter atmosphere)
+    float glowStrength = EDGE_GLOW_STRENGTH + uInsolation * INSOL_GLOW_BOOST;
     float edgeGlow = 1.0 - abs(dot(vNormal, VIEW_DIRECTION));
-    edgeGlow = pow(edgeGlow, EDGE_GLOW_POWER) * EDGE_GLOW_STRENGTH;
+    edgeGlow = pow(edgeGlow, EDGE_GLOW_POWER) * glowStrength;
     atmosphereColor += variedBaseColor * edgeGlow;
+
+    // === STAR TEMPERATURE TINTING ===
+    // Apply subtle color tint based on host star type
+    vec3 starTint = getStarTint(uStarTemp);
+    atmosphereColor = mix(atmosphereColor, atmosphereColor * starTint, STAR_TINT_STRENGTH);
 
     gl_FragColor = vec4(atmosphereColor, 1.0);
 }

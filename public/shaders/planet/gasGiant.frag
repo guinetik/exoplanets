@@ -10,9 +10,13 @@
 
 uniform vec3 uBaseColor;
 uniform float uTime;
-uniform float uTemperature; // Planet equilibrium temperature
-uniform float uHasAtmosphere; // Unused but passed from component
-uniform float uSeed; // Unique seed per planet for color variation
+uniform float uTemperature;    // Planet equilibrium temperature
+uniform float uHasAtmosphere;  // Atmosphere thickness (unused for gas giants)
+uniform float uSeed;           // Unique seed per planet for color variation
+uniform float uDensity;        // 0-1: low=puffy diffuse bands, high=sharp defined bands
+uniform float uInsolation;     // 0-1: energy from star, affects glow and activity
+uniform float uStarTemp;       // Host star temperature for lighting tint
+uniform float uDetailLevel;    // 0=simple (StarSystem), 1=detailed (Planet page)
 
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -65,7 +69,7 @@ const float STORM2_STRENGTH = 0.6; // Opacity of second storm
 const float HUE_SHIFT_RANGE = 0.5; // How much seed can shift hue (±0.25 of full hue circle)
 const float SAT_BASE_FACTOR = 0.5; // Base saturation multiplier
 const float SAT_SEED_FACTOR = 0.9; // How much seed affects saturation
-const float SAT_MIN_CLAMP = 0.25; // Minimum saturation (prevent gray)
+const float SAT_MIN_CLAMP = 0.35; // Minimum saturation (prevent gray)
 const float SAT_MAX_CLAMP = 1.0; // Maximum saturation
 const float BRIGHT_BASE_FACTOR = 0.7; // Base brightness multiplier
 const float BRIGHT_SEED_FACTOR = 0.5; // How much seed affects brightness
@@ -181,6 +185,11 @@ vec3 rgb2hsv(vec3 c) {
 // =============================================================================
 
 void main() {
+    // === DENSITY-BASED BAND SHARPNESS ===
+    // Low density = puffy atmosphere with diffuse, blurry bands
+    // High density = more compact atmosphere with sharp, defined bands
+    float bandSharpness = 0.3 + uDensity * 0.7; // 0.3 to 1.0
+
     // === LATITUDE-BASED BANDS ===
     // LEARNING: Gas giants like Jupiter have distinctive latitude bands
     // caused by atmospheric circulation patterns. We use sine waves
@@ -189,10 +198,18 @@ void main() {
     float latitude = vUv.y;
 
     // Calculate number of bands based on seed for variety
-    float bandFreq = BAND_FREQ_BASE + uSeed * BAND_FREQ_SEED_SCALE;
+    // More bands for denser planets (tighter circulation)
+    float bandFreq = BAND_FREQ_BASE + uSeed * BAND_FREQ_SEED_SCALE + uDensity * 4.0;
 
     // Create sine wave that varies from 0 to 1 based on latitude
-    float bands = sin(latitude * BAND_PI * bandFreq) * BAND_AMPLITUDE + BAND_AMPLITUDE;
+    float rawBands = sin(latitude * BAND_PI * bandFreq) * BAND_AMPLITUDE + BAND_AMPLITUDE;
+
+    // Apply sharpness - low density = smoothed bands, high density = sharp
+    float bands = mix(
+        smoothstep(0.3, 0.7, rawBands),  // Soft version
+        rawBands,                         // Sharp version
+        bandSharpness
+    );
 
     // === TURBULENCE / ATMOSPHERIC MOVEMENT ===
     // Add noise to make bands look more realistic and animated
@@ -213,25 +230,30 @@ void main() {
     // === PRIMARY STORM (Great Red Spot) ===
     // LEARNING: Gas giants have long-lived storms. We position them
     // using the seed value so each planet has unique storm locations.
+    // High insolation = more energetic atmosphere = more/larger storms
+
+    // Storm intensity scales with insolation (more energy = more storms)
+    float stormIntensity = 0.5 + uInsolation * 0.5;
 
     vec2 stormCenter = vec2(
             fract(uSeed * STORM_CENTER_X_SEED),
             STORM_CENTER_Y_BASE + fract(uSeed * STORM_CENTER_Y_SEED) * STORM_CENTER_Y_RANGE
         );
     float stormDist = length(vUv - stormCenter);
-    float stormSize = STORM_SIZE_BASE + fract(uSeed * STORM_SIZE_SEED) * STORM_SIZE_RANGE;
+    // Larger storms on high-insolation planets
+    float stormSize = (STORM_SIZE_BASE + fract(uSeed * STORM_SIZE_SEED) * STORM_SIZE_RANGE) * (1.0 + uInsolation * 0.5);
 
     // Create soft-edged storm using smoothstep
-    float storm = smoothstep(stormSize + STORM_SMOOTHSTEP_OUTER, stormSize, stormDist);
+    float storm = smoothstep(stormSize + STORM_SMOOTHSTEP_OUTER, stormSize, stormDist) * stormIntensity;
 
     // === SECONDARY STORM ===
-    // Add a second smaller storm for more interest
+    // Add a second smaller storm for more interest (only in detailed mode)
     vec2 storm2Center = vec2(
             fract(uSeed * STORM2_CENTER_X_SEED + STORM2_CENTER_X_OFFSET),
             STORM2_CENTER_Y_BASE + fract(uSeed * STORM2_CENTER_Y_SEED) * STORM2_CENTER_Y_RANGE
         );
     float storm2Dist = length(vUv - storm2Center);
-    float storm2 = smoothstep(STORM2_SMOOTHSTEP_OUTER, STORM2_SMOOTHSTEP_INNER, storm2Dist) * STORM2_STRENGTH;
+    float storm2 = smoothstep(STORM2_SMOOTHSTEP_OUTER, STORM2_SMOOTHSTEP_INNER, storm2Dist) * STORM2_STRENGTH * uDetailLevel;
 
     // === COLOR PALETTE WITH SEED-BASED VARIATION ===
     // LEARNING: Using HSV color space lets us easily shift hue, saturation,
@@ -283,13 +305,41 @@ void main() {
     // Overlay storms
     surfaceColor = mix(surfaceColor, stormColor, storm + storm2);
 
-    // === SWIRL/DETAIL NOISE ===
+    // === SWIRL/DETAIL NOISE (only in detailed mode) ===
     // Add subtle swirling texture to make it more dynamic
-    float swirl = snoise(vec2(
-                vUv.x * SWIRL_SCALE_X + uTime * SWIRL_SPEED,
-                vUv.y * SWIRL_SCALE_Y + uSeed * SWIRL_SEED_SCALE
-            )) * SWIRL_STRENGTH;
-    surfaceColor += surfaceColor * swirl;
+    if (uDetailLevel > 0.5) {
+        float swirl = snoise(vec2(
+                    vUv.x * SWIRL_SCALE_X + uTime * SWIRL_SPEED,
+                    vUv.y * SWIRL_SCALE_Y + uSeed * SWIRL_SEED_SCALE
+                )) * SWIRL_STRENGTH;
+        surfaceColor += surfaceColor * swirl;
+    }
+
+    // === STAR TEMPERATURE TINTING ===
+    // Red dwarfs cast warm light, hot blue stars cast cool light
+    // This affects how we perceive the planet's color
+    vec3 starTint = vec3(1.0);
+    if (uStarTemp < 4000.0) {
+        // Red/orange dwarf - warm tint
+        float warmth = 1.0 - (uStarTemp - 2500.0) / 1500.0;
+        starTint = mix(vec3(1.0), vec3(1.1, 0.9, 0.8), clamp(warmth, 0.0, 1.0));
+    } else if (uStarTemp > 7500.0) {
+        // Hot blue star - cool tint
+        float coolness = (uStarTemp - 7500.0) / 10000.0;
+        starTint = mix(vec3(1.0), vec3(0.9, 0.95, 1.1), clamp(coolness, 0.0, 1.0));
+    }
+    surfaceColor *= starTint;
+
+    // === ATMOSPHERIC GLOW (high insolation) ===
+    // Hot Jupiters have glowing upper atmospheres from stellar irradiation
+    if (uInsolation > 0.5 && uDetailLevel > 0.5) {
+        float glowStrength = (uInsolation - 0.5) * 2.0; // 0-1 for high insolation
+        float limbGlow = 1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0));
+        limbGlow = pow(limbGlow, 3.0) * glowStrength * 0.3;
+        // Warm glow color based on temperature
+        vec3 glowColor = mix(vec3(1.0, 0.6, 0.3), vec3(1.0, 0.9, 0.7), uTemperature / 2000.0);
+        surfaceColor += glowColor * limbGlow;
+    }
 
     // === LIMB DARKENING ===
     // LEARNING: Gas giants appear darker at the edges due to

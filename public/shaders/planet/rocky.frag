@@ -11,6 +11,12 @@ uniform float uTemperature; // Equilibrium temperature
 uniform float uHasAtmosphere; // 0.0 = no atmosphere, 1.0 = thick atmosphere
 uniform float uSeed; // Unique seed per planet for color variation
 
+// New data-driven uniforms
+uniform float uDensity;      // 0-1 normalized (low=puffy/volatile-rich, high=dense/iron-rich)
+uniform float uInsolation;   // 0-1 normalized (energy from star, affects surface activity)
+uniform float uStarTemp;     // Host star temperature in Kelvin (for lighting tint)
+uniform float uDetailLevel;  // 0=simple colors for StarSystem, 1=full detail for Planet page
+
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -169,15 +175,38 @@ const float HAZE_HOT_BLUE_BASE = 0.3;
 const float HAZE_HOT_BLUE_SEED = 0.2;
 
 // --- Color Variation from Seed ---
-const float HUE_SHIFT_RANGE = 0.25; // Up to 25% hue rotation
-const float SAT_BASE_MULT = 0.7; // Base saturation multiplier
-const float SAT_SEED_MULT = 0.6; // Seed contribution to saturation
-const float SAT_MIN_CLAMP = 0.2; // Minimum saturation
+const float HUE_SHIFT_RANGE = 0.15; // Up to 15% hue rotation (subtle but noticeable)
+const float SAT_BASE_MULT = 0.85; // Base saturation multiplier (increased to preserve color)
+const float SAT_SEED_MULT = 0.3; // Seed contribution to saturation
+const float SAT_MIN_CLAMP = 0.35; // Minimum saturation (prevents grey appearance)
 const float SAT_MAX_CLAMP = 1.0; // Maximum saturation
 
 // --- UV Offset from Seed ---
 const float UV_SEED_OFFSET_X = 10.0; // X-axis offset multiplier
 const float UV_SEED_OFFSET_Y = 7.0; // Y-axis offset multiplier
+
+// --- Density Effects ---
+// High density = iron-rich (redder), more cratered (impacts retained)
+// Low density = volatile-rich (bluer), smoother surface
+const float DENSITY_CRATER_MIN = 0.3;    // Minimum crater visibility at low density
+const float DENSITY_CRATER_MAX = 1.0;    // Maximum crater visibility at high density
+const float DENSITY_ROUGHNESS_MIN = 0.5; // Minimum terrain roughness
+const float DENSITY_ROUGHNESS_MAX = 1.5; // Maximum terrain roughness at high density
+const float DENSITY_HUE_SHIFT = 0.08;    // Hue shift towards red for high density (iron)
+const float DENSITY_SAT_BOOST = 0.2;     // Saturation boost for high density worlds
+
+// --- Insolation Effects ---
+// Modifies volcanic/ice thresholds based on actual stellar energy received
+const float INSOL_VOLCANIC_BOOST = 200.0;  // Temperature boost from high insolation
+const float INSOL_ICE_PENALTY = 100.0;     // Temperature reduction for low insolation
+const float INSOL_GLOW_THRESHOLD = 0.7;    // Above this, surface glows from heat
+const float INSOL_GLOW_INTENSITY = 0.4;    // How bright the glow is
+
+// --- Star Temperature Effects (Kelvin) ---
+const float STAR_TEMP_RED_DWARF = 3500.0;  // M-type stars
+const float STAR_TEMP_SUN = 5778.0;        // G-type (Sun-like)
+const float STAR_TEMP_HOT = 8000.0;        // A/B-type stars
+const float STAR_TINT_STRENGTH = 0.35;     // How much star color affects surface (increased for visibility)
 
 // --- Terrain Smoothstep Thresholds ---
 const float TERRAIN_HIGHLAND_LOW = 0.3;
@@ -289,6 +318,27 @@ vec3 rgb2hsv(vec3 rgb) {
 }
 
 // =============================================================================
+// Star Temperature to Color Tint
+// =============================================================================
+
+vec3 getStarTint(float starTemp) {
+    // Red dwarf (M-type): warm orange-red tint
+    vec3 redDwarfTint = vec3(1.0, 0.7, 0.5);
+    // Sun-like (G-type): neutral warm yellow
+    vec3 sunTint = vec3(1.0, 0.98, 0.95);
+    // Hot star (A/B-type): cool blue-white
+    vec3 hotStarTint = vec3(0.85, 0.9, 1.0);
+
+    if (starTemp < STAR_TEMP_SUN) {
+        float t = smoothstep(STAR_TEMP_RED_DWARF, STAR_TEMP_SUN, starTemp);
+        return mix(redDwarfTint, sunTint, t);
+    } else {
+        float t = smoothstep(STAR_TEMP_SUN, STAR_TEMP_HOT, starTemp);
+        return mix(sunTint, hotStarTint, t);
+    }
+}
+
+// =============================================================================
 // Main Fragment Shader
 // =============================================================================
 
@@ -297,32 +347,51 @@ void main() {
     // Offset UV coordinates by seed to generate unique terrain per planet
     vec2 terrainUv = vUv + vec2(uSeed * UV_SEED_OFFSET_X, uSeed * UV_SEED_OFFSET_Y);
 
-    // === COLOR VARIATION FROM SEED ===
+    // === COLOR VARIATION FROM SEED AND DENSITY ===
     vec3 colorInHsv = rgb2hsv(uBaseColor);
 
     // Rotate hue based on seed for variety
     float seedHueShift = uSeed * HUE_SHIFT_RANGE;
     colorInHsv.x = fract(colorInHsv.x + seedHueShift);
 
-    // Vary saturation based on seed
-    colorInHsv.y = clamp(colorInHsv.y * (SAT_BASE_MULT + uSeed * SAT_SEED_MULT),
+    // Density affects color: high density = iron-rich (shift toward red/orange)
+    // Low density = volatile-rich (shift toward blue/gray)
+    float densityHueShift = (uDensity - 0.5) * DENSITY_HUE_SHIFT;
+    colorInHsv.x = fract(colorInHsv.x - densityHueShift); // Negative to shift toward red
+
+    // Vary saturation based on seed and density
+    float densitySatBoost = uDensity * DENSITY_SAT_BOOST;
+    colorInHsv.y = clamp(colorInHsv.y * (SAT_BASE_MULT + uSeed * SAT_SEED_MULT) + densitySatBoost,
             SAT_MIN_CLAMP, SAT_MAX_CLAMP);
 
     vec3 seedVariedBaseColor = hsv2rgb(colorInHsv);
 
     // === TERRAIN HEIGHT GENERATION ===
     // Generate multi-octave terrain using FBM (Fractional Brownian Motion)
-    float terrainScale = TERRAIN_SCALE_BASE + uSeed * TERRAIN_SCALE_SEED_RANGE;
+    // Density affects terrain roughness: high density = more rugged terrain
+    float densityRoughness = mix(DENSITY_ROUGHNESS_MIN, DENSITY_ROUGHNESS_MAX, uDensity);
+    float terrainScale = (TERRAIN_SCALE_BASE + uSeed * TERRAIN_SCALE_SEED_RANGE) * densityRoughness;
 
     float terrainHeight = fbm(terrainUv * terrainScale) * TERRAIN_OCTAVE_1_AMP;
-    terrainHeight += fbm(terrainUv * terrainScale * TERRAIN_OCTAVE_2_MULT) * TERRAIN_OCTAVE_2_AMP;
-    terrainHeight += fbm(terrainUv * terrainScale * TERRAIN_OCTAVE_3_MULT) * TERRAIN_OCTAVE_3_AMP;
-    terrainHeight = terrainHeight / TERRAIN_OCTAVE_TOTAL;
+    // Only add extra octaves in detailed mode (expensive)
+    if (uDetailLevel > 0.5) {
+        terrainHeight += fbm(terrainUv * terrainScale * TERRAIN_OCTAVE_2_MULT) * TERRAIN_OCTAVE_2_AMP;
+        terrainHeight += fbm(terrainUv * terrainScale * TERRAIN_OCTAVE_3_MULT) * TERRAIN_OCTAVE_3_AMP;
+        terrainHeight = terrainHeight / TERRAIN_OCTAVE_TOTAL;
+    } else {
+        terrainHeight = terrainHeight / TERRAIN_OCTAVE_1_AMP; // Normalize single octave
+    }
 
     // === TEMPERATURE ANALYSIS ===
-    // Determine if planet is icy, temperate, or volcanic
-    float iceFactor = smoothstep(TEMP_ICE_HIGH, TEMP_ICE_LOW, uTemperature);
-    float volcanicFactor = smoothstep(TEMP_VOLCANIC_LOW, TEMP_VOLCANIC_HIGH, uTemperature);
+    // Combine equilibrium temperature with insolation for effective surface temp
+    // High insolation boosts volcanic activity, low insolation promotes ice
+    float effectiveTemp = uTemperature;
+    effectiveTemp += (uInsolation - 0.5) * INSOL_VOLCANIC_BOOST; // High insol = hotter
+    effectiveTemp -= (0.5 - uInsolation) * INSOL_ICE_PENALTY * step(uInsolation, 0.5); // Low insol = colder
+
+    // Determine if planet is icy, temperate, or volcanic using effective temp
+    float iceFactor = smoothstep(TEMP_ICE_HIGH, TEMP_ICE_LOW, effectiveTemp);
+    float volcanicFactor = smoothstep(TEMP_VOLCANIC_LOW, TEMP_VOLCANIC_HIGH, effectiveTemp);
     float temperateFactor = 1.0 - iceFactor - volcanicFactor;
 
     // === BASE TERRAIN COLORS ===
@@ -357,28 +426,42 @@ void main() {
             smoothstep(TERRAIN_PEAK_LOW, TERRAIN_PEAK_HIGH, terrainHeight));
 
     // === CRATERS (on airless worlds) ===
+    // High density worlds retain more craters (stronger gravity, harder surface)
+    // Low density worlds have fewer visible craters (resurfacing, weathering)
+    float densityCraterFactor = mix(DENSITY_CRATER_MIN, DENSITY_CRATER_MAX, uDensity);
     float craterPattern = snoise(terrainUv * (CRATER_NOISE_SCALE_BASE + uSeed * CRATER_NOISE_SEED_SCALE));
-    float craterMask = smoothstep(CRATER_THRESHOLD_HIGH, CRATER_THRESHOLD_LOW, craterPattern) * (1.0 - uHasAtmosphere);
+    float craterMask = smoothstep(CRATER_THRESHOLD_HIGH, CRATER_THRESHOLD_LOW, craterPattern);
+    craterMask *= (1.0 - uHasAtmosphere) * densityCraterFactor;
     surfaceColor *= (1.0 - craterMask * CRATER_DARKNESS);
 
-    // === LAVA CRACKS (on hot worlds) ===
-    if (volcanicFactor > 0.0) {
+    // === LAVA CRACKS (on hot worlds) - detailed mode only ===
+    if (volcanicFactor > 0.0 && uDetailLevel > 0.5) {
         float crackPattern = snoise(terrainUv * (LAVA_CRACK_SCALE_BASE + uSeed * LAVA_CRACK_SEED_SCALE));
         float crackMask = smoothstep(LAVA_CRACK_THRESHOLD_HIGH, LAVA_CRACK_THRESHOLD_LOW, abs(crackPattern));
         vec3 crackGlowColor = lavaColor * LAVA_CRACK_GLOW;
         surfaceColor = mix(surfaceColor, crackGlowColor, crackMask * volcanicFactor * LAVA_CRACK_VISIBILITY);
     }
 
-    // === POLAR ICE CAPS (temperate worlds with atmosphere) ===
-    if (temperateFactor > POLAR_CAP_MIN_TEMPERATURE && uHasAtmosphere > POLAR_CAP_MIN_ATMOSPHERE) {
+    // === INSOLATION GLOW (extremely irradiated worlds) ===
+    // Very high insolation causes the surface to glow from thermal radiation
+    if (uInsolation > INSOL_GLOW_THRESHOLD) {
+        float glowFactor = smoothstep(INSOL_GLOW_THRESHOLD, 1.0, uInsolation);
+        vec3 glowColor = vec3(1.0, 0.6, 0.3); // Hot orange glow
+        surfaceColor = mix(surfaceColor, surfaceColor + glowColor * INSOL_GLOW_INTENSITY, glowFactor);
+    }
+
+    // === POLAR ICE CAPS (temperate worlds with atmosphere) - detailed mode only ===
+    if (temperateFactor > POLAR_CAP_MIN_TEMPERATURE && uHasAtmosphere > POLAR_CAP_MIN_ATMOSPHERE && uDetailLevel > 0.5) {
         float distanceFromEquator = abs(vUv.y - 0.5) * 2.0;
-        float capThreshold = POLAR_CAP_BASE_SIZE + uSeed * POLAR_CAP_SEED_SIZE_RANGE;
+        // Low insolation = larger ice caps
+        float insolIceBoost = (1.0 - uInsolation) * 0.1;
+        float capThreshold = POLAR_CAP_BASE_SIZE + uSeed * POLAR_CAP_SEED_SIZE_RANGE - insolIceBoost;
         float capMask = smoothstep(capThreshold, capThreshold + POLAR_CAP_SOFTNESS, distanceFromEquator);
         surfaceColor = mix(surfaceColor, iceColor, capMask * POLAR_CAP_VISIBILITY);
     }
 
-    // === CLOUDS (for worlds with atmosphere) ===
-    if (uHasAtmosphere > 0.3) {
+    // === CLOUDS (for worlds with atmosphere) - detailed mode only ===
+    if (uHasAtmosphere > 0.3 && uDetailLevel > 0.5) {
         float cloudScale = CLOUD_SCALE_BASE + uSeed * CLOUD_SCALE_SEED_RANGE;
         float cloudPattern1 = snoise(terrainUv * cloudScale + vec2(uTime * CLOUD_TIME_SPEED_1, 0.0)) * CLOUD_OCTAVE_1_STRENGTH + 0.5;
         float cloudPattern2 = snoise(terrainUv * cloudScale * FBM_FREQUENCY_MULT + vec2(uTime * CLOUD_TIME_SPEED_2, 0.0)) * CLOUD_OCTAVE_2_STRENGTH;
@@ -388,17 +471,19 @@ void main() {
         surfaceColor = mix(surfaceColor, vec3(1.0), cloudMask);
     }
 
-    // === SURFACE DETAIL NOISE ===
-    float detailNoise = snoise(terrainUv * DETAIL_SCALE) * DETAIL_STRENGTH;
-    surfaceColor += surfaceColor * detailNoise;
+    // === SURFACE DETAIL NOISE - detailed mode only ===
+    if (uDetailLevel > 0.5) {
+        float detailNoise = snoise(terrainUv * DETAIL_SCALE) * DETAIL_STRENGTH;
+        surfaceColor += surfaceColor * detailNoise;
+    }
 
     // === LIMB DARKENING ===
     float limbEffect = dot(vNormal, LIMB_VIEW_DIRECTION);
     limbEffect = smoothstep(LIMB_SMOOTHSTEP_LOW, LIMB_SMOOTHSTEP_HIGH, limbEffect);
     surfaceColor *= LIMB_BASE_DARKNESS + limbEffect * LIMB_BRIGHTNESS_RANGE;
 
-    // === ATMOSPHERIC HAZE (for worlds with atmosphere) ===
-    if (uHasAtmosphere > 0.0) {
+    // === ATMOSPHERIC HAZE (for worlds with atmosphere) - detailed mode only ===
+    if (uHasAtmosphere > 0.0 && uDetailLevel > 0.5) {
         float edgeIntensity = 1.0 - abs(dot(vNormal, LIMB_VIEW_DIRECTION));
         float hazeMask = pow(edgeIntensity, HAZE_POWER) * uHasAtmosphere * HAZE_MAX_OPACITY;
 
@@ -413,6 +498,11 @@ void main() {
         vec3 hazeColor = mix(coolHazeColor, hotHazeColor, volcanicFactor);
         surfaceColor += hazeColor * hazeMask;
     }
+
+    // === STAR TEMPERATURE TINTING ===
+    // Apply subtle color tint based on host star type
+    vec3 starTint = getStarTint(uStarTemp);
+    surfaceColor = mix(surfaceColor, surfaceColor * starTint, STAR_TINT_STRENGTH);
 
     gl_FragColor = vec4(surfaceColor, 1.0);
 }
