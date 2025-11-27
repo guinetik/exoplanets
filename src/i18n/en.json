@@ -3,6 +3,7 @@
     "home": "Home",
     "stars": "Stars",
     "planets": "Planets",
+    "habitability": "Habitability",
     "apod": "Pic of the Day",
     "about": "About"
   },
@@ -10,7 +11,7 @@
     "home": {
       "title": "Home",
       "infoCard": {
-        "title": "Welcome to the Cosmos",
+        "title": "Welcome to the Exoplanets",
         "description": "You're viewing the night sky from Earth — but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
         "stats": "Over {{starCount}} stellar systems harboring {{planetCount}}+ confirmed worlds",
         "hint": "Click any star to explore its planetary system",
@@ -18,16 +19,203 @@
       }
     },
     "stars": {
-      "title": "Stars"
+      "title": "Stars",
+      "loading": "Loading stars...",
+      "errorTitle": "Error Loading Stars",
+      "searchPlaceholder": "Search stars by name...",
+      "filters": {
+        "starClass": "Star Class:",
+        "sortBy": "Sort by:",
+        "clearFilters": "Clear Filters"
+      },
+      "sort": {
+        "name": "Name",
+        "distance": "Distance",
+        "planets": "Planet Count",
+        "temperature": "Temperature"
+      },
+      "results": {
+        "showing": "Showing {{start}}–{{end}} of {{filtered}} star",
+        "showing_plural": "Showing {{start}}–{{end}} of {{filtered}} stars",
+        "total": "({{total}} total)",
+        "noResults": "No stars match your filters. Try adjusting your search."
+      },
+      "pagination": {
+        "previous": "← Previous",
+        "next": "Next →",
+        "pageOf": "Page {{current}} of {{total}}"
+      }
+    },
+    "starCard": {
+      "properties": {
+        "temperature": "Temperature",
+        "radius": "Radius",
+        "mass": "Mass",
+        "distance": "Distance",
+        "planets": "Planets",
+        "vMagnitude": "V Magnitude"
+      },
+      "viewSystem": "View system →"
+    },
+    "star": {
+      "title": "Star Details",
+      "loading": "Loading...",
+      "notFound": {
+        "title": "Star Not Found",
+        "message": "The star \"{{starId}}\" could not be found.",
+        "returnToStarfield": "← Return to starfield"
+      },
+      "backToStarfield": "← Back to Starfield"
+    },
+    "starSystem": {
+      "info": {
+        "type": "Type",
+        "temperature": "Temperature",
+        "radius": "Radius",
+        "mass": "Mass",
+        "distance": "Distance",
+        "age": "Age",
+        "planet": "Planet",
+        "planets": "Planets",
+        "planetaryBodies": "Planetary Bodies",
+        "star": "Star",
+        "unknown": "Unknown"
+      },
+      "hint": "Drag to rotate • Scroll to zoom • Hover planets for info"
     },
     "star": {
       "title": "Star Details"
     },
     "planets": {
-      "title": "Planets"
+      "title": "Planets",
+      "loading": "Loading planets...",
+      "errorTitle": "Error Loading Planets",
+      "searchPlaceholder": "Search planets by name or host star...",
+      "filters": {
+        "planetType": "Planet Type:",
+        "starClass": "Star Class:",
+        "sortBy": "Sort by:",
+        "habitableOnly": "Habitable Zone Only",
+        "earthLikeOnly": "Earth-like Only",
+        "clearFilters": "Clear Filters"
+      },
+      "sort": {
+        "name": "Name",
+        "distance": "Distance",
+        "mass": "Mass",
+        "radius": "Radius",
+        "discoveryYear": "Discovery Date",
+        "habitability": "Habitability Score"
+      },
+      "results": {
+        "showing": "Showing {{start}}–{{end}} of {{filtered}} planet",
+        "showing_plural": "Showing {{start}}–{{end}} of {{filtered}} planets",
+        "total": "({{total}} total)",
+        "noResults": "No planets match your filters. Try adjusting your search."
+      },
+      "pagination": {
+        "previous": "← Previous",
+        "next": "Next →",
+        "pageOf": "Page {{current}} of {{total}}"
+      }
     },
     "planet": {
-      "title": "Planet Details"
+      "title": "Planet Details",
+      "loading": "Loading planet data...",
+      "notFound": {
+        "title": "Planet Not Found",
+        "message": "Could not find planet: {{planetId}}",
+        "browseAll": "← Browse all planets"
+      },
+      "back": "← Back",
+      "exoplanet": "Exoplanet",
+      "viewSystem": "View {{hostname}} System →",
+      "visualization": {
+        "title": "How We Visualize This Planet",
+        "intro": "Our planet visualizations are generated procedurally using real scientific data from NASA's Exoplanet Archive. Here's how different properties influence what you see:",
+        "density": {
+          "title": "Density",
+          "description": "Determines surface texture and composition. High-density worlds appear more rugged with retained impact craters (strong gravity holds surface features). Low-density \"puffy\" planets have smoother, more volatile-rich appearances."
+        },
+        "insolation": {
+          "title": "Insolation Flux",
+          "description": "The energy received from the host star. High insolation creates volcanic surfaces, lava glow, and active atmospheres. Low insolation produces ice coverage and frozen landscapes."
+        },
+        "starTemp": {
+          "title": "Star Temperature",
+          "description": "Affects the lighting color. Planets around red dwarf stars have a warm orange tint, while those orbiting hot blue stars appear cooler and bluer."
+        },
+        "planetType": {
+          "title": "Planet Type",
+          "description": "Determines the base shader: Gas Giants show banded atmospheres with storms, Ice Giants have smooth blue-green methane atmospheres, and Rocky planets display terrain, craters, and possible atmospheres."
+        },
+        "disclaimer": "Note: These visualizations are artistic interpretations based on scientific data, not actual photographs. Each planet's unique seed ensures consistent appearance across sessions."
+      },
+      "info": {
+        "sections": {
+          "properties": "Planet Properties",
+          "hostStar": "Host Star",
+          "discovery": "Discovery",
+          "reviews": "Reviews"
+        },
+        "earthComparison": "🌍 = hover for Earth comparison",
+        "flags": {
+          "habitableZone": "In Habitable Zone",
+          "earthLike": "Earth-like"
+        },
+        "reviews": {
+          "placeholder": "Reviews coming soon! Share your thoughts about this distant world.",
+          "writeReview": "Write a Review"
+        },
+        "unknown": "Unknown",
+        "fields": {
+          "hostStar": "Host Star",
+          "planetType": "Planet Type",
+          "radius": "Radius",
+          "mass": "Mass",
+          "density": "Density",
+          "insolationFlux": "Insolation Flux",
+          "eqTemperature": "Eq. Temperature",
+          "orbitalPeriod": "Orbital Period",
+          "semiMajorAxis": "Semi-major Axis",
+          "orbitalEccentricity": "Orbital Eccentricity",
+          "starTemperature": "Star Temperature",
+          "starMetallicity": "Star Metallicity",
+          "starAge": "Star Age",
+          "discoveryYear": "Discovery Year",
+          "discoveryMethod": "Discovery Method",
+          "facility": "Facility"
+        },
+        "earthRef": {
+          "earthRadius": "Earth radius",
+          "earthMass": "Earth mass",
+          "earthDensity": "Earth density",
+          "earthEqTemp": "Earth equilibrium temp",
+          "earthInsolation": "Earth insolation",
+          "earthOrbitalPeriod": "Earth orbital period",
+          "earthSemiMajorAxis": "Earth semi-major axis",
+          "earthOrbitalEccentricity": "Earth orbital eccentricity",
+          "sunTemperature": "Sun temperature",
+          "sunMetallicity": "Sun metallicity",
+          "sunAge": "Sun age"
+        }
+      }
+    },
+    "planetCard": {
+      "properties": {
+        "radius": "Radius",
+        "mass": "Mass",
+        "period": "Period",
+        "temp": "Temp",
+        "distance": "Distance",
+        "discovered": "Discovered"
+      },
+      "flags": {
+        "habitableZone": "Habitable Zone",
+        "earthLike": "Earth-like",
+        "circumbinary": "Circumbinary"
+      },
+      "viewDetails": "View details →"
     },
     "apod": {
       "title": "Astronomy Picture of the Day",
@@ -40,6 +228,83 @@
     },
     "about": {
       "title": "About"
+    },
+    "habitability": {
+      "title": "Habitability Analysis",
+      "subtitle": "Where are the potentially habitable worlds?",
+      "loading": "Analyzing habitability data...",
+      "stats": {
+        "total": "Planets Analyzed",
+        "habitableZone": "In Habitable Zone",
+        "earthLike": "Earth-like Candidates",
+        "topScore": "Highest Score",
+        "avgScore": "Average Score",
+        "nearest": "Nearest Habitable"
+      },
+      "galaxy": {
+        "title": "Habitable Worlds Galaxy Map",
+        "hint": "Drag to rotate • Scroll to zoom • Click planets for details",
+        "filters": {
+          "all": "All Planets",
+          "habitable": "Habitable Zone",
+          "earthLike": "Earth-like",
+          "top20": "Top 20"
+        },
+        "legend": {
+          "top": "Top Candidates",
+          "habitableEarthLike": "Habitable + Earth-like",
+          "habitable": "Habitable Zone",
+          "other": "Other Planets"
+        },
+        "distance": "{{distance}} light-years"
+      },
+      "insights": {
+        "title": "Data Insights",
+        "scoreDistribution": {
+          "title": "Habitability Score Distribution",
+          "description": "Most planets score below 40, with only {{pct}}% scoring above 60"
+        },
+        "temperature": {
+          "title": "Temperature Sweet Spot",
+          "description": "Planets in the 200-320K range have the highest habitability scores",
+          "zone": "Goldilocks Zone"
+        },
+        "starType": {
+          "title": "Best Star Types",
+          "description": "G and K-type stars host the most promising habitable candidates"
+        },
+        "discovery": {
+          "title": "Discovery Timeline",
+          "description": "Habitable zone discoveries accelerated after the Kepler mission",
+          "kepler": "Kepler Launch",
+          "tess": "TESS Launch"
+        }
+      },
+      "deepDive": {
+        "title": "Deep Dive Analysis",
+        "planetStarHeatmap": "Planet Types by Star Class",
+        "starClass": "Star Class",
+        "planetType": "Planet Type",
+        "featureCooccurrence": "Feature Co-occurrence (%)",
+        "featurePrevalence": "Feature Prevalence",
+        "habitabilityBreakdown": "Habitability Classification"
+      },
+      "candidates": {
+        "title": "Top Habitability Candidates",
+        "description": "The most promising worlds for potential habitability",
+        "rank": "#{{rank}}",
+        "score": "Score: {{score}}",
+        "distance": "{{distance}} ly",
+        "viewDetails": "View Details"
+      },
+      "methodology": {
+        "title": "Scoring Methodology",
+        "description": "Our habitability score (0-100) is calculated from four key factors:",
+        "temperature": "Temperature (40 pts): Ideal range 200-320K for liquid water",
+        "size": "Size (30 pts): Earth-like radius 0.8-1.5 R⊕ for rocky surface",
+        "starType": "Star Type (20 pts): G-type stars score highest (stable, long-lived)",
+        "insolation": "Insolation (10 pts): Energy flux 0.5-2.0 Earth's for moderate climate"
+      }
     }
   },
   "common": {

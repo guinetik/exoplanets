@@ -3,6 +3,7 @@
     "home": "Início",
     "stars": "Estrelas",
     "planets": "Planetas",
+    "habitability": "Habitabilidade",
     "apod": "Foto do Dia",
     "about": "Sobre"
   },
@@ -18,16 +19,203 @@
       }
     },
     "stars": {
-      "title": "Estrelas"
+      "title": "Estrelas",
+      "loading": "Carregando estrelas...",
+      "errorTitle": "Erro ao Carregar Estrelas",
+      "searchPlaceholder": "Buscar estrelas por nome...",
+      "filters": {
+        "starClass": "Classe Estelar:",
+        "sortBy": "Ordenar por:",
+        "clearFilters": "Limpar Filtros"
+      },
+      "sort": {
+        "name": "Nome",
+        "distance": "Distância",
+        "planets": "Número de Planetas",
+        "temperature": "Temperatura"
+      },
+      "results": {
+        "showing": "Mostrando {{start}}–{{end}} de {{filtered}} estrela",
+        "showing_plural": "Mostrando {{start}}–{{end}} de {{filtered}} estrelas",
+        "total": "({{total}} no total)",
+        "noResults": "Nenhuma estrela corresponde aos seus filtros. Tente ajustar sua busca."
+      },
+      "pagination": {
+        "previous": "← Anterior",
+        "next": "Próximo →",
+        "pageOf": "Página {{current}} de {{total}}"
+      }
+    },
+    "starCard": {
+      "properties": {
+        "temperature": "Temperatura",
+        "radius": "Raio",
+        "mass": "Massa",
+        "distance": "Distância",
+        "planets": "Planetas",
+        "vMagnitude": "Magnitude V"
+      },
+      "viewSystem": "Ver sistema →"
+    },
+    "star": {
+      "title": "Detalhes da Estrela",
+      "loading": "Carregando...",
+      "notFound": {
+        "title": "Estrela Não Encontrada",
+        "message": "A estrela \"{{starId}}\" não foi encontrada.",
+        "returnToStarfield": "← Voltar ao campo estelar"
+      },
+      "backToStarfield": "← Voltar ao Campo Estelar"
+    },
+    "starSystem": {
+      "info": {
+        "type": "Tipo",
+        "temperature": "Temperatura",
+        "radius": "Raio",
+        "mass": "Massa",
+        "distance": "Distância",
+        "age": "Idade",
+        "planet": "Planeta",
+        "planets": "Planetas",
+        "planetaryBodies": "Corpos Planetários",
+        "star": "Estrela",
+        "unknown": "Desconhecido"
+      },
+      "hint": "Arraste para girar • Role para zoom • Passe o mouse nos planetas para informações"
     },
     "star": {
       "title": "Detalhes da Estrela"
     },
     "planets": {
-      "title": "Planetas"
+      "title": "Planetas",
+      "loading": "Carregando planetas...",
+      "errorTitle": "Erro ao Carregar Planetas",
+      "searchPlaceholder": "Buscar planetas por nome ou estrela hospedeira...",
+      "filters": {
+        "planetType": "Tipo de Planeta:",
+        "starClass": "Classe Estelar:",
+        "sortBy": "Ordenar por:",
+        "habitableOnly": "Apenas Zona Habitável",
+        "earthLikeOnly": "Apenas Semelhantes à Terra",
+        "clearFilters": "Limpar Filtros"
+      },
+      "sort": {
+        "name": "Nome",
+        "distance": "Distância",
+        "mass": "Massa",
+        "radius": "Raio",
+        "discoveryYear": "Data de Descoberta",
+        "habitability": "Pontuação de Habitabilidade"
+      },
+      "results": {
+        "showing": "Mostrando {{start}}–{{end}} de {{filtered}} planeta",
+        "showing_plural": "Mostrando {{start}}–{{end}} de {{filtered}} planetas",
+        "total": "({{total}} no total)",
+        "noResults": "Nenhum planeta corresponde aos seus filtros. Tente ajustar sua busca."
+      },
+      "pagination": {
+        "previous": "← Anterior",
+        "next": "Próximo →",
+        "pageOf": "Página {{current}} de {{total}}"
+      }
     },
     "planet": {
-      "title": "Detalhes do Planeta"
+      "title": "Detalhes do Planeta",
+      "loading": "Carregando dados do planeta...",
+      "notFound": {
+        "title": "Planeta Não Encontrado",
+        "message": "Não foi possível encontrar o planeta: {{planetId}}",
+        "browseAll": "← Ver todos os planetas"
+      },
+      "back": "← Voltar",
+      "exoplanet": "Exoplaneta",
+      "viewSystem": "Ver Sistema {{hostname}} →",
+      "visualization": {
+        "title": "Como Visualizamos Este Planeta",
+        "intro": "Nossas visualizações de planetas são geradas proceduralmente usando dados científicos reais do Arquivo de Exoplanetas da NASA. Veja como diferentes propriedades influenciam o que você vê:",
+        "density": {
+          "title": "Densidade",
+          "description": "Determina a textura e composição da superfície. Mundos de alta densidade parecem mais acidentados com crateras de impacto retidas (gravidade forte mantém características da superfície). Planetas \"inchados\" de baixa densidade têm aparências mais suaves e ricas em voláteis."
+        },
+        "insolation": {
+          "title": "Fluxo de Insolação",
+          "description": "A energia recebida da estrela hospedeira. Alta insolação cria superfícies vulcânicas, brilho de lava e atmosferas ativas. Baixa insolação produz cobertura de gelo e paisagens congeladas."
+        },
+        "starTemp": {
+          "title": "Temperatura Estelar",
+          "description": "Afeta a cor da iluminação. Planetas ao redor de anãs vermelhas têm um tom laranja quente, enquanto aqueles orbitando estrelas azuis quentes parecem mais frios e azulados."
+        },
+        "planetType": {
+          "title": "Tipo de Planeta",
+          "description": "Determina o shader base: Gigantes Gasosos mostram atmosferas em faixas com tempestades, Gigantes de Gelo têm atmosferas suaves de metano azul-esverdeado, e planetas Rochosos exibem terreno, crateras e possíveis atmosferas."
+        },
+        "disclaimer": "Nota: Estas visualizações são interpretações artísticas baseadas em dados científicos, não fotografias reais. A semente única de cada planeta garante aparência consistente entre sessões."
+      },
+      "info": {
+        "sections": {
+          "properties": "Propriedades do Planeta",
+          "hostStar": "Estrela Hospedeira",
+          "discovery": "Descoberta",
+          "reviews": "Avaliações"
+        },
+        "earthComparison": "🌍 = passe o mouse para comparação com a Terra",
+        "flags": {
+          "habitableZone": "Na Zona Habitável",
+          "earthLike": "Tipo Terrestre"
+        },
+        "reviews": {
+          "placeholder": "Avaliações em breve! Compartilhe seus pensamentos sobre este mundo distante.",
+          "writeReview": "Escrever Avaliação"
+        },
+        "unknown": "Desconhecido",
+        "fields": {
+          "hostStar": "Estrela Hospedeira",
+          "planetType": "Tipo de Planeta",
+          "radius": "Raio",
+          "mass": "Massa",
+          "density": "Densidade",
+          "insolationFlux": "Fluxo de Insolação",
+          "eqTemperature": "Temp. de Equilíbrio",
+          "orbitalPeriod": "Período Orbital",
+          "semiMajorAxis": "Semieixo Maior",
+          "orbitalEccentricity": "Excentricidade Orbital",
+          "starTemperature": "Temperatura Estelar",
+          "starMetallicity": "Metalicidade Estelar",
+          "starAge": "Idade da Estrela",
+          "discoveryYear": "Ano de Descoberta",
+          "discoveryMethod": "Método de Descoberta",
+          "facility": "Instalação"
+        },
+        "earthRef": {
+          "earthRadius": "Raio da Terra",
+          "earthMass": "Massa da Terra",
+          "earthDensity": "Densidade da Terra",
+          "earthEqTemp": "Temp. de equilíbrio da Terra",
+          "earthInsolation": "Insolação da Terra",
+          "earthOrbitalPeriod": "Período orbital da Terra",
+          "earthSemiMajorAxis": "Semieixo maior da Terra",
+          "earthOrbitalEccentricity": "Excentricidade orbital da Terra",
+          "sunTemperature": "Temperatura do Sol",
+          "sunMetallicity": "Metalicidade do Sol",
+          "sunAge": "Idade do Sol"
+        }
+      }
+    },
+    "planetCard": {
+      "properties": {
+        "radius": "Raio",
+        "mass": "Massa",
+        "period": "Período",
+        "temp": "Temp",
+        "distance": "Distância",
+        "discovered": "Descoberto"
+      },
+      "flags": {
+        "habitableZone": "Zona Habitável",
+        "earthLike": "Tipo Terrestre",
+        "circumbinary": "Circumbinário"
+      },
+      "viewDetails": "Ver detalhes →"
     },
     "apod": {
       "title": "Foto Astronômica do Dia",
@@ -40,6 +228,83 @@
     },
     "about": {
       "title": "Sobre"
+    },
+    "habitability": {
+      "title": "Análise de Habitabilidade",
+      "subtitle": "Onde estão os mundos potencialmente habitáveis?",
+      "loading": "Analisando dados de habitabilidade...",
+      "stats": {
+        "total": "Planetas Analisados",
+        "habitableZone": "Na Zona Habitável",
+        "earthLike": "Candidatos Tipo Terra",
+        "topScore": "Maior Pontuação",
+        "avgScore": "Pontuação Média",
+        "nearest": "Habitável Mais Próximo"
+      },
+      "galaxy": {
+        "title": "Mapa Galáctico de Mundos Habitáveis",
+        "hint": "Arraste para girar • Role para zoom • Clique nos planetas para detalhes",
+        "filters": {
+          "all": "Todos os Planetas",
+          "habitable": "Zona Habitável",
+          "earthLike": "Tipo Terra",
+          "top20": "Top 20"
+        },
+        "legend": {
+          "top": "Melhores Candidatos",
+          "habitableEarthLike": "Habitável + Tipo Terra",
+          "habitable": "Zona Habitável",
+          "other": "Outros Planetas"
+        },
+        "distance": "{{distance}} anos-luz"
+      },
+      "insights": {
+        "title": "Insights dos Dados",
+        "scoreDistribution": {
+          "title": "Distribuição de Pontuação de Habitabilidade",
+          "description": "A maioria dos planetas pontua abaixo de 40, com apenas {{pct}}% pontuando acima de 60"
+        },
+        "temperature": {
+          "title": "Faixa Ideal de Temperatura",
+          "description": "Planetas na faixa de 200-320K têm as maiores pontuações de habitabilidade",
+          "zone": "Zona Cachinhos Dourados"
+        },
+        "starType": {
+          "title": "Melhores Tipos de Estrela",
+          "description": "Estrelas tipo G e K hospedam os candidatos habitáveis mais promissores"
+        },
+        "discovery": {
+          "title": "Linha do Tempo de Descobertas",
+          "description": "Descobertas na zona habitável aceleraram após a missão Kepler",
+          "kepler": "Lançamento Kepler",
+          "tess": "Lançamento TESS"
+        }
+      },
+      "deepDive": {
+        "title": "Análise Aprofundada",
+        "planetStarHeatmap": "Tipos de Planetas por Classe Estelar",
+        "starClass": "Classe Estelar",
+        "planetType": "Tipo de Planeta",
+        "featureCooccurrence": "Co-ocorrência de Características (%)",
+        "featurePrevalence": "Prevalência de Características",
+        "habitabilityBreakdown": "Classificação de Habitabilidade"
+      },
+      "candidates": {
+        "title": "Principais Candidatos à Habitabilidade",
+        "description": "Os mundos mais promissores para potencial habitabilidade",
+        "rank": "#{{rank}}",
+        "score": "Pontuação: {{score}}",
+        "distance": "{{distance}} al",
+        "viewDetails": "Ver Detalhes"
+      },
+      "methodology": {
+        "title": "Metodologia de Pontuação",
+        "description": "Nossa pontuação de habitabilidade (0-100) é calculada a partir de quatro fatores principais:",
+        "temperature": "Temperatura (40 pts): Faixa ideal 200-320K para água líquida",
+        "size": "Tamanho (30 pts): Raio tipo Terra 0.8-1.5 R⊕ para superfície rochosa",
+        "starType": "Tipo de Estrela (20 pts): Estrelas tipo G pontuam mais (estáveis, longevas)",
+        "insolation": "Insolação (10 pts): Fluxo de energia 0.5-2.0 da Terra para clima moderado"
+      }
     }
   },
   "common": {
