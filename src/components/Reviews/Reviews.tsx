@@ -1,6 +1,7 @@
 /**
  * Reviews Component
  * Main container for planet reviews
+ * Supports Firebase auth and local user fallback
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import type { PlanetReview, ReviewUser } from '../../types';
 import { reviewService } from '../../services/reviewService';
 import { userService } from '../../services/userService';
+import { useAuth } from '../../context/AuthContext';
 import { ReviewList } from './ReviewList';
 import { ReviewForm } from './ReviewForm';
 import { UserPrompt } from './UserPrompt';
@@ -18,11 +20,15 @@ interface ReviewsProps {
 
 export function Reviews({ planetId }: ReviewsProps) {
   const { t } = useTranslation();
+  const { profile, loading: authLoading } = useAuth();
   const [reviews, setReviews] = useState<PlanetReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showUserPrompt, setShowUserPrompt] = useState(false);
-  const [currentUser, setCurrentUser] = useState<ReviewUser | null>(null);
+  const [localUser, setLocalUser] = useState<ReviewUser | null>(null);
+
+  // Current user is either Firebase profile or local user
+  const currentUser = profile || localUser;
 
   // Load reviews on mount
   const loadReviews = useCallback(async () => {
@@ -39,11 +45,11 @@ export function Reviews({ planetId }: ReviewsProps) {
     loadReviews();
   }, [loadReviews]);
 
-  // Check for existing user on mount
+  // Check for existing local user on mount (fallback when Firebase not configured)
   useEffect(() => {
     const user = userService.getUser();
     if (user) {
-      setCurrentUser(user);
+      setLocalUser(user);
     }
   }, []);
 
@@ -56,16 +62,29 @@ export function Reviews({ planetId }: ReviewsProps) {
     }
   };
 
-  // Handle user creation from prompt
+  // Handle user creation from prompt (local fallback)
   const handleUserCreate = (name: string) => {
     const user = userService.createUser(name);
-    setCurrentUser(user);
+    setLocalUser(user);
     setShowUserPrompt(false);
     setShowForm(true);
   };
 
+  // Handle closing user prompt (Firebase auth was successful)
+  const handleUserPromptClose = () => {
+    setShowUserPrompt(false);
+    // If user is now authenticated via Firebase, show the form
+    if (profile) {
+      setShowForm(true);
+    }
+  };
+
   // Handle review submission
-  const handleSubmitReview = async (data: { rate: number; title: string; text: string }) => {
+  const handleSubmitReview = async (data: {
+    rate: number;
+    title: string;
+    text: string;
+  }) => {
     if (!currentUser) return;
 
     await reviewService.createReview(
@@ -83,6 +102,15 @@ export function Reviews({ planetId }: ReviewsProps) {
     await loadReviews();
   };
 
+  // Show loading if auth is still initializing
+  if (authLoading) {
+    return (
+      <div className="reviews-section">
+        <div className="reviews-loading">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="reviews-section">
       <div className="reviews-header">
@@ -96,7 +124,7 @@ export function Reviews({ planetId }: ReviewsProps) {
       {showUserPrompt && (
         <UserPrompt
           onSubmit={handleUserCreate}
-          onClose={() => setShowUserPrompt(false)}
+          onClose={handleUserPromptClose}
         />
       )}
 

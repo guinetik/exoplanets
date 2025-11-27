@@ -2075,6 +2075,29 @@
   @apply transition-all duration-200;
 }
 
+.user-prompt-google {
+  @apply w-full py-3 px-4 rounded-lg;
+  @apply bg-white text-gray-700 font-medium;
+  @apply flex items-center justify-center gap-3;
+  @apply hover:bg-gray-100;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-all duration-200;
+}
+
+.user-prompt-divider {
+  @apply flex items-center gap-4 my-4;
+}
+
+.user-prompt-divider::before,
+.user-prompt-divider::after {
+  content: '';
+  @apply flex-1 h-px bg-white/20;
+}
+
+.user-prompt-divider span {
+  @apply text-sm text-white/40;
+}
+
 /* Review Form Modal */
 .review-form-overlay {
   @apply fixed inset-0 z-50 flex items-center justify-center p-4;

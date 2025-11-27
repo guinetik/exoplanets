@@ -6,6 +6,7 @@
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../../types';
 import { Reviews } from '../Reviews';
+import { nameToSlug } from '../../utils/urlSlug';
 
 // Earth reference values for comparison tooltips (translation keys)
 const EARTH_VALUES = {
@@ -387,7 +388,7 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
         <h2 className="planet-info-section-title">
           {t('pages.planet.info.sections.reviews')}
         </h2>
-        <Reviews planetId={planet.pl_name} />
+        <Reviews planetId={nameToSlug(planet.pl_name)} />
       </section>
     </div>
   );
