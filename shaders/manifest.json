@@ -1,0 +1,21 @@
+{
+  "shaders": [
+    { "name": "earthSurfaceVert", "path": "earth/surface.vert" },
+    { "name": "earthSurfaceFrag", "path": "earth/surface.frag" },
+    { "name": "atmosphereVert", "path": "earth/atmosphere.vert" },
+    { "name": "atmosphereFrag", "path": "earth/atmosphere.frag" },
+    { "name": "starSurfaceVert", "path": "star/surface.vert" },
+    { "name": "starSurfaceFrag", "path": "star/surface.frag" },
+    { "name": "starCoronaVert", "path": "star/corona.vert" },
+    { "name": "starCoronaFrag", "path": "star/corona.frag" },
+    { "name": "planetVert", "path": "planet/planet.vert" },
+    { "name": "gasGiantFrag", "path": "planet/gasGiant.frag" },
+    { "name": "hotJupiterFrag", "path": "planet/hotJupiter.frag" },
+    { "name": "iceGiantFrag", "path": "planet/iceGiant.frag" },
+    { "name": "rockyFrag", "path": "planet/rocky.frag" },
+    { "name": "lavaWorldFrag", "path": "planet/lavaWorld.frag" },
+    { "name": "icyWorldFrag", "path": "planet/icyWorld.frag" },
+    { "name": "ringsVert", "path": "planet/rings.vert" },
+    { "name": "ringsFrag", "path": "planet/rings.frag" }
+  ]
+}
