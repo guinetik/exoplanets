@@ -25,6 +25,10 @@
       "searchPlaceholder": "Buscar estrelas por nome...",
       "filters": {
         "starClass": "Classe Estelar:",
+        "systemType": "Tipo de Sistema:",
+        "allSystems": "Todos",
+        "binarySystems": "Binário ★★",
+        "singleSystems": "Único ★",
         "sortBy": "Ordenar por:",
         "clearFilters": "Limpar Filtros"
       },
@@ -82,9 +86,6 @@
         "unknown": "Desconhecido"
       },
       "hint": "Arraste para girar • Role para zoom • Passe o mouse nos planetas para informações"
-    },
-    "star": {
-      "title": "Detalhes da Estrela"
     },
     "planets": {
       "title": "Planetas",
@@ -161,11 +162,98 @@
         "earthComparison": "🌍 = passe o mouse para comparação com a Terra",
         "flags": {
           "habitableZone": "Na Zona Habitável",
-          "earthLike": "Tipo Terrestre"
+          "earthLike": "Tipo Terrestre",
+          "topCandidate": "Top Candidato Habitável",
+          "potentiallyRocky": "Potencialmente Rochoso",
+          "earthLikeInsolation": "Insolação Tipo Terra",
+          "hotJupiter": "Júpiter Quente",
+          "hotNeptune": "Netuno Quente",
+          "ultraHot": "Ultra Quente (>2000K)",
+          "frozenWorld": "Mundo Congelado",
+          "ultraDense": "Ultra Denso",
+          "puffy": "Inflado (Baixa Dens.)",
+          "superMassive": "Super Massivo",
+          "lightweight": "Leve (<0.5 M⊕)",
+          "ultraShortPeriod": "Período Ultra-Curto (<1 dia)",
+          "longPeriod": "Período Longo (>1000 dias)",
+          "eccentricOrbit": "Órbita Excêntrica",
+          "circularOrbit": "Órbita Circular",
+          "tidallyLocked": "Provável Travamento de Marés",
+          "circumbinary": "Circumbinário (Tatooine)",
+          "multiPlanet": "Sistema Multi-Planetário",
+          "richSystem": "Sistema Rico (4+ planetas)",
+          "multiStar": "Sistema Multi-Estelar",
+          "veryNearby": "Muito Próximo (<65 al)",
+          "nearby": "Próximo (<163 al)",
+          "solarAnalog": "Estrela Análoga ao Sol",
+          "redDwarfHost": "Estrela Anã Vermelha",
+          "youngSystem": "Sistema Jovem (<1 Ga)",
+          "ancientSystem": "Sistema Antigo (>10 Ga)",
+          "metalRich": "Estrela Rica em Metais",
+          "metalPoor": "Estrela Pobre em Metais",
+          "transiting": "Em Trânsito",
+          "hasRvData": "Dados de VR",
+          "hasTtv": "Possui TTV",
+          "controversial": "Detecção Controversa"
+        },
+        "flagDescriptions": {
+          "habitableZone": "Orbita dentro da zona onde água líquida pode existir na superfície, nem muito quente nem muito frio.",
+          "earthLike": "Tamanho e composição semelhantes à Terra, tornando-o um potencial análogo ao nosso planeta natal.",
+          "topCandidate": "Classificado entre os mundos mais promissores para potencial habitabilidade com base em múltiplos fatores.",
+          "potentiallyRocky": "Densidade sugere uma composição rochosa semelhante à Terra, Marte ou Vênus.",
+          "earthLikeInsolation": "Recebe energia estelar semelhante ao que a Terra recebe do Sol.",
+          "hotJupiter": "Gigante gasoso orbitando extremamente perto de sua estrela, com temperaturas escaldantes.",
+          "hotNeptune": "Planeta do tamanho de Netuno em uma órbita próxima com atmosfera aquecida.",
+          "ultraHot": "Temperaturas da superfície excedem 2000K, quente o suficiente para vaporizar metais.",
+          "frozenWorld": "Temperaturas extremamente frias, provavelmente coberto de gelos de vários compostos.",
+          "ultraDense": "Densidade excepcionalmente alta, possivelmente indicando núcleo rico em metais ou composição exótica.",
+          "puffy": "Densidade anormalmente baixa para seu tamanho, com atmosfera estendida e inflada.",
+          "superMassive": "Massa extremamente alta, potencialmente na fronteira entre planeta e anã marrom.",
+          "lightweight": "Menos de metade da massa da Terra, possivelmente com gravidade fraca e atmosfera fina.",
+          "ultraShortPeriod": "Completa uma órbita em menos de um dia, experimentando intensa radiação estelar.",
+          "longPeriod": "Leva mais de 1000 dias para orbitar, experimentando variações sazonais extremas.",
+          "eccentricOrbit": "Órbita altamente elíptica, causando variações drásticas de temperatura ao longo do ano.",
+          "circularOrbit": "Órbita quase perfeitamente circular, fornecendo condições climáticas estáveis.",
+          "tidallyLocked": "Um lado sempre voltado para a estrela, criando lados permanentes de dia e noite.",
+          "circumbinary": "Orbita duas estrelas como o planeta ficcional Tatooine de Star Wars.",
+          "multiPlanet": "Parte de um sistema com múltiplos planetas confirmados.",
+          "richSystem": "Em um sistema com 4 ou mais planetas conhecidos, indicando dinâmica complexa.",
+          "multiStar": "Sistema hospedeiro contém múltiplas estrelas, criando padrões complexos de iluminação.",
+          "veryNearby": "Dentro de 65 anos-luz da Terra, tornando-o um alvo potencial para estudo futuro.",
+          "nearby": "Dentro de 163 anos-luz, relativamente próximo em termos astronômicos.",
+          "solarAnalog": "Orbita uma estrela semelhante ao nosso Sol em temperatura, tamanho e idade.",
+          "redDwarfHost": "Orbita uma estrela anã vermelha, o tipo mais comum de estrela em nossa galáxia.",
+          "youngSystem": "Sistema tem menos de 1 bilhão de anos, potencialmente ainda evoluindo.",
+          "ancientSystem": "Sistema tem mais de 10 bilhões de anos, mais antigo que nosso sistema solar.",
+          "metalRich": "Estrela hospedeira rica em elementos pesados, o que pode indicar formação planetária rica.",
+          "metalPoor": "Estrela hospedeira pobre em elementos pesados, formada no início da história cósmica.",
+          "transiting": "Passa na frente de sua estrela visto da Terra, permitindo estudo atmosférico.",
+          "hasRvData": "Detectado usando medições de velocidade radial da oscilação estelar.",
+          "hasTtv": "Mostra variações no tempo de trânsito, indicando influência gravitacional de outros planetas.",
+          "controversial": "Detecção ou parâmetros são debatidos na comunidade científica."
         },
         "reviews": {
-          "placeholder": "Avaliações em breve! Compartilhe seus pensamentos sobre este mundo distante.",
-          "writeReview": "Escrever Avaliação"
+          "empty": "Nenhuma avaliação ainda. Seja o primeiro a compartilhar sua experiência!",
+          "writeReview": "Escrever Avaliação",
+          "form": {
+            "title": "Compartilhe Sua Experiência",
+            "ratingLabel": "Como você avaliaria este planeta?",
+            "titleLabel": "Título da Avaliação",
+            "titlePlaceholder": "Dê um título à sua avaliação",
+            "textLabel": "Sua Avaliação",
+            "textPlaceholder": "Como foi sua experiência neste mundo distante?",
+            "submit": "Publicar Avaliação",
+            "errorTitleMin": "O título deve ter pelo menos 3 caracteres",
+            "errorTextMin": "A avaliação deve ter pelo menos 10 caracteres"
+          },
+          "userPrompt": {
+            "title": "Antes de continuar...",
+            "subtitle": "Diga-nos seu nome, viajante espacial",
+            "placeholder": "Digite seu nome",
+            "continue": "Continuar como {{name}}",
+            "errorMinLength": "O nome deve ter pelo menos 2 caracteres",
+            "errorMaxLength": "O nome deve ter no máximo 30 caracteres"
+          }
         },
         "unknown": "Desconhecido",
         "fields": {
@@ -213,7 +301,23 @@
       "flags": {
         "habitableZone": "Zona Habitável",
         "earthLike": "Tipo Terrestre",
-        "circumbinary": "Circumbinário"
+        "circumbinary": "Circumbinário",
+        "topCandidate": "Top Candidato",
+        "potentiallyRocky": "Potenc. Rochoso",
+        "hotJupiter": "Júpiter Quente",
+        "hotNeptune": "Netuno Quente",
+        "ultraHot": "Ultra Quente",
+        "frozenWorld": "Mundo Congelado",
+        "ultraDense": "Ultra Denso",
+        "puffy": "Inflado",
+        "ultraShortPeriod": "Período Ultra-Curto",
+        "eccentricOrbit": "Órbita Excêntrica",
+        "tidallyLocked": "Travado Marés",
+        "richSystem": "Sistema Rico",
+        "veryNearby": "Muito Próximo",
+        "solarAnalog": "Análogo Solar",
+        "redDwarfHost": "Anã Vermelha",
+        "controversial": "Controverso"
       },
       "viewDetails": "Ver detalhes →"
     },
@@ -304,6 +408,29 @@
         "size": "Tamanho (30 pts): Raio tipo Terra 0.8-1.5 R⊕ para superfície rochosa",
         "starType": "Tipo de Estrela (20 pts): Estrelas tipo G pontuam mais (estáveis, longevas)",
         "insolation": "Insolação (10 pts): Fluxo de energia 0.5-2.0 da Terra para clima moderado"
+      },
+      "charts": {
+        "badges": {
+          "habitableZone": "Zona Habitável",
+          "earthLike": "Tipo Terra"
+        },
+        "legend": {
+          "allDiscoveries": "Todas as Descobertas",
+          "habitableZone": "Zona Habitável"
+        },
+        "breakdown": {
+          "total": "Total",
+          "planets": "planetas"
+        },
+        "axes": {
+          "percentOfPlanets": "% dos planetas",
+          "avgHabitabilityScore": "Pontuação Média de Habitabilidade",
+          "temperature": "Temperatura (K)",
+          "habitabilityScore": "Pontuação de Habitabilidade"
+        },
+        "goldilocksZone": "Zona Cachinhos Dourados",
+        "score": "Pontuação: {{score}}",
+        "lightYears": "anos-luz"
       }
     }
   },

@@ -25,6 +25,10 @@
       "searchPlaceholder": "Search stars by name...",
       "filters": {
         "starClass": "Star Class:",
+        "systemType": "System Type:",
+        "allSystems": "All",
+        "binarySystems": "Binary ★★",
+        "singleSystems": "Single ★",
         "sortBy": "Sort by:",
         "clearFilters": "Clear Filters"
       },
@@ -77,14 +81,16 @@
         "age": "Age",
         "planet": "Planet",
         "planets": "Planets",
+        "stars": "Stars",
         "planetaryBodies": "Planetary Bodies",
         "star": "Star",
+        "primaryStar": "Primary Star",
+        "companionStar": "Companion Star",
+        "binarySystem": "Binary System",
+        "circumbinary": "Circumbinary",
         "unknown": "Unknown"
       },
       "hint": "Drag to rotate • Scroll to zoom • Hover planets for info"
-    },
-    "star": {
-      "title": "Star Details"
     },
     "planets": {
       "title": "Planets",
@@ -161,11 +167,98 @@
         "earthComparison": "🌍 = hover for Earth comparison",
         "flags": {
           "habitableZone": "In Habitable Zone",
-          "earthLike": "Earth-like"
+          "earthLike": "Earth-like",
+          "topCandidate": "Top Habitability Candidate",
+          "potentiallyRocky": "Potentially Rocky",
+          "earthLikeInsolation": "Earth-like Insolation",
+          "hotJupiter": "Hot Jupiter",
+          "hotNeptune": "Hot Neptune",
+          "ultraHot": "Ultra Hot (>2000K)",
+          "frozenWorld": "Frozen World",
+          "ultraDense": "Ultra Dense",
+          "puffy": "Puffy (Low Density)",
+          "superMassive": "Super Massive",
+          "lightweight": "Lightweight (<0.5 M⊕)",
+          "ultraShortPeriod": "Ultra-Short Period (<1 day)",
+          "longPeriod": "Long Period (>1000 days)",
+          "eccentricOrbit": "Eccentric Orbit",
+          "circularOrbit": "Circular Orbit",
+          "tidallyLocked": "Likely Tidally Locked",
+          "circumbinary": "Circumbinary (Tatooine)",
+          "multiPlanet": "Multi-Planet System",
+          "richSystem": "Rich System (4+ planets)",
+          "multiStar": "Multi-Star System",
+          "veryNearby": "Very Nearby (<65 ly)",
+          "nearby": "Nearby (<163 ly)",
+          "solarAnalog": "Solar Analog Host",
+          "redDwarfHost": "Red Dwarf Host",
+          "youngSystem": "Young System (<1 Gyr)",
+          "ancientSystem": "Ancient System (>10 Gyr)",
+          "metalRich": "Metal-Rich Star",
+          "metalPoor": "Metal-Poor Star",
+          "transiting": "Transiting",
+          "hasRvData": "Has RV Data",
+          "hasTtv": "Has TTV",
+          "controversial": "Controversial Detection"
+        },
+        "flagDescriptions": {
+          "habitableZone": "This planet orbits within the habitable zone — the region around a star where liquid water could exist on the surface.",
+          "earthLike": "This planet has characteristics similar to Earth: rocky composition, similar size, and potentially habitable conditions.",
+          "topCandidate": "Among the best candidates for potential habitability based on multiple factors including temperature, size, and stellar environment.",
+          "potentiallyRocky": "Based on its mass and radius, this planet likely has a rocky composition similar to Earth, Mars, or Venus.",
+          "earthLikeInsolation": "This planet receives a similar amount of energy from its star as Earth does from the Sun (0.5-2.0× Earth's insolation).",
+          "hotJupiter": "A gas giant orbiting very close to its star, resulting in extreme surface temperatures and rapid orbital periods.",
+          "hotNeptune": "A Neptune-sized planet orbiting close to its star, experiencing intense stellar radiation.",
+          "ultraHot": "Surface temperature exceeds 2000K — hot enough to vaporize most metals and rocks.",
+          "frozenWorld": "An extremely cold world where surface temperatures are too low for liquid water, likely covered in ice.",
+          "ultraDense": "This planet has exceptionally high density, suggesting a composition dominated by heavy elements like iron.",
+          "puffy": "A low-density planet with an extended atmosphere, likely inflated by intense stellar heating.",
+          "superMassive": "An exceptionally massive planet, significantly larger than Jupiter.",
+          "lightweight": "A very low-mass planet (less than half Earth's mass), possibly with a thin atmosphere or none at all.",
+          "ultraShortPeriod": "Completes an orbit in less than one Earth day, experiencing extreme tidal forces and stellar radiation.",
+          "longPeriod": "Takes over 1000 days to complete one orbit, existing far from its host star.",
+          "eccentricOrbit": "Follows a highly elliptical orbit, experiencing significant variations in distance from its star.",
+          "circularOrbit": "Follows a nearly circular orbit, maintaining a consistent distance from its star.",
+          "tidallyLocked": "One side of this planet likely always faces its star, creating permanent day and night hemispheres.",
+          "circumbinary": "Orbits around two stars, like Tatooine in Star Wars. Experiences complex gravitational dynamics.",
+          "multiPlanet": "Part of a system with multiple confirmed planets orbiting the same star.",
+          "richSystem": "Belongs to a planetary system with 4 or more confirmed planets.",
+          "multiStar": "Located in a system with multiple stars (binary, triple, or more).",
+          "veryNearby": "Less than 65 light-years from Earth — one of our closest exoplanet neighbors.",
+          "nearby": "Within 163 light-years of Earth, making it a relatively close interstellar neighbor.",
+          "solarAnalog": "Orbits a star very similar to our Sun in temperature, size, and luminosity.",
+          "redDwarfHost": "Orbits a red dwarf (M-type star), the most common type of star in the galaxy.",
+          "youngSystem": "Part of a stellar system less than 1 billion years old — still in its cosmic youth.",
+          "ancientSystem": "Part of a stellar system over 10 billion years old — older than most stars in our galaxy.",
+          "metalRich": "Host star has high metallicity, which correlates with increased planet formation.",
+          "metalPoor": "Host star has low metallicity, suggesting the system formed from primordial gas.",
+          "transiting": "This planet passes in front of its star from our viewpoint, enabling detailed atmospheric studies.",
+          "hasRvData": "Detected or confirmed using radial velocity measurements, which track the star's wobble caused by the planet.",
+          "hasTtv": "Shows Transit Timing Variations — changes in transit timing that reveal gravitational interactions with other bodies.",
+          "controversial": "The existence or properties of this planet are debated among astronomers."
         },
         "reviews": {
-          "placeholder": "Reviews coming soon! Share your thoughts about this distant world.",
-          "writeReview": "Write a Review"
+          "empty": "No reviews yet. Be the first to share your experience!",
+          "writeReview": "Write a Review",
+          "form": {
+            "title": "Share Your Experience",
+            "ratingLabel": "How would you rate this planet?",
+            "titleLabel": "Review Title",
+            "titlePlaceholder": "Give your review a title",
+            "textLabel": "Your Review",
+            "textPlaceholder": "What was your experience like on this distant world?",
+            "submit": "Post Review",
+            "errorTitleMin": "Title must be at least 3 characters",
+            "errorTextMin": "Review must be at least 10 characters"
+          },
+          "userPrompt": {
+            "title": "Before you continue...",
+            "subtitle": "Tell us your name, space traveler",
+            "placeholder": "Enter your name",
+            "continue": "Continue as {{name}}",
+            "errorMinLength": "Name must be at least 2 characters",
+            "errorMaxLength": "Name must be 30 characters or less"
+          }
         },
         "unknown": "Unknown",
         "fields": {
@@ -213,7 +306,23 @@
       "flags": {
         "habitableZone": "Habitable Zone",
         "earthLike": "Earth-like",
-        "circumbinary": "Circumbinary"
+        "circumbinary": "Circumbinary",
+        "topCandidate": "Top Candidate",
+        "potentiallyRocky": "Potentially Rocky",
+        "hotJupiter": "Hot Jupiter",
+        "hotNeptune": "Hot Neptune",
+        "ultraHot": "Ultra Hot",
+        "frozenWorld": "Frozen World",
+        "ultraDense": "Ultra Dense",
+        "puffy": "Puffy",
+        "ultraShortPeriod": "Ultra-Short Period",
+        "eccentricOrbit": "Eccentric Orbit",
+        "tidallyLocked": "Tidally Locked",
+        "richSystem": "Rich System",
+        "veryNearby": "Very Nearby",
+        "solarAnalog": "Solar Analog",
+        "redDwarfHost": "Red Dwarf Host",
+        "controversial": "Controversial"
       },
       "viewDetails": "View details →"
     },
@@ -304,6 +413,29 @@
         "size": "Size (30 pts): Earth-like radius 0.8-1.5 R⊕ for rocky surface",
         "starType": "Star Type (20 pts): G-type stars score highest (stable, long-lived)",
         "insolation": "Insolation (10 pts): Energy flux 0.5-2.0 Earth's for moderate climate"
+      },
+      "charts": {
+        "badges": {
+          "habitableZone": "Habitable Zone",
+          "earthLike": "Earth-like"
+        },
+        "legend": {
+          "allDiscoveries": "All Discoveries",
+          "habitableZone": "Habitable Zone"
+        },
+        "breakdown": {
+          "total": "Total",
+          "planets": "planets"
+        },
+        "axes": {
+          "percentOfPlanets": "% of planets",
+          "avgHabitabilityScore": "Average Habitability Score",
+          "temperature": "Temperature (K)",
+          "habitabilityScore": "Habitability Score"
+        },
+        "goldilocksZone": "Goldilocks Zone",
+        "score": "Score: {{score}}",
+        "lightYears": "light-years"
       }
     }
   },
