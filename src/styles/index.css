@@ -2191,3 +2191,194 @@
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-all duration-200;
 }
+
+/* =============================================================================
+   VOTE PAGE - Earth 2.0 Poll
+   ============================================================================= */
+
+.vote-page {
+  @apply w-full min-h-screen pb-16;
+  background: linear-gradient(180deg, #000 0%, #0a0a1a 100%);
+}
+
+.vote-loading {
+  @apply flex flex-col items-center justify-center h-screen gap-4;
+  @apply text-white/60;
+}
+
+/* Vote Header */
+.vote-header {
+  @apply text-center py-12 px-4;
+  @apply border-b border-white/10;
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.05) 0%, transparent 100%);
+}
+
+.vote-title {
+  @apply text-4xl md:text-5xl font-light text-white mb-3;
+  @apply tracking-wide;
+  text-shadow: 0 0 60px rgba(6, 182, 212, 0.4);
+}
+
+.vote-subtitle {
+  @apply text-lg text-white/60 mb-6 max-w-2xl mx-auto;
+}
+
+.vote-stats {
+  @apply flex flex-wrap items-center justify-center gap-4;
+}
+
+.vote-total {
+  @apply px-4 py-2 rounded-full;
+  @apply bg-white/5 border border-white/20;
+  @apply text-white/70 text-sm font-mono;
+}
+
+.vote-your-pick {
+  @apply px-4 py-2 rounded-full;
+  @apply bg-cyan-400/10 border border-cyan-400/30;
+  @apply text-cyan-400 text-sm;
+}
+
+/* Vote Grid */
+.vote-grid {
+  @apply grid gap-4 p-4 md:p-8;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  @apply max-w-7xl mx-auto;
+}
+
+/* Vote Card */
+.vote-card {
+  @apply relative flex flex-col p-4 rounded-xl;
+  @apply bg-gradient-to-br from-white/5 to-white/[0.02];
+  @apply border border-white/10;
+  @apply transition-all duration-300;
+}
+
+.vote-card:hover {
+  @apply border-white/20;
+  @apply transform -translate-y-1;
+  box-shadow: 0 20px 40px -20px rgba(6, 182, 212, 0.2);
+}
+
+.vote-card-leader {
+  @apply border-yellow-400/50;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(250, 204, 21, 0.02) 100%);
+}
+
+.vote-card-leader:hover {
+  @apply border-yellow-400/70;
+  box-shadow: 0 20px 40px -20px rgba(250, 204, 21, 0.3);
+}
+
+.vote-card-selected {
+  @apply border-cyan-400/50;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(6, 182, 212, 0.02) 100%);
+}
+
+/* Vote Rank Badge */
+.vote-rank {
+  @apply absolute top-3 right-3;
+  @apply px-2 py-1 rounded text-xs font-mono;
+  @apply bg-white/10 text-white/60;
+  @apply flex items-center gap-1;
+}
+
+.vote-crown {
+  @apply text-yellow-400;
+}
+
+/* Vote Card Content */
+.vote-card-content {
+  @apply flex-1 space-y-3 mb-4;
+}
+
+.vote-planet-name {
+  @apply block text-lg font-medium text-white truncate pr-12;
+  @apply hover:text-cyan-400 transition-colors;
+  @apply uppercase tracking-wide;
+}
+
+.vote-planet-score {
+  @apply flex items-baseline gap-1;
+}
+
+.vote-planet-score .score-value {
+  @apply text-2xl font-light text-cyan-400;
+}
+
+.vote-planet-score .score-label {
+  @apply text-sm text-white/40;
+}
+
+.vote-planet-details {
+  @apply flex flex-wrap gap-2 text-xs text-white/50;
+}
+
+.vote-planet-details .detail-item {
+  @apply px-2 py-1 bg-white/5 rounded;
+}
+
+/* Vote Badges */
+.vote-badges {
+  @apply flex flex-wrap gap-1.5;
+}
+
+.vote-badges .badge {
+  @apply text-xs px-2 py-0.5 rounded;
+}
+
+.vote-badges .badge.habitable {
+  @apply bg-green-500/20 text-green-300 border border-green-400/30;
+}
+
+.vote-badges .badge.earth-like {
+  @apply bg-blue-500/20 text-blue-300 border border-blue-400/30;
+}
+
+/* Vote Card Footer */
+.vote-card-footer {
+  @apply flex items-center justify-between pt-4;
+  @apply border-t border-white/10;
+}
+
+.vote-count {
+  @apply flex items-center gap-2;
+}
+
+.vote-count-number {
+  @apply text-xl font-light text-white;
+}
+
+.vote-count-label {
+  @apply text-xs text-white/40 uppercase;
+}
+
+/* Vote Button */
+.vote-button {
+  @apply px-4 py-2 rounded-lg text-sm font-medium;
+  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
+  @apply text-white;
+  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-all duration-200;
+}
+
+.vote-button-selected {
+  @apply bg-gradient-to-r from-green-500 to-emerald-500;
+  @apply hover:from-green-400 hover:to-emerald-400;
+}
+
+/* Selected Badge */
+.vote-selected-badge {
+  @apply absolute -top-2 left-1/2 -translate-x-1/2;
+  @apply px-3 py-1 rounded-full text-xs font-medium;
+  @apply bg-cyan-400 text-black;
+  @apply shadow-lg;
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Loading Overlay */
+.vote-loading-overlay {
+  @apply fixed inset-0 z-40 flex items-center justify-center;
+  @apply bg-black/50 backdrop-blur-sm;
+}

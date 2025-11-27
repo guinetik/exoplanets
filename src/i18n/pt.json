@@ -4,6 +4,7 @@
     "stars": "Estrelas",
     "planets": "Planetas",
     "habitability": "Habitabilidade",
+    "vote": "Votar",
     "apod": "Foto do Dia",
     "about": "Sobre"
   },
@@ -432,6 +433,19 @@
         "score": "Pontuação: {{score}}",
         "lightYears": "anos-luz"
       }
+    },
+    "vote": {
+      "title": "Vote na Terra 2.0",
+      "subtitle": "Qual exoplaneta será o próximo lar da humanidade? Vote agora!",
+      "loading": "Carregando candidatos...",
+      "totalVotes": "{{count}} votos registrados",
+      "yourPick": "Sua escolha: {{planet}}",
+      "lightYears": "al",
+      "votes": "voto",
+      "votes_plural": "votos",
+      "voteButton": "Votar",
+      "voted": "Votado ✓",
+      "yourChoice": "Sua Escolha"
     }
   },
   "common": {

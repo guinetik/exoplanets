@@ -356,3 +356,26 @@ export interface PlanetReview {
   // Joined field (populated on fetch, not stored in DB)
   author?: ReviewUser;
 }
+
+// =============================================================================
+// VOTING TYPES (Earth 2.0 Poll)
+// =============================================================================
+
+/**
+ * User vote for Earth 2.0 poll
+ * Firestore collection: exoplanets_poll
+ */
+export interface ExoplanetVote {
+  id?: string;           // Firestore doc ID (auto-generated)
+  planet: string;        // Planet name (e.g., "TRAPPIST-1 e")
+  userid: string;        // User ID (from existing auth)
+  timestamp: number;     // Vote timestamp in milliseconds
+}
+
+/**
+ * Aggregated vote counts by planet
+ */
+export interface VoteCount {
+  planet: string;        // Planet name
+  count: number;         // Number of votes
+}

@@ -4,6 +4,7 @@
     "stars": "Stars",
     "planets": "Planets",
     "habitability": "Habitability",
+    "vote": "Vote",
     "apod": "Pic of the Day",
     "about": "About"
   },
@@ -437,6 +438,19 @@
         "score": "Score: {{score}}",
         "lightYears": "light-years"
       }
+    },
+    "vote": {
+      "title": "Vote for Earth 2.0",
+      "subtitle": "Which exoplanet will become humanity's next home? Cast your vote!",
+      "loading": "Loading candidates...",
+      "totalVotes": "{{count}} votes cast",
+      "yourPick": "Your pick: {{planet}}",
+      "lightYears": "ly",
+      "votes": "vote",
+      "votes_plural": "votes",
+      "voteButton": "Vote",
+      "voted": "Voted ✓",
+      "yourChoice": "Your Choice"
     }
   },
   "common": {

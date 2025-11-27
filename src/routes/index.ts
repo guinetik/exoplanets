@@ -6,6 +6,7 @@ const Star = lazy(() => import('./Star'));
 const Planets = lazy(() => import('./Planets'));
 const Planet = lazy(() => import('./Planet'));
 const Habitability = lazy(() => import('./Habitability'));
+const Vote = lazy(() => import('./Vote'));
 const Apod = lazy(() => import('./Apod'));
 const About = lazy(() => import('./About'));
 
@@ -51,6 +52,12 @@ export const routes: RouteConfig[] = [
     path: '/habitability',
     element: Habitability,
     labelKey: 'nav.habitability',
+    showInNav: true,
+  },
+  {
+    path: '/vote',
+    element: Vote,
+    labelKey: 'nav.vote',
     showInNav: true,
   },
   {
