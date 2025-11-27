@@ -32,6 +32,9 @@ export default function Stars() {
   const [currentPage, setCurrentPage] = useState(
     parseInt(searchParams.get('page') || '1', 10)
   );
+  const [binaryFilter, setBinaryFilter] = useState<'all' | 'binary' | 'single'>(
+    (searchParams.get('binary') as 'all' | 'binary' | 'single') || 'all'
+  );
 
   // Get all stars
   const allStars = useMemo(() => getAllStars(), [getAllStars]);
@@ -54,6 +57,13 @@ export default function Stars() {
       result = result.filter(
         (star) => star.star_class && selectedClasses.includes(star.star_class)
       );
+    }
+
+    // Apply binary filter
+    if (binaryFilter === 'binary') {
+      result = result.filter((star) => star.sy_snum > 1);
+    } else if (binaryFilter === 'single') {
+      result = result.filter((star) => star.sy_snum === 1);
     }
 
     // Apply search filter
@@ -80,7 +90,7 @@ export default function Stars() {
     });
 
     return sorted;
-  }, [allStars, selectedClasses, searchQuery, sortBy]);
+  }, [allStars, selectedClasses, searchQuery, sortBy, binaryFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredStars.length / ITEMS_PER_PAGE);
@@ -97,10 +107,11 @@ export default function Stars() {
     if (selectedClasses.length > 0)
       params.set('classes', selectedClasses.join(','));
     if (searchQuery) params.set('search', searchQuery);
+    if (binaryFilter !== 'all') params.set('binary', binaryFilter);
     if (validPage !== 1) params.set('page', String(validPage));
 
     setSearchParams(params, { replace: true });
-  }, [sortBy, selectedClasses, searchQuery, validPage, setSearchParams]);
+  }, [sortBy, selectedClasses, searchQuery, binaryFilter, validPage, setSearchParams]);
 
   // Reset to page 1 when filters change
   const handleFilterChange = () => {
@@ -126,10 +137,16 @@ export default function Stars() {
     handleFilterChange();
   };
 
+  const handleBinaryFilterChange = (value: 'all' | 'binary' | 'single') => {
+    setBinaryFilter(value);
+    handleFilterChange();
+  };
+
   const clearFilters = () => {
     setSelectedClasses([]);
     setSearchQuery('');
     setSortBy('name');
+    setBinaryFilter('all');
     setCurrentPage(1);
   };
 
@@ -192,6 +209,31 @@ export default function Stars() {
             </div>
           </div>
 
+          {/* Binary Filter */}
+          <div className="filter-group">
+            <label className="filter-label">{t('pages.stars.filters.systemType', 'System Type')}</label>
+            <div className="class-buttons">
+              <button
+                onClick={() => handleBinaryFilterChange('all')}
+                className={`class-button ${binaryFilter === 'all' ? 'active' : ''}`}
+              >
+                {t('pages.stars.filters.allSystems', 'All')}
+              </button>
+              <button
+                onClick={() => handleBinaryFilterChange('binary')}
+                className={`class-button ${binaryFilter === 'binary' ? 'active' : ''}`}
+              >
+                {t('pages.stars.filters.binarySystems', 'Binary ★★')}
+              </button>
+              <button
+                onClick={() => handleBinaryFilterChange('single')}
+                className={`class-button ${binaryFilter === 'single' ? 'active' : ''}`}
+              >
+                {t('pages.stars.filters.singleSystems', 'Single ★')}
+              </button>
+            </div>
+          </div>
+
           {/* Sort Dropdown */}
           <div className="filter-group">
             <label className="filter-label">{t('pages.stars.filters.sortBy')}</label>
@@ -208,7 +250,7 @@ export default function Stars() {
           </div>
 
           {/* Clear Button */}
-          {(selectedClasses.length > 0 || searchQuery) && (
+          {(selectedClasses.length > 0 || searchQuery || binaryFilter !== 'all') && (
             <button onClick={clearFilters} className="clear-button">
               {t('pages.stars.filters.clearFilters')}
             </button>
