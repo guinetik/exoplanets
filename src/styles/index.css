@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -14,11 +16,32 @@
   }
 
   body {
-    @apply bg-black text-white;
+    @apply bg-[#050508] text-gray-300 antialiased;
+    font-family:
+      'Inter',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      sans-serif;
+  }
+
+  /* Selection colors - cyan accent */
+  ::selection {
+    @apply bg-cyan-500/30 text-white;
   }
 
   a {
-    @apply text-inherit no-underline;
+    @apply text-inherit no-underline transition-colors duration-200;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-white font-semibold tracking-tight;
   }
 
   /* =============================================================================
@@ -36,16 +59,17 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: #333;
     border-radius: 4px;
+    border: 2px solid #000;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: #555;
   }
 
   ::-webkit-scrollbar-thumb:active {
-    background: rgba(255, 255, 255, 0.35);
+    background: #777;
   }
 
   ::-webkit-scrollbar-corner {
@@ -78,25 +102,26 @@
     @apply flex-1 w-full max-w-7xl mx-auto px-4 py-8;
   }
 
-  /* Navigation */
+  /* Navigation - Glassmorphism */
   .navbar {
-    @apply sticky top-0 z-50 bg-black border-b border-white/10;
+    @apply sticky top-0 z-50 backdrop-blur-xl border-b border-white/[0.06];
+    background: rgba(8, 8, 12, 0.85);
   }
 
   .navbar-inner {
-    @apply max-w-7xl mx-auto px-4 h-16 flex items-center justify-between;
+    @apply max-w-7xl mx-auto px-6 h-16 flex items-center justify-between;
   }
 
   .navbar-brand {
-    @apply text-xl font-bold;
+    @apply text-lg font-bold tracking-tight text-white;
   }
 
   .navbar-menu {
-    @apply hidden md:flex items-center gap-6;
+    @apply hidden md:flex items-center gap-8;
   }
 
   .navbar-link {
-    @apply text-white/70 hover:text-white transition-colors;
+    @apply text-sm font-medium text-gray-400 hover:text-white transition-colors duration-200;
   }
 
   .navbar-link-active {
@@ -139,7 +164,7 @@
 
   /* Page Titles */
   .page-title {
-    @apply text-3xl md:text-4xl font-bold mb-8;
+    @apply text-4xl md:text-5xl font-bold tracking-tight mb-10 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60;
   }
 
   /* Placeholder Content */
@@ -406,28 +431,26 @@
 
   .welcome-card {
     @apply relative pointer-events-auto;
-    @apply p-4 md:p-6 rounded-lg;
+    @apply p-6 rounded-xl;
     @apply w-11/12 max-w-sm;
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(12px);
+    @apply border border-white/[0.08] backdrop-blur-xl;
+    background: rgba(12, 12, 18, 0.9);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   }
 
   .welcome-title {
-    @apply text-base md:text-lg font-medium text-white text-center mb-3;
+    @apply text-lg md:text-xl font-bold text-white text-center mb-2;
     @apply tracking-tight;
   }
 
   .welcome-description {
-    @apply text-xs md:text-sm leading-relaxed text-neutral-400 text-center mb-4;
+    @apply text-sm leading-relaxed text-gray-400 text-center mb-6;
   }
 
   .welcome-stats {
-    @apply text-xs text-center py-3 md:py-2 px-3 md:px-3 mb-4 rounded;
-    @apply font-mono;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.6);
+    @apply text-xs text-center py-2.5 px-4 mb-6 rounded-md;
+    @apply font-mono font-medium;
+    @apply bg-[#111] border border-[#222] text-gray-400;
   }
 
   .welcome-hint {
@@ -435,9 +458,9 @@
   }
 
   .welcome-dismiss {
-    @apply w-full py-3 md:py-2 px-4 rounded;
-    @apply text-sm font-medium;
-    @apply transition-all duration-150;
+    @apply w-full py-2.5 px-4 rounded-md;
+    @apply text-sm font-semibold text-black bg-white;
+    @apply hover:bg-gray-200 transition-colors duration-200;
     background: #fff;
     color: #000;
   }
@@ -648,10 +671,10 @@
   }
 
   .search-input {
-    @apply w-full px-4 py-2 bg-white/5 border border-white/20 rounded-lg;
-    @apply text-white placeholder-white/40;
-    @apply focus:outline-none focus:border-white/40 focus:bg-white/10;
-    @apply transition-all;
+    @apply w-full px-4 py-2.5 bg-[#111] border border-white/[0.1] rounded-md;
+    @apply text-sm text-white placeholder-gray-500 font-medium;
+    @apply focus:outline-none focus:border-white/[0.2] focus:ring-1 focus:ring-white/[0.2];
+    @apply transition-all duration-200;
   }
 
   .controls-row {
@@ -671,14 +694,14 @@
   }
 
   .class-button {
-    @apply px-3 py-1 text-sm rounded;
-    @apply border border-white/20 text-white/70;
-    @apply hover:border-white/40 hover:text-white;
-    @apply transition-all;
+    @apply px-3 py-1.5 text-xs font-medium uppercase tracking-wide rounded-md;
+    @apply border border-white/[0.1] text-gray-400 bg-[#111];
+    @apply hover:border-white/[0.2] hover:text-white hover:bg-[#161616];
+    @apply transition-all duration-200;
   }
 
   .class-button.active {
-    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+    @apply border-white text-black bg-white;
   }
 
   .sort-select {
@@ -716,14 +739,18 @@
     @apply block h-full no-underline;
   }
 
-  /* Star Card */
+  /* Star Card - Glassmorphism */
   .star-card {
     @apply h-full flex flex-col;
-    @apply bg-gradient-to-br from-white/5 to-white/5;
-    @apply border border-white/10 rounded-lg p-4;
-    @apply hover:border-white/20 hover:bg-gradient-to-br hover:from-white/10 hover:to-white/5;
-    @apply transition-all duration-300;
-    @apply cursor-pointer;
+    @apply border border-white/[0.06] rounded-xl p-5;
+    @apply hover:border-white/[0.12];
+    @apply transition-all duration-200 ease-in-out;
+    @apply cursor-pointer backdrop-blur-sm;
+    background: rgba(10, 10, 14, 0.8);
+  }
+
+  .star-card:hover {
+    background: rgba(14, 14, 20, 0.9);
   }
 
   .star-card-visualization {
@@ -753,7 +780,7 @@
   }
 
   .star-card-name {
-    @apply text-lg font-medium text-white truncate;
+    @apply text-base font-semibold text-gray-100 truncate tracking-tight;
   }
 
   .star-card-badges {
@@ -829,11 +856,11 @@
   }
 
   .pagination-button {
-    @apply px-4 py-2 rounded-lg;
-    @apply border border-white/20 text-white/70;
-    @apply hover:border-white/40 hover:text-white;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
-    @apply transition-all;
+    @apply px-4 py-2 rounded-md text-sm font-medium;
+    @apply border border-white/[0.1] text-gray-400 bg-[#111];
+    @apply hover:border-white/[0.2] hover:text-white hover:bg-[#161616];
+    @apply disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-white/[0.1] disabled:hover:bg-[#111];
+    @apply transition-all duration-200;
   }
 
   .pagination-info {
@@ -845,15 +872,15 @@
   }
 
   .pagination-number {
-    @apply w-10 h-10 rounded-lg;
-    @apply border border-white/20 text-white/70;
-    @apply hover:border-white/40 hover:text-white;
-    @apply transition-all;
+    @apply w-9 h-9 rounded-md;
+    @apply border border-white/[0.1] text-gray-400 bg-[#111];
+    @apply hover:border-white/[0.2] hover:text-white hover:bg-[#161616];
+    @apply transition-all duration-200;
     @apply text-sm font-medium;
   }
 
   .pagination-number.active {
-    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+    @apply border-white text-black bg-white;
   }
 
   /* =============================================================================
@@ -870,14 +897,14 @@
   }
 
   .type-button {
-    @apply px-3 py-1 text-sm rounded;
-    @apply border border-white/20 text-white/70;
-    @apply hover:border-white/40 hover:text-white;
-    @apply transition-all;
+    @apply px-3 py-1.5 text-xs font-medium uppercase tracking-wide rounded-md;
+    @apply border border-white/[0.1] text-gray-400 bg-[#111];
+    @apply hover:border-white/[0.2] hover:text-white hover:bg-[#161616];
+    @apply transition-all duration-200;
   }
 
   .type-button.active {
-    @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+    @apply border-white text-black bg-white;
   }
 
   .toggle-filters {
@@ -909,14 +936,18 @@
     @apply block h-full no-underline;
   }
 
-  /* Planet Card */
+  /* Planet Card - Glassmorphism */
   .planet-card {
     @apply h-full flex flex-col;
-    @apply bg-gradient-to-br from-white/5 to-white/5;
-    @apply border border-white/10 rounded-lg p-4;
-    @apply hover:border-white/20 hover:bg-gradient-to-br hover:from-white/10 hover:to-white/5;
-    @apply transition-all duration-300;
-    @apply cursor-pointer;
+    @apply border border-white/[0.06] rounded-xl p-5;
+    @apply hover:border-white/[0.12];
+    @apply transition-all duration-200 ease-in-out;
+    @apply cursor-pointer backdrop-blur-sm;
+    background: rgba(10, 10, 14, 0.8);
+  }
+
+  .planet-card:hover {
+    background: rgba(14, 14, 20, 0.9);
   }
 
   .planet-card-visualization {
@@ -945,16 +976,16 @@
   }
 
   .planet-card-name {
-    @apply text-lg font-medium text-white truncate uppercase;
+    @apply text-base font-semibold text-gray-100 truncate uppercase tracking-wide;
   }
 
   .planet-card-host {
-    @apply text-xs text-white/50 uppercase tracking-wider truncate;
+    @apply text-[10px] font-mono text-gray-500 uppercase tracking-widest truncate mt-1;
   }
 
   .planet-type-badge {
-    @apply inline-block px-2 py-1 bg-white/10 border border-white/20 rounded;
-    @apply text-xs font-mono text-cyan-400;
+    @apply inline-block px-2 py-0.5 bg-white/[0.05] border border-white/[0.1] rounded-full;
+    @apply text-[10px] font-medium text-gray-400 uppercase tracking-wider;
     @apply flex-shrink-0;
   }
 
@@ -1675,13 +1706,16 @@
 }
 
 .habitability-title {
-  @apply text-4xl md:text-5xl font-light text-white mb-2;
-  @apply tracking-wide;
-  text-shadow: 0 0 40px rgba(255, 255, 255, 0.3);
+  @apply text-4xl md:text-6xl font-bold text-white mb-4;
+  @apply tracking-tight;
+  background: linear-gradient(to bottom, #fff, #888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
 }
 
 .habitability-subtitle {
-  @apply text-lg text-white/60;
+  @apply text-lg text-gray-400 max-w-2xl mx-auto font-medium;
 }
 
 /* Galaxy View Container */
@@ -1705,14 +1739,14 @@
 }
 
 .filter-btn {
-  @apply px-3 py-1.5 text-sm rounded-lg;
-  @apply bg-black/60 border border-white/20 text-white/70;
-  @apply hover:bg-black/80 hover:border-white/40 hover:text-white;
-  @apply transition-all backdrop-blur-sm;
+  @apply px-3 py-1.5 text-xs font-medium uppercase tracking-wide rounded-md;
+  @apply bg-[#111] border border-[#333] text-gray-400;
+  @apply hover:bg-[#222] hover:border-[#444] hover:text-white;
+  @apply transition-all duration-200;
 }
 
 .filter-btn.active {
-  @apply border-cyan-400 text-cyan-400 bg-cyan-400/10;
+  @apply bg-white text-black border-white;
 }
 
 .galaxy-hint {
@@ -1826,24 +1860,27 @@
 }
 
 .stat-item {
-  @apply text-center p-4 rounded-lg;
-  @apply bg-white/5 border border-white/10;
+  @apply text-center p-6 rounded-xl;
+  @apply border border-white/[0.06] backdrop-blur-sm;
+  @apply hover:border-white/[0.1] transition-colors duration-200;
+  background: rgba(10, 10, 14, 0.8);
 }
 
 .stat-item.highlight {
-  @apply border-cyan-400/30 bg-cyan-400/5;
+  @apply border-white/[0.1];
+  background: rgba(14, 14, 20, 0.9);
 }
 
 .stat-value {
-  @apply text-3xl font-light text-white mb-1;
+  @apply text-3xl font-bold text-white mb-1 tracking-tight;
 }
 
 .stat-label {
-  @apply text-xs uppercase tracking-wider text-white/50;
+  @apply text-[11px] font-medium uppercase tracking-widest text-gray-500;
 }
 
 .stat-sublabel {
-  @apply text-xs text-cyan-400 mt-1 truncate;
+  @apply text-xs text-gray-400 mt-2 truncate font-medium;
 }
 
 /* Charts Section */
@@ -1863,18 +1900,19 @@
   @apply grid grid-cols-1 md:grid-cols-2 gap-6;
 }
 
-/* Insight Cards */
+/* Insight Cards - Glassmorphism */
 .insight-card {
-  @apply p-5 rounded-lg;
-  @apply bg-white/5 border border-white/10;
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.06] backdrop-blur-sm;
+  background: rgba(10, 10, 14, 0.8);
 }
 
 .insight-card .card-title {
-  @apply text-base font-medium text-white mb-2;
+  @apply text-lg font-semibold text-white mb-2 tracking-tight;
 }
 
 .insight-card .card-description {
-  @apply text-sm text-white/50 mb-4;
+  @apply text-sm text-gray-400 mb-6 leading-relaxed;
 }
 
 /* D3 Chart Container */
@@ -1891,39 +1929,43 @@
   @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4;
 }
 
-/* Candidate Card */
+/* Candidate Card - Glassmorphism */
 .candidate-card {
-  @apply relative block p-4 rounded-lg;
-  @apply bg-gradient-to-br from-white/5 to-white/5;
-  @apply border border-white/10;
-  @apply hover:border-cyan-400/50 hover:from-white/10 hover:to-white/5;
-  @apply transition-all duration-300;
+  @apply relative block p-5 rounded-xl;
+  @apply border border-white/[0.06] backdrop-blur-sm;
+  @apply hover:border-white/[0.12] hover:-translate-y-1;
+  @apply transition-all duration-200;
   @apply no-underline;
+  background: rgba(10, 10, 14, 0.8);
+}
+
+.candidate-card:hover {
+  background: rgba(14, 14, 20, 0.9);
 }
 
 .candidate-rank {
-  @apply absolute top-2 right-2 text-xs font-mono;
-  @apply px-2 py-0.5 rounded bg-white/10 text-white/50;
+  @apply absolute top-4 right-4 text-[10px] font-mono font-medium;
+  @apply px-2 py-1 rounded bg-[#1a1a1a] text-gray-400 border border-[#333];
 }
 
 .candidate-content {
-  @apply space-y-2;
+  @apply space-y-3;
 }
 
 .candidate-name {
-  @apply text-base font-medium text-white truncate pr-10;
+  @apply text-base font-semibold text-white truncate pr-10 tracking-tight;
 }
 
 .candidate-score {
-  @apply flex items-baseline gap-1;
+  @apply flex items-baseline gap-1.5;
 }
 
 .candidate-score .score-value {
-  @apply text-2xl font-light text-cyan-400;
+  @apply text-2xl font-bold text-white;
 }
 
 .candidate-score .score-label {
-  @apply text-sm text-white/40;
+  @apply text-xs font-medium text-gray-500 uppercase tracking-wide;
 }
 
 .candidate-details {
@@ -1965,21 +2007,22 @@
 }
 
 .methodology-card {
-  @apply p-6 rounded-lg;
-  @apply bg-white/5 border border-white/10;
+  @apply p-8 rounded-xl;
+  @apply border border-white/[0.06] backdrop-blur-sm;
+  background: rgba(10, 10, 14, 0.8);
 }
 
 .methodology-intro {
-  @apply text-white/70 mb-4;
+  @apply text-gray-400 mb-6 text-sm leading-relaxed;
 }
 
 .methodology-list {
-  @apply space-y-2;
+  @apply space-y-4;
 }
 
 .methodology-list li {
-  @apply text-sm text-white/50 pl-4;
-  @apply border-l-2 border-white/20;
+  @apply text-sm text-gray-500 pl-4;
+  @apply border-l-2 border-[#333];
 }
 
 /* =============================================================================
@@ -1997,9 +2040,8 @@
 
 .reviews-write-button {
   @apply px-4 py-2 rounded-lg text-sm font-medium;
-  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
-  @apply text-white;
-  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply bg-cyan-600 text-white;
+  @apply hover:bg-cyan-500;
   @apply transition-all duration-200;
 }
 
@@ -2141,9 +2183,8 @@
 
 .user-prompt-submit {
   @apply w-full py-3 px-4 rounded-lg;
-  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
-  @apply text-white font-medium;
-  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply bg-cyan-600 text-white font-medium;
+  @apply hover:bg-cyan-500;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-all duration-200;
 }
@@ -2258,9 +2299,8 @@
 
 .review-form-submit {
   @apply w-full py-3 px-4 rounded-lg mt-2;
-  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
-  @apply text-white font-medium;
-  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply bg-cyan-600 text-white font-medium;
+  @apply hover:bg-cyan-500;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-all duration-200;
 }
@@ -2271,7 +2311,7 @@
 
 .vote-page {
   @apply w-full min-h-screen pb-16;
-  background: linear-gradient(180deg, #000 0%, #0a0a1a 100%);
+  background: #050508;
 }
 
 .vote-loading {
@@ -2281,19 +2321,17 @@
 
 /* Vote Header */
 .vote-header {
-  @apply text-center py-12 px-4;
-  @apply border-b border-white/10;
-  background: linear-gradient(180deg, rgba(6, 182, 212, 0.05) 0%, transparent 100%);
+  @apply text-center py-16 px-6;
+  @apply border-b border-[#222] bg-black;
 }
 
 .vote-title {
-  @apply text-4xl md:text-5xl font-light text-white mb-3;
-  @apply tracking-wide;
-  text-shadow: 0 0 60px rgba(6, 182, 212, 0.4);
+  @apply text-4xl md:text-6xl font-bold text-white mb-4;
+  @apply tracking-tight;
 }
 
 .vote-subtitle {
-  @apply text-lg text-white/60 mb-6 max-w-2xl mx-auto;
+  @apply text-lg text-gray-400 mb-8 max-w-2xl mx-auto font-medium;
 }
 
 .vote-stats {
@@ -2301,15 +2339,15 @@
 }
 
 .vote-total {
-  @apply px-4 py-2 rounded-full;
-  @apply bg-white/5 border border-white/20;
-  @apply text-white/70 text-sm font-mono;
+  @apply px-3 py-1.5 rounded-md;
+  @apply bg-[#111] border border-[#333];
+  @apply text-gray-400 text-xs font-medium uppercase tracking-wide;
 }
 
 .vote-your-pick {
-  @apply px-4 py-2 rounded-full;
-  @apply bg-cyan-400/10 border border-cyan-400/30;
-  @apply text-cyan-400 text-sm;
+  @apply px-3 py-1.5 rounded-md;
+  @apply bg-white text-black border border-white;
+  @apply text-xs font-bold uppercase tracking-wide;
 }
 
 /* Vote Grid */
@@ -2319,33 +2357,30 @@
   @apply max-w-7xl mx-auto;
 }
 
-/* Vote Card */
+/* Vote Card - Glassmorphism */
 .vote-card {
-  @apply relative flex flex-col p-4 rounded-xl;
-  @apply bg-gradient-to-br from-white/5 to-white/[0.02];
-  @apply border border-white/10;
-  @apply transition-all duration-300;
+  @apply relative flex flex-col p-5 rounded-xl;
+  @apply border border-white/[0.06] backdrop-blur-sm;
+  @apply transition-all duration-200 ease-in-out;
+  background: rgba(10, 10, 14, 0.8);
 }
 
 .vote-card:hover {
-  @apply border-white/20;
-  @apply transform -translate-y-1;
-  box-shadow: 0 20px 40px -20px rgba(6, 182, 212, 0.2);
+  @apply border-white/[0.12] -translate-y-1;
+  background: rgba(14, 14, 20, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .vote-card-leader {
-  @apply border-yellow-400/50;
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(250, 204, 21, 0.02) 100%);
+  @apply border-yellow-500/40 bg-yellow-500/[0.03];
 }
 
 .vote-card-leader:hover {
-  @apply border-yellow-400/70;
-  box-shadow: 0 20px 40px -20px rgba(250, 204, 21, 0.3);
+  @apply border-yellow-500/60 bg-yellow-500/[0.05];
 }
 
 .vote-card-selected {
-  @apply border-cyan-400/50;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(6, 182, 212, 0.02) 100%);
+  @apply border-white bg-white/[0.05];
 }
 
 /* Vote Card Planet Visualization */
@@ -2355,14 +2390,13 @@
 
 .vote-card-visualization canvas {
   @apply rounded-full;
-  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.3));
 }
 
 /* Vote Rank Badge */
 .vote-rank {
-  @apply absolute top-3 right-3;
-  @apply px-2 py-1 rounded text-xs font-mono;
-  @apply bg-white/10 text-white/60;
+  @apply absolute top-4 right-4;
+  @apply px-2 py-1 rounded text-[10px] font-mono font-medium;
+  @apply bg-[#1a1a1a] text-gray-400 border border-[#333];
   @apply flex items-center gap-1;
 }
 
@@ -2436,19 +2470,18 @@
   @apply text-xs text-white/40 uppercase;
 }
 
-/* Vote Button */
+/* Vote Button - Flat */
 .vote-button {
   @apply px-4 py-2 rounded-lg text-sm font-medium;
-  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
-  @apply text-white;
-  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply bg-cyan-600 text-white;
+  @apply hover:bg-cyan-500;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
   @apply transition-all duration-200;
 }
 
 .vote-button-selected {
-  @apply bg-gradient-to-r from-green-500 to-emerald-500;
-  @apply hover:from-green-400 hover:to-emerald-400;
+  @apply bg-emerald-600;
+  @apply hover:bg-emerald-500;
 }
 
 /* Selected Badge */
@@ -2783,7 +2816,8 @@
 }
 
 @keyframes bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
