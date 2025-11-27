@@ -50,6 +50,17 @@ export function CelestialBody({
     [body.color, body.temperature]
   );
 
+  // Corona shader uniforms
+  const coronaMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const coronaUniforms = useMemo(
+    () => ({
+      uStarColor: { value: new THREE.Color(body.color) },
+      uTime: { value: 0 },
+      uIntensity: { value: body.emissiveIntensity ?? 1.0 },
+    }),
+    [body.color, body.emissiveIntensity]
+  );
+
   // Planet shader uniforms using the factory (simple mode for StarSystem view)
   const planetUniforms = useMemo(() => {
     if (body.planetData) {
@@ -151,6 +162,9 @@ export function CelestialBody({
       if (starMaterialRef.current) {
         starMaterialRef.current.uniforms.uTime.value = time;
       }
+      if (coronaMaterialRef.current) {
+        coronaMaterialRef.current.uniforms.uTime.value = time;
+      }
     } else if (body.type === 'planet') {
       if (planetMaterialRef.current) {
         planetMaterialRef.current.uniforms.uTime.value = time;
@@ -219,6 +233,21 @@ export function CelestialBody({
             vertexShader={shaderService.get('starSurfaceVert')}
             fragmentShader={shaderService.get('starSurfaceFrag')}
             uniforms={starUniforms}
+          />
+        </mesh>
+
+        {/* Corona layer - fiery tendrils radiating outward */}
+        <mesh>
+          <sphereGeometry args={[body.diameter / 2 * 1.15, 64, 64]} />
+          <shaderMaterial
+            ref={coronaMaterialRef}
+            vertexShader={shaderService.get('starCoronaVert')}
+            fragmentShader={shaderService.get('starCoronaFrag')}
+            uniforms={coronaUniforms}
+            transparent
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            side={THREE.FrontSide}
           />
         </mesh>
       </>

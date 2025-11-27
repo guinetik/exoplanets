@@ -76,16 +76,16 @@ void main() {
         fVal2 += (0.5 / power) * snoise(coord + vec3(0.0, -time, time * 0.2), power * 25.0 * (newTime2 + 1.0));
     }
 
-    // === CORONA CALCULATION (from reference) ===
+    // === CORONA CALCULATION (from reference, scaled down for 3D) ===
     // This creates the flame tendrils shooting outward
-    float corona = pow(fVal1 * max(1.1 - fade, 0.0), 2.0) * 50.0;
-    corona += pow(fVal2 * max(1.1 - fade, 0.0), 2.0) * 50.0;
+    float corona = pow(fVal1 * max(1.1 - fade, 0.0), 2.0) * 3.0;
+    corona += pow(fVal2 * max(1.1 - fade, 0.0), 2.0) * 3.0;
     corona *= 1.2 - newTime1; // Animated variation
-    corona *= uIntensity * 0.4;
+    corona *= uIntensity * 0.08;
 
     // === STAR GLOW (warm radiance underneath) ===
     float starGlow = clamp(1.0 - dist * (1.0 - brightness), 0.0, 1.0);
-    starGlow *= uIntensity * 0.5;
+    starGlow *= uIntensity * 0.1;
 
     // === COLORS ===
     // Main corona color (star's natural color)
@@ -99,9 +99,9 @@ void main() {
 
     // === ALPHA ===
     // Corona is visible where there are flames or glow
-    float alpha = corona + starGlow * 0.6;
-    alpha *= smoothstep(0.0, 0.5, fresnel); // Fade in from center
-    alpha = clamp(alpha, 0.0, 1.0);
+    float alpha = corona * 0.4 + starGlow * 0.2;
+    alpha *= smoothstep(0.0, 0.3, fresnel); // Fade in from center
+    alpha = clamp(alpha, 0.0, 0.5);
 
     gl_FragColor = vec4(finalColor, alpha);
 }
