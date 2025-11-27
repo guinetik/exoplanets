@@ -11,6 +11,8 @@
     { "name": "planetVert", "path": "planet/planet.vert" },
     { "name": "gasGiantFrag", "path": "planet/gasGiant.frag" },
     { "name": "iceGiantFrag", "path": "planet/iceGiant.frag" },
-    { "name": "rockyFrag", "path": "planet/rocky.frag" }
+    { "name": "rockyFrag", "path": "planet/rocky.frag" },
+    { "name": "ringsVert", "path": "planet/rings.vert" },
+    { "name": "ringsFrag", "path": "planet/rings.frag" }
   ]
 }
