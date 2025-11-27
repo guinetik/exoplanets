@@ -5,9 +5,10 @@ Extracts essential columns, adds derived fields, exports clean dataset
 Run: python process_exoplanets.py
 """
 
-import pandas as pd
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 RAW_DIR = Path(__file__).parent / "raw"
 OUT_DIR = Path(__file__).parent / "out"
@@ -18,29 +19,74 @@ OUT_DIR = Path(__file__).parent / "out"
 
 ESSENTIAL_COLUMNS = [
     # Planet identification
-    "pl_name", "pl_letter", "hostname",
+    "pl_name",
+    "pl_letter",
+    "hostname",
     # Planet physical properties
-    "pl_rade", "pl_radj", "pl_bmasse", "pl_bmassj", "pl_bmassprov",
-    "pl_dens", "pl_eqt", "pl_insol",
+    "pl_rade",
+    "pl_radj",
+    "pl_bmasse",
+    "pl_bmassj",
+    "pl_bmassprov",
+    "pl_dens",
+    "pl_eqt",
+    "pl_insol",
     # Orbital properties
-    "pl_orbper", "pl_orbsmax", "pl_orbeccen", "pl_orbincl",
+    "pl_orbper",
+    "pl_orbsmax",
+    "pl_orbeccen",
+    "pl_orbincl",
     # Transit properties
-    "pl_trandep", "pl_trandur", "pl_ratror", "pl_ratdor", "pl_imppar",
+    "pl_trandep",
+    "pl_trandur",
+    "pl_ratror",
+    "pl_ratdor",
+    "pl_imppar",
     # Discovery info
-    "disc_year", "discoverymethod", "disc_facility", "disc_telescope",
+    "disc_year",
+    "discoverymethod",
+    "disc_facility",
+    "disc_telescope",
     # Star properties
-    "st_teff", "st_rad", "st_mass", "st_lum", "st_logg",
-    "st_age", "st_dens", "st_met", "st_rotp", "st_spectype",
+    "st_teff",
+    "st_rad",
+    "st_mass",
+    "st_lum",
+    "st_logg",
+    "st_age",
+    "st_dens",
+    "st_met",
+    "st_rotp",
+    "st_spectype",
     # System properties
-    "sy_snum", "sy_pnum", "sy_mnum", "sy_dist",
+    "sy_snum",
+    "sy_pnum",
+    "sy_mnum",
+    "sy_dist",
     # Coordinates
-    "ra", "dec", "rastr", "decstr", "glat", "glon", "x", "y", "z",
+    "ra",
+    "dec",
+    "rastr",
+    "decstr",
+    "glat",
+    "glon",
+    "x",
+    "y",
+    "z",
     # Flags
-    "cb_flag", "pl_controv_flag", "tran_flag", "rv_flag", "ttv_flag",
+    "cb_flag",
+    "pl_controv_flag",
+    "tran_flag",
+    "rv_flag",
+    "ttv_flag",
     # Magnitudes
-    "sy_vmag", "sy_kmag", "sy_gaiamag", "sy_tmag",
+    "sy_vmag",
+    "sy_kmag",
+    "sy_gaiamag",
+    "sy_tmag",
     # IDs
-    "tic_id", "gaia_dr3_id",
+    "tic_id",
+    "gaia_dr3_id",
 ]
 
 
@@ -48,12 +94,13 @@ ESSENTIAL_COLUMNS = [
 # DERIVED FIELD FUNCTIONS
 # =============================================================================
 
+
 def classify_planet_type(row):
     """
     Classify planet type based on radius (Earth radii).
     Based on NASA's classification scheme.
     """
-    radius = row['pl_rade']
+    radius = row["pl_rade"]
     if pd.isna(radius):
         return None
 
@@ -75,9 +122,9 @@ def classify_planet_subtype(row):
     """
     More detailed classification using mass and radius.
     """
-    radius = row['pl_rade']
-    mass = row['pl_bmasse']
-    temp = row['pl_eqt']
+    radius = row["pl_rade"]
+    mass = row["pl_bmasse"]
+    temp = row["pl_eqt"]
 
     if pd.isna(radius):
         return None
@@ -121,7 +168,7 @@ def get_star_class(spectype):
 
     # Get first letter, which is the main class
     first = spectype[0]
-    if first in ['O', 'B', 'A', 'F', 'G', 'K', 'M', 'L', 'T', 'Y']:
+    if first in ["O", "B", "A", "F", "G", "K", "M", "L", "T", "Y"]:
         return first
     return None
 
@@ -136,7 +183,7 @@ def calculate_habitability_score(row):
     score = 0
 
     # Temperature score (max 40 points)
-    temp = row['pl_eqt']
+    temp = row["pl_eqt"]
     if pd.notna(temp):
         if 200 <= temp <= 320:
             # Perfect range
@@ -147,7 +194,7 @@ def calculate_habitability_score(row):
             score += 10
 
     # Size score (max 30 points)
-    radius = row['pl_rade']
+    radius = row["pl_rade"]
     if pd.notna(radius):
         if 0.8 <= radius <= 1.5:
             score += 30
@@ -157,13 +204,13 @@ def calculate_habitability_score(row):
             score += 10
 
     # Star type score (max 20 points)
-    star_class = row.get('star_class')
+    star_class = row.get("star_class")
     if pd.notna(star_class):
-        star_scores = {'G': 20, 'K': 18, 'F': 15, 'M': 12, 'A': 5}
+        star_scores = {"G": 20, "K": 18, "F": 15, "M": 12, "A": 5}
         score += star_scores.get(star_class, 0)
 
     # Bonus: Insolation close to Earth (max 10 points)
-    insol = row['pl_insol']
+    insol = row["pl_insol"]
     if pd.notna(insol):
         if 0.5 <= insol <= 2.0:
             score += 10
@@ -184,7 +231,7 @@ def format_distance(parsecs):
     elif light_years < 1000:
         return f"{light_years:.0f} light-years"
     else:
-        return f"{light_years/1000:.1f}k light-years"
+        return f"{light_years / 1000:.1f}k light-years"
 
 
 def format_period(days):
@@ -198,7 +245,7 @@ def format_period(days):
     elif days < 30:
         return f"{days:.1f} days"
     elif days < 365:
-        return f"{days/30:.1f} months"
+        return f"{days / 30:.1f} months"
     else:
         years = days / 365.25
         return f"{years:.1f} years"
@@ -239,13 +286,13 @@ def calculate_3d_position(row):
     Calculate actual 3D position in parsecs from unit vector and distance.
     Returns (x_pc, y_pc, z_pc) tuple.
     """
-    dist = row['sy_dist']
+    dist = row["sy_dist"]
     if pd.isna(dist):
         return (None, None, None)
 
-    x = row['x'] * dist if pd.notna(row['x']) else None
-    y = row['y'] * dist if pd.notna(row['y']) else None
-    z = row['z'] * dist if pd.notna(row['z']) else None
+    x = row["x"] * dist if pd.notna(row["x"]) else None
+    y = row["y"] * dist if pd.notna(row["y"]) else None
+    z = row["z"] * dist if pd.notna(row["z"]) else None
 
     return (x, y, z)
 
@@ -254,11 +301,14 @@ def calculate_3d_position(row):
 # MAIN PROCESSING
 # =============================================================================
 
+
 def load_raw_data():
     """Load raw data from CSV."""
     csv_file = RAW_DIR / "exoplanets_raw.csv"
     if not csv_file.exists():
-        raise FileNotFoundError(f"Raw data not found at {csv_file}. Run fetch_exoplanets.py first.")
+        raise FileNotFoundError(
+            f"Raw data not found at {csv_file}. Run fetch_exoplanets.py first."
+        )
 
     print(f"Loading raw data from {csv_file}...")
     df = pd.read_csv(csv_file, low_memory=False)
@@ -286,44 +336,199 @@ def add_derived_fields(df):
 
     # Star class (from spectral type)
     print("  - star_class")
-    df['star_class'] = df['st_spectype'].apply(get_star_class)
+    df["star_class"] = df["st_spectype"].apply(get_star_class)
 
     # Planet classifications
     print("  - planet_type")
-    df['planet_type'] = df.apply(classify_planet_type, axis=1)
+    df["planet_type"] = df.apply(classify_planet_type, axis=1)
 
     print("  - planet_subtype")
-    df['planet_subtype'] = df.apply(classify_planet_subtype, axis=1)
+    df["planet_subtype"] = df.apply(classify_planet_subtype, axis=1)
 
     # Habitability score
     print("  - habitability_score")
-    df['habitability_score'] = df.apply(calculate_habitability_score, axis=1)
+    df["habitability_score"] = df.apply(calculate_habitability_score, axis=1)
 
     # Human-readable displays
     print("  - display fields (distance, period, mass, radius)")
-    df['distance_display'] = df['sy_dist'].apply(format_distance)
-    df['period_display'] = df['pl_orbper'].apply(format_period)
-    df['mass_display'] = df['pl_bmasse'].apply(format_mass)
-    df['radius_display'] = df['pl_rade'].apply(format_radius)
+    df["distance_display"] = df["sy_dist"].apply(format_distance)
+    df["period_display"] = df["pl_orbper"].apply(format_period)
+    df["mass_display"] = df["pl_bmasse"].apply(format_mass)
+    df["radius_display"] = df["pl_rade"].apply(format_radius)
 
     # 3D positions in parsecs
     print("  - 3D positions (x_pc, y_pc, z_pc)")
     positions = df.apply(calculate_3d_position, axis=1)
-    df['x_pc'] = positions.apply(lambda p: p[0])
-    df['y_pc'] = positions.apply(lambda p: p[1])
-    df['z_pc'] = positions.apply(lambda p: p[2])
+    df["x_pc"] = positions.apply(lambda p: p[0])
+    df["y_pc"] = positions.apply(lambda p: p[1])
+    df["z_pc"] = positions.apply(lambda p: p[2])
 
     # Distance in light years
     print("  - distance_ly")
-    df['distance_ly'] = df['sy_dist'] * 3.26156
+    df["distance_ly"] = df["sy_dist"] * 3.26156
 
     # Is in habitable zone flag
     print("  - is_habitable_zone")
-    df['is_habitable_zone'] = (df['pl_eqt'] >= 200) & (df['pl_eqt'] <= 320)
+    df["is_habitable_zone"] = (df["pl_eqt"] >= 200) & (df["pl_eqt"] <= 320)
 
     # Is Earth-like flag
     print("  - is_earth_like")
-    df['is_earth_like'] = (df['pl_rade'] >= 0.8) & (df['pl_rade'] <= 1.25)
+    df["is_earth_like"] = (df["pl_rade"] >= 0.8) & (df["pl_rade"] <= 1.25)
+
+    # =========================================================================
+    # ORBITAL CHARACTERISTICS
+    # =========================================================================
+    print("  - orbital characteristics")
+
+    # Ultra-short period: < 1 day (extreme worlds, likely tidally locked)
+    df["is_ultra_short_period"] = df["pl_orbper"] < 1.0
+
+    # Short period: < 10 days
+    df["is_short_period"] = df["pl_orbper"] < 10.0
+
+    # Long period: > 1000 days (outer system analogs)
+    df["is_long_period"] = df["pl_orbper"] > 1000.0
+
+    # Eccentric orbit: e > 0.3 (wild temperature swings)
+    df["is_eccentric_orbit"] = df["pl_orbeccen"] > 0.3
+
+    # Circular orbit: e < 0.05 (stable, Earth-like)
+    df["is_circular_orbit"] = df["pl_orbeccen"] < 0.05
+
+    # Likely tidally locked: short period + close orbit (permanent day/night)
+    df["is_likely_tidally_locked"] = (df["pl_orbper"] < 10.0) & (df["pl_orbsmax"] < 0.1)
+
+    # =========================================================================
+    # SYSTEM ARCHITECTURE
+    # =========================================================================
+    print("  - system architecture")
+
+    # Multi-planet system
+    df["is_multi_planet_system"] = df["sy_pnum"] > 1
+
+    # Rich system: 4+ planets
+    df["is_rich_system"] = df["sy_pnum"] >= 4
+
+    # Only known planet in system
+    df["is_only_known_planet"] = df["sy_pnum"] == 1
+
+    # Circumbinary: orbits two stars ("Tatooine" planets)
+    df["is_circumbinary"] = df["cb_flag"] == 1
+
+    # Multi-star system
+    df["is_multi_star_system"] = df["sy_snum"] > 1
+
+    # =========================================================================
+    # PROXIMITY & OBSERVABILITY
+    # =========================================================================
+    print("  - proximity & observability")
+
+    # Nearby: < 50 parsecs (~163 light-years) - best for detailed study
+    df["is_nearby"] = df["sy_dist"] < 50
+
+    # Very nearby: < 20 parsecs (~65 light-years) - prime targets
+    df["is_very_nearby"] = df["sy_dist"] < 20
+
+    # Transiting: can observe atmosphere during transit
+    df["is_transiting"] = df["tran_flag"] == 1
+
+    # Has radial velocity data
+    df["has_rv_data"] = df["rv_flag"] == 1
+
+    # Has transit timing variations (indicates gravitational interactions)
+    df["has_ttv"] = df["ttv_flag"] == 1
+
+    # Controversial: flagged as controversial in NASA database
+    df["is_controversial"] = df["pl_controv_flag"] == 1
+
+    # =========================================================================
+    # STELLAR ENVIRONMENT
+    # =========================================================================
+    print("  - stellar environment")
+
+    # Solar analog: G-type star with similar mass to Sun
+    df["is_solar_analog"] = (df["star_class"] == "G") & (
+        (df["st_mass"] >= 0.8) & (df["st_mass"] <= 1.2)
+    )
+
+    # Sun-like star (broader): F, G, or K type
+    df["is_sun_like_star"] = df["star_class"].isin(["F", "G", "K"])
+
+    # Red dwarf host: M-type star
+    df["is_red_dwarf_host"] = df["star_class"] == "M"
+
+    # Young system: < 1 billion years (planets still evolving)
+    df["is_young_system"] = df["st_age"] < 1.0
+
+    # Mature system: 1-8 billion years (like our solar system)
+    df["is_mature_system"] = (df["st_age"] >= 1.0) & (df["st_age"] <= 8.0)
+
+    # Ancient system: > 10 billion years (time for complex life?)
+    df["is_ancient_system"] = df["st_age"] > 10.0
+
+    # Metal-rich star: higher chance of rocky planets
+    df["is_metal_rich_star"] = df["st_met"] > 0.1
+
+    # Metal-poor star: may have different planet formation
+    df["is_metal_poor_star"] = df["st_met"] < -0.3
+
+    # =========================================================================
+    # EXTREME WORLDS
+    # =========================================================================
+    print("  - extreme worlds")
+
+    # Hot Jupiter: gas giant with very high temperature
+    df["is_hot_jupiter"] = (df["planet_type"] == "Gas Giant") & (df["pl_eqt"] > 1000)
+
+    # Hot Neptune: Neptune-sized with high temperature
+    df["is_hot_neptune"] = (df["planet_type"].isin(["Neptune-like", "Sub-Neptune"])) & (
+        df["pl_eqt"] > 800
+    )
+
+    # Ultra-hot: equilibrium temp > 2000K
+    df["is_ultra_hot"] = df["pl_eqt"] > 2000
+
+    # Frozen world: very cold (outer system)
+    df["is_frozen_world"] = df["pl_eqt"] < 150
+
+    # Ultra-dense: density > 8 g/cm³ (iron-rich, Mercury-like)
+    df["is_ultra_dense"] = df["pl_dens"] > 8.0
+
+    # Puffy: density < 0.5 g/cm³ (inflated atmosphere)
+    df["is_puffy"] = df["pl_dens"] < 0.5
+
+    # Super-massive: > 10 Jupiter masses (brown dwarf boundary)
+    df["is_super_massive"] = df["pl_bmassj"] > 10.0
+
+    # Lightweight: < 0.5 Earth masses
+    df["is_lightweight"] = df["pl_bmasse"] < 0.5
+
+    # =========================================================================
+    # HABITABILITY RELATED
+    # =========================================================================
+    print("  - habitability features")
+
+    # Earth-like insolation: receives similar energy as Earth
+    df["has_earth_like_insolation"] = (df["pl_insol"] >= 0.5) & (df["pl_insol"] <= 2.0)
+
+    # Conservative habitable zone: stricter temperature range
+    df["is_conservative_habitable"] = (df["pl_eqt"] >= 200) & (df["pl_eqt"] <= 280)
+
+    # Optimistic habitable zone: broader range allowing for greenhouse effects
+    df["is_optimistic_habitable"] = (df["pl_eqt"] >= 150) & (df["pl_eqt"] <= 350)
+
+    # Best habitability candidates: combines multiple factors
+    df["is_top_habitable_candidate"] = (
+        (df["is_habitable_zone"])
+        & (df["pl_rade"] <= 2.0)
+        & (df["pl_rade"] >= 0.5)
+        & (df["is_sun_like_star"] | df["is_red_dwarf_host"])
+    )
+
+    # Potentially rocky: size suggests rocky composition
+    df["is_potentially_rocky"] = (df["pl_rade"] <= 1.6) & (
+        (df["pl_dens"] >= 3.5) | pd.isna(df["pl_dens"])
+    )
 
     return df
 
@@ -338,19 +543,23 @@ def generate_summary(df):
     print(f"Total columns: {len(df.columns)}")
 
     print("\nPlanet types:")
-    for ptype, count in df['planet_type'].value_counts().items():
+    for ptype, count in df["planet_type"].value_counts().items():
         print(f"  {ptype}: {count:,}")
 
     print("\nStar classes:")
-    for sclass, count in df['star_class'].value_counts().head(8).items():
+    for sclass, count in df["star_class"].value_counts().head(8).items():
         print(f"  {sclass}: {count:,}")
 
     print("\nHabitability:")
     print(f"  Habitable zone: {df['is_habitable_zone'].sum():,}")
     print(f"  Earth-like size: {df['is_earth_like'].sum():,}")
-    print(f"  Both (best candidates): {((df['is_habitable_zone']) & (df['is_earth_like'])).sum():,}")
+    print(
+        f"  Both (best candidates): {((df['is_habitable_zone']) & (df['is_earth_like'])).sum():,}"
+    )
 
-    top_hab = df.nlargest(5, 'habitability_score')[['pl_name', 'habitability_score', 'pl_eqt', 'pl_rade']]
+    top_hab = df.nlargest(5, "habitability_score")[
+        ["pl_name", "habitability_score", "pl_eqt", "pl_rade"]
+    ]
     print("\nTop 5 habitability scores:")
     for _, row in top_hab.iterrows():
         print(f"  {row['pl_name']}: {row['habitability_score']:.1f}")
