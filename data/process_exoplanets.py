@@ -120,7 +120,7 @@ def classify_planet_type(row):
 
 def classify_planet_subtype(row):
     """
-    More detailed classification using mass and radius.
+    More detailed classification using mass, radius, and temperature.
     """
     radius = row["pl_rade"]
     mass = row["pl_bmasse"]
@@ -137,6 +137,11 @@ def classify_planet_subtype(row):
             return "Hot Neptune"
         else:
             return "Lava World"
+
+    # Frozen rocky worlds (temp < 220K and small radius)
+    # These are Europa/Enceladus-like or cold super-Earths like TRAPPIST-1 f
+    if pd.notna(temp) and temp < 220 and radius < 2.0:
+        return "Ice World"
 
     # Cold/temperate planets
     if radius < 1.25:

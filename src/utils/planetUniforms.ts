@@ -140,9 +140,55 @@ export function createPlanetUniforms(options: PlanetUniformOptions): PlanetUnifo
 }
 
 /**
- * Determine which fragment shader to use based on planet type
+ * Determine which fragment shader to use based on planet subtype (preferred) or type
+ *
+ * Subtype-based mapping (more accurate):
+ * - hotJupiter: Hot Jupiter (tidally locked, extreme atmospheres)
+ * - gasGiant: Jovian, Brown Dwarf Candidate
+ * - iceGiant: Ice Giant, Mini-Neptune, Hot Neptune
+ * - lavaWorld: Lava World (molten hellscapes)
+ * - icyWorld: Ice World (frozen rocky worlds like TRAPPIST-1 f)
+ * - rocky: Rocky, Super-Earth, Dense Super-Earth
  */
-export function getPlanetShaderType(planetType?: string | null): 'gasGiant' | 'iceGiant' | 'rocky' {
+export function getPlanetShaderType(
+  planetSubtype?: string | null,
+  planetType?: string | null
+): 'hotJupiter' | 'gasGiant' | 'iceGiant' | 'lavaWorld' | 'icyWorld' | 'rocky' {
+  // Prefer subtype for more accurate shader selection
+  if (planetSubtype) {
+    switch (planetSubtype) {
+      // Hot Jupiters - tidally locked extreme gas giants
+      case 'Hot Jupiter':
+        return 'hotJupiter';
+
+      // Gas giants - large hydrogen/helium dominated
+      case 'Jovian':
+      case 'Brown Dwarf Candidate':
+        return 'gasGiant';
+
+      // Ice giants - Neptune/Uranus-like
+      case 'Ice Giant':
+      case 'Mini-Neptune':
+      case 'Hot Neptune':
+        return 'iceGiant';
+
+      // Lava worlds - molten surfaces
+      case 'Lava World':
+        return 'lavaWorld';
+
+      // Ice worlds - frozen rocky surfaces (Europa-like)
+      case 'Ice World':
+        return 'icyWorld';
+
+      // Rocky worlds - solid surfaces
+      case 'Rocky':
+      case 'Super-Earth':
+      case 'Dense Super-Earth':
+        return 'rocky';
+    }
+  }
+
+  // Fallback to type-based classification
   switch (planetType) {
     case 'Gas Giant':
       return 'gasGiant';
@@ -158,10 +204,13 @@ export function getPlanetShaderType(planetType?: string | null): 'gasGiant' | 'i
 /**
  * Get shader file name from shader type
  */
-export function getShaderFileName(shaderType: 'gasGiant' | 'iceGiant' | 'rocky'): string {
+export function getShaderFileName(shaderType: 'hotJupiter' | 'gasGiant' | 'iceGiant' | 'lavaWorld' | 'icyWorld' | 'rocky'): string {
   const shaderMap = {
+    hotJupiter: 'hotJupiterFrag',
     gasGiant: 'gasGiantFrag',
     iceGiant: 'iceGiantFrag',
+    lavaWorld: 'lavaWorldFrag',
+    icyWorld: 'icyWorldFrag',
     rocky: 'rockyFrag',
   };
   return shaderMap[shaderType];
