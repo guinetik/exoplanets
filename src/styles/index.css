@@ -625,10 +625,14 @@
   }
 
   .sort-select {
-    @apply px-3 py-2 bg-white/5 border border-white/20 rounded-lg;
+    @apply pl-3 pr-6 py-1 bg-white/5 border border-white/20 rounded;
     @apply text-white text-sm;
     @apply focus:outline-none focus:border-white/40;
     @apply transition-all;
+  }
+
+  .sort-select option {
+    @apply bg-black text-white;
   }
 
   .clear-button {
@@ -665,8 +669,26 @@
     @apply cursor-pointer;
   }
 
+  .star-card-visualization {
+    @apply flex justify-center items-center mb-4;
+    @apply py-4;
+  }
+
+  .star-visualization-dot {
+    @apply w-16 h-16 rounded-full;
+    @apply transition-all duration-300;
+  }
+
+  .star-card:hover .star-visualization-dot {
+    @apply scale-110;
+  }
+
   .star-card-header {
-    @apply flex items-center gap-3 mb-4;
+    @apply flex items-center justify-between gap-3 mb-4;
+  }
+
+  .star-card-dot {
+    @apply w-4 h-4 rounded-full flex-shrink-0;
   }
 
   .star-color-dot {
@@ -679,7 +701,8 @@
 
   .star-card-class-badge {
     @apply inline-block px-2 py-1 bg-white/10 border border-white/20 rounded;
-    @apply text-xs font-mono text-cyan-400 mb-3;
+    @apply text-xs font-mono text-cyan-400;
+    @apply flex-shrink-0;
   }
 
   .star-card-properties {
@@ -829,8 +852,21 @@
     @apply cursor-pointer;
   }
 
+  .planet-card-visualization {
+    @apply flex justify-center items-center mb-4;
+    @apply py-4;
+  }
+
+  .planet-visualization {
+    @apply transition-transform duration-300;
+  }
+
+  .planet-card:hover .planet-visualization {
+    @apply scale-110;
+  }
+
   .planet-card-header {
-    @apply flex items-center gap-3 mb-3;
+    @apply flex items-center justify-between gap-3 mb-3;
   }
 
   .planet-star-dot {
@@ -851,7 +887,8 @@
 
   .planet-type-badge {
     @apply inline-block px-2 py-1 bg-white/10 border border-white/20 rounded;
-    @apply text-xs font-mono text-cyan-400 mb-3;
+    @apply text-xs font-mono text-cyan-400;
+    @apply flex-shrink-0;
   }
 
   .planet-card-properties {
@@ -877,6 +914,80 @@
 
   .flag-circumbinary {
     @apply bg-purple-500/20 border-purple-400/50 text-purple-300;
+  }
+
+  /* Top habitability candidate */
+  .flag-top-candidate {
+    @apply bg-yellow-500/20 border-yellow-400/50 text-yellow-300;
+  }
+
+  /* Potentially rocky */
+  .flag-rocky {
+    @apply bg-amber-500/20 border-amber-400/50 text-amber-300;
+  }
+
+  /* Extreme worlds - Hot */
+  .flag-hot-jupiter {
+    @apply bg-orange-500/20 border-orange-400/50 text-orange-300;
+  }
+
+  .flag-hot-neptune {
+    @apply bg-orange-400/20 border-orange-300/50 text-orange-200;
+  }
+
+  .flag-ultra-hot {
+    @apply bg-red-500/20 border-red-400/50 text-red-300;
+  }
+
+  /* Extreme worlds - Cold */
+  .flag-frozen {
+    @apply bg-cyan-500/20 border-cyan-400/50 text-cyan-300;
+  }
+
+  /* Density extremes */
+  .flag-ultra-dense {
+    @apply bg-slate-500/20 border-slate-400/50 text-slate-300;
+  }
+
+  .flag-puffy {
+    @apply bg-pink-500/20 border-pink-400/50 text-pink-300;
+  }
+
+  /* Orbital characteristics */
+  .flag-ultra-short {
+    @apply bg-rose-500/20 border-rose-400/50 text-rose-300;
+  }
+
+  .flag-eccentric {
+    @apply bg-violet-500/20 border-violet-400/50 text-violet-300;
+  }
+
+  .flag-tidally-locked {
+    @apply bg-indigo-500/20 border-indigo-400/50 text-indigo-300;
+  }
+
+  /* System characteristics */
+  .flag-rich-system {
+    @apply bg-emerald-500/20 border-emerald-400/50 text-emerald-300;
+  }
+
+  /* Proximity */
+  .flag-very-nearby {
+    @apply bg-lime-500/20 border-lime-400/50 text-lime-300;
+  }
+
+  /* Star characteristics */
+  .flag-solar-analog {
+    @apply bg-yellow-600/20 border-yellow-500/50 text-yellow-200;
+  }
+
+  .flag-red-dwarf {
+    @apply bg-red-600/20 border-red-500/50 text-red-200;
+  }
+
+  /* Controversial */
+  .flag-controversial {
+    @apply bg-gray-500/20 border-gray-400/50 text-gray-300;
   }
 
   .planet-card-footer {
@@ -1141,7 +1252,12 @@
 
   .planet-flag {
     @apply inline-block px-3 py-1 rounded text-xs font-medium;
-    @apply border;
+    @apply border cursor-help;
+    @apply transition-all duration-200;
+  }
+
+  .planet-flag:hover {
+    @apply opacity-80;
   }
 
   .planet-flag.flag-habitable {
@@ -1150,6 +1266,130 @@
 
   .planet-flag.flag-earth-like {
     @apply bg-blue-500/20 border-blue-400/50 text-blue-300;
+  }
+
+  .planet-flag.flag-top-candidate {
+    @apply bg-yellow-500/20 border-yellow-400/50 text-yellow-300;
+  }
+
+  .planet-flag.flag-rocky {
+    @apply bg-amber-500/20 border-amber-400/50 text-amber-300;
+  }
+
+  .planet-flag.flag-hot-jupiter {
+    @apply bg-orange-500/20 border-orange-400/50 text-orange-300;
+  }
+
+  .planet-flag.flag-hot-neptune {
+    @apply bg-orange-400/20 border-orange-300/50 text-orange-200;
+  }
+
+  .planet-flag.flag-ultra-hot {
+    @apply bg-red-500/20 border-red-400/50 text-red-300;
+  }
+
+  .planet-flag.flag-frozen {
+    @apply bg-cyan-500/20 border-cyan-400/50 text-cyan-300;
+  }
+
+  .planet-flag.flag-ultra-dense {
+    @apply bg-slate-500/20 border-slate-400/50 text-slate-300;
+  }
+
+  .planet-flag.flag-puffy {
+    @apply bg-pink-500/20 border-pink-400/50 text-pink-300;
+  }
+
+  .planet-flag.flag-super-massive {
+    @apply bg-purple-600/20 border-purple-500/50 text-purple-300;
+  }
+
+  .planet-flag.flag-lightweight {
+    @apply bg-teal-500/20 border-teal-400/50 text-teal-300;
+  }
+
+  .planet-flag.flag-ultra-short {
+    @apply bg-rose-500/20 border-rose-400/50 text-rose-300;
+  }
+
+  .planet-flag.flag-long-period {
+    @apply bg-sky-500/20 border-sky-400/50 text-sky-300;
+  }
+
+  .planet-flag.flag-eccentric {
+    @apply bg-violet-500/20 border-violet-400/50 text-violet-300;
+  }
+
+  .planet-flag.flag-circular {
+    @apply bg-emerald-400/20 border-emerald-300/50 text-emerald-200;
+  }
+
+  .planet-flag.flag-tidally-locked {
+    @apply bg-indigo-500/20 border-indigo-400/50 text-indigo-300;
+  }
+
+  .planet-flag.flag-circumbinary {
+    @apply bg-purple-500/20 border-purple-400/50 text-purple-300;
+  }
+
+  .planet-flag.flag-multi-planet {
+    @apply bg-blue-400/20 border-blue-300/50 text-blue-200;
+  }
+
+  .planet-flag.flag-rich-system {
+    @apply bg-emerald-500/20 border-emerald-400/50 text-emerald-300;
+  }
+
+  .planet-flag.flag-multi-star {
+    @apply bg-fuchsia-500/20 border-fuchsia-400/50 text-fuchsia-300;
+  }
+
+  .planet-flag.flag-very-nearby {
+    @apply bg-lime-500/20 border-lime-400/50 text-lime-300;
+  }
+
+  .planet-flag.flag-nearby {
+    @apply bg-lime-400/20 border-lime-300/50 text-lime-200;
+  }
+
+  .planet-flag.flag-solar-analog {
+    @apply bg-yellow-600/20 border-yellow-500/50 text-yellow-200;
+  }
+
+  .planet-flag.flag-red-dwarf {
+    @apply bg-red-600/20 border-red-500/50 text-red-200;
+  }
+
+  .planet-flag.flag-young {
+    @apply bg-cyan-400/20 border-cyan-300/50 text-cyan-200;
+  }
+
+  .planet-flag.flag-ancient {
+    @apply bg-amber-600/20 border-amber-500/50 text-amber-200;
+  }
+
+  .planet-flag.flag-metal-rich {
+    @apply bg-yellow-500/20 border-yellow-400/50 text-yellow-300;
+  }
+
+  .planet-flag.flag-metal-poor {
+    @apply bg-gray-400/20 border-gray-300/50 text-gray-200;
+  }
+
+  .planet-flag.flag-transiting {
+    @apply bg-blue-500/20 border-blue-400/50 text-blue-300;
+  }
+
+  .planet-flag.flag-rv {
+    @apply bg-indigo-400/20 border-indigo-300/50 text-indigo-200;
+  }
+
+  .planet-flag.flag-ttv {
+    @apply bg-violet-400/20 border-violet-300/50 text-violet-200;
+  }
+
+  .planet-flag.flag-controversial {
+    @apply bg-gray-500/20 border-gray-400/50 text-gray-300;
   }
 
   /* Reviews placeholder */
@@ -1667,4 +1907,264 @@
 .methodology-list li {
   @apply text-sm text-white/50 pl-4;
   @apply border-l-2 border-white/20;
+}
+
+/* =============================================================================
+   REVIEWS COMPONENTS
+   ============================================================================= */
+
+/* Reviews Section Container */
+.reviews-section {
+  @apply w-full;
+}
+
+.reviews-header {
+  @apply flex justify-end mb-4;
+}
+
+.reviews-write-button {
+  @apply px-4 py-2 rounded-lg text-sm font-medium;
+  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
+  @apply text-white;
+  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply transition-all duration-200;
+}
+
+/* Reviews List */
+.reviews-list {
+  @apply flex flex-col gap-4;
+}
+
+.reviews-empty {
+  @apply text-center py-8;
+  @apply text-white/50;
+}
+
+.reviews-loading {
+  @apply flex items-center justify-center gap-3 py-8;
+  @apply text-white/50;
+}
+
+.reviews-loading-spinner {
+  @apply w-5 h-5 rounded-full border-2 border-white/20;
+  border-top-color: #06b6d4;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Review Card */
+.review-card {
+  @apply p-4 rounded-lg;
+  @apply bg-white/5 border border-white/10;
+}
+
+.review-header {
+  @apply flex items-center gap-3 mb-3;
+}
+
+.review-avatar {
+  @apply w-10 h-10 rounded-full;
+  @apply bg-white/10;
+}
+
+.review-author-info {
+  @apply flex flex-col;
+}
+
+.review-author-name {
+  @apply text-cyan-400 font-medium;
+}
+
+.review-date {
+  @apply text-xs text-white/40;
+}
+
+.review-rating-row {
+  @apply flex items-center gap-2 mb-2;
+}
+
+.review-title {
+  @apply text-white font-medium;
+}
+
+.review-text {
+  @apply text-white/70 text-sm leading-relaxed;
+}
+
+/* Star Rating */
+.star-rating {
+  @apply flex items-center gap-0.5;
+}
+
+.star-rating-interactive .star-rating-star {
+  @apply cursor-pointer;
+  @apply transition-transform duration-150;
+}
+
+.star-rating-interactive .star-rating-star:hover {
+  @apply scale-110;
+}
+
+.star-rating-readonly .star-rating-star {
+  @apply cursor-default;
+}
+
+.star-rating-star {
+  @apply p-0 bg-transparent border-none;
+}
+
+.star-rating-star:disabled {
+  @apply opacity-100;
+}
+
+/* User Prompt Modal */
+.user-prompt-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  animation: fade-in 0.2s ease-out;
+}
+
+.user-prompt-modal {
+  @apply relative w-full max-w-sm p-6 rounded-xl;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 30, 0.98) 0%,
+    rgba(15, 15, 25, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fade-in 0.3s ease-out;
+}
+
+.user-prompt-close {
+  @apply absolute top-3 right-3 w-8 h-8 rounded-full;
+  @apply flex items-center justify-center text-xl;
+  @apply text-white/40 hover:text-white hover:bg-white/10;
+  @apply transition-colors duration-200;
+}
+
+.user-prompt-title {
+  @apply text-lg font-medium text-white mb-1;
+}
+
+.user-prompt-subtitle {
+  @apply text-sm text-white/50 mb-6;
+}
+
+.user-prompt-form {
+  @apply flex flex-col gap-4;
+}
+
+.user-prompt-input {
+  @apply w-full px-4 py-3 rounded-lg;
+  @apply bg-white/5 border border-white/20;
+  @apply text-white placeholder-white/40;
+  @apply focus:outline-none focus:border-cyan-400 focus:bg-white/10;
+  @apply transition-all;
+}
+
+.user-prompt-error {
+  @apply text-sm text-red-400;
+}
+
+.user-prompt-submit {
+  @apply w-full py-3 px-4 rounded-lg;
+  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
+  @apply text-white font-medium;
+  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-all duration-200;
+}
+
+/* Review Form Modal */
+.review-form-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  animation: fade-in 0.2s ease-out;
+}
+
+.review-form-modal {
+  @apply relative w-full max-w-md p-6 rounded-xl;
+  @apply max-h-[90vh] overflow-y-auto;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 20, 30, 0.98) 0%,
+    rgba(15, 15, 25, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fade-in 0.3s ease-out;
+}
+
+.review-form-close {
+  @apply absolute top-3 right-3 w-8 h-8 rounded-full;
+  @apply flex items-center justify-center text-xl;
+  @apply text-white/40 hover:text-white hover:bg-white/10;
+  @apply transition-colors duration-200;
+}
+
+.review-form-title {
+  @apply text-lg font-medium text-white mb-4;
+}
+
+.review-form-user {
+  @apply flex items-center gap-3 mb-6 pb-4;
+  @apply border-b border-white/10;
+}
+
+.review-form-avatar {
+  @apply w-10 h-10 rounded-full;
+  @apply bg-white/10;
+}
+
+.review-form-username {
+  @apply text-cyan-400 font-medium;
+}
+
+.review-form {
+  @apply flex flex-col gap-5;
+}
+
+.review-form-field {
+  @apply flex flex-col gap-2;
+}
+
+.review-form-label {
+  @apply text-sm text-white/70;
+}
+
+.review-form-input {
+  @apply w-full px-4 py-3 rounded-lg;
+  @apply bg-white/5 border border-white/20;
+  @apply text-white placeholder-white/40;
+  @apply focus:outline-none focus:border-cyan-400 focus:bg-white/10;
+  @apply transition-all;
+}
+
+.review-form-input.error {
+  @apply border-red-400;
+}
+
+.review-form-textarea {
+  @apply w-full px-4 py-3 rounded-lg resize-none;
+  @apply bg-white/5 border border-white/20;
+  @apply text-white placeholder-white/40;
+  @apply focus:outline-none focus:border-cyan-400 focus:bg-white/10;
+  @apply transition-all;
+}
+
+.review-form-textarea.error {
+  @apply border-red-400;
+}
+
+.review-form-error {
+  @apply text-sm text-red-400;
+}
+
+.review-form-submit {
+  @apply w-full py-3 px-4 rounded-lg mt-2;
+  @apply bg-gradient-to-r from-cyan-500 to-teal-500;
+  @apply text-white font-medium;
+  @apply hover:from-cyan-400 hover:to-teal-400;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transition-all duration-200;
 }
