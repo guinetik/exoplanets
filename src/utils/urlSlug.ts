@@ -29,3 +29,4 @@ export function nameToSlug(name: string): string {
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
 }
 
+

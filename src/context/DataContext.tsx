@@ -6,6 +6,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { dataService } from '../services/dataService';
 import { shaderService } from '../services/shaderService';
+import { loadBinaryData } from '../utils/solarSystem';
 import { createLogger } from '@guinetik/logger';
 import type { Exoplanet, Star, FilterOptions, SortOptions } from '../types';
 
@@ -54,10 +55,11 @@ export function DataProvider({ children }: DataProviderProps) {
       try {
         setIsLoading(true);
         setError(null);
-        // Load data and shaders in parallel
+        // Load data, shaders, and binary star data in parallel
         await Promise.all([
           dataService.loadData(),
-          shaderService.loadShaders()
+          shaderService.loadShaders(),
+          loadBinaryData()
         ]);
       } catch (err) {
         logger.error('Failed to load data:', err);

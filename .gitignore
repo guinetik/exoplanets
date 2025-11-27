@@ -28,3 +28,4 @@ coverage/
 
 # Data (large files)
 data/raw/*.csv
+tmp

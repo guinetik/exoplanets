@@ -200,6 +200,7 @@ export function Stars({
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const geometryRef = useRef<THREE.BufferGeometry>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number>(-1);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const { gl, camera } = useThree();
 
   // Create texture once
@@ -390,7 +391,23 @@ export function Stars({
     }
   }, [visibleStars, hoveredIndex, gl, camera, onStarHover]);
 
-  const handleClick = useCallback(() => {
+  const handlePointerDown = useCallback((event: PointerEvent) => {
+    pointerDownPos.current = { x: event.clientX, y: event.clientY };
+  }, []);
+
+  const handleClick = useCallback((event: MouseEvent) => {
+    // Only trigger click if mouse didn't move much (not a drag)
+    if (pointerDownPos.current) {
+      const dx = event.clientX - pointerDownPos.current.x;
+      const dy = event.clientY - pointerDownPos.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 5) {
+        // This was a drag, not a click
+        return;
+      }
+    }
+
     if (hoveredIndex >= 0 && visibleStars[hoveredIndex]) {
       onStarClick?.(visibleStars[hoveredIndex].star);
     }
@@ -405,16 +422,18 @@ export function Stars({
   // Attach event listeners
   useEffect(() => {
     const canvas = gl.domElement;
+    canvas.addEventListener('pointerdown', handlePointerDown);
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('pointerleave', handlePointerLeave);
 
     return () => {
+      canvas.removeEventListener('pointerdown', handlePointerDown);
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('pointerleave', handlePointerLeave);
     };
-  }, [gl, handlePointerMove, handleClick, handlePointerLeave]);
+  }, [gl, handlePointerDown, handlePointerMove, handleClick, handlePointerLeave]);
 
   // Cleanup texture on unmount
   useEffect(() => {
