@@ -10,7 +10,12 @@ import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Exoplanet } from '../../types';
 import { shaderService } from '../../services/shaderService';
-import { createPlanetUniforms, getPlanetShaderType, getShaderFileName } from '../../utils/planetUniforms';
+import { 
+  createPlanetUniforms, 
+  getV2PlanetShaderType, 
+  getV2ShaderFileName,
+  getPlanetVertexShader,
+} from '../../utils/planetUniforms';
 import { estimateRotationSpeed, estimateAxialTilt } from '../../utils/solarSystem';
 
 // Background stars for depth
@@ -89,9 +94,10 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const ringMaterialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Get shader type and file name (prefer subtype for accuracy)
-  const shaderType = useMemo(() => getPlanetShaderType(planet.planet_subtype, planet.planet_type), [planet.planet_subtype, planet.planet_type]);
-  const fragShaderName = useMemo(() => getShaderFileName(shaderType), [shaderType]);
+  // Get shader type and file name using V2 system for better variety
+  const shaderType = useMemo(() => getV2PlanetShaderType(planet), [planet]);
+  const fragShaderName = useMemo(() => getV2ShaderFileName(shaderType), [shaderType]);
+  const vertShaderName = useMemo(() => getPlanetVertexShader('v2'), []);
 
   // Create uniforms with detailed mode for the Planet page (full features)
   const uniforms = useMemo(() => createPlanetUniforms({
@@ -160,12 +166,12 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
     <group position={[0, 0.2, 0]}>
       {/* Rotating group for planet and rings */}
       <group ref={groupRef}>
-        {/* Main planet sphere - large to fill viewport */}
+        {/* Main planet sphere - large to fill viewport (V2 shaders) */}
         <mesh ref={meshRef}>
           <sphereGeometry args={[2, 64, 64]} />
           <shaderMaterial
             ref={materialRef}
-            vertexShader={shaderService.get('planetVert')}
+            vertexShader={shaderService.get(vertShaderName)}
             fragmentShader={shaderService.get(fragShaderName)}
             uniforms={uniforms}
           />

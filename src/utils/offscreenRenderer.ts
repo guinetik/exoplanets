@@ -7,7 +7,12 @@
 import * as THREE from 'three';
 import type { Exoplanet } from '../types';
 import { shaderService } from '../services/shaderService';
-import { createPlanetUniforms, getPlanetShaderType, getShaderFileName } from './planetUniforms';
+import { 
+  createPlanetUniforms, 
+  getV2PlanetShaderType, 
+  getV2ShaderFileName,
+  getPlanetVertexShader,
+} from './planetUniforms';
 import { THUMBNAIL_SIZE } from '../services/thumbnailService';
 
 /** Singleton renderer instance (reused for efficiency) */
@@ -87,14 +92,15 @@ function generateSeed(name: string): number {
 }
 
 /**
- * Create a planet mesh with the appropriate shader
+ * Create a planet mesh with the appropriate V2 shader
  */
 function createPlanetMesh(planet: Exoplanet): THREE.Mesh {
   const geometry = new THREE.SphereGeometry(1, 32, 32);
   
-  // Get shader type and create uniforms
-  const shaderType = getPlanetShaderType(planet.planet_subtype, planet.planet_type);
-  const fragShaderName = getShaderFileName(shaderType);
+  // Get V2 shader type for better variety
+  const shaderType = getV2PlanetShaderType(planet);
+  const fragShaderName = getV2ShaderFileName(shaderType);
+  const vertShaderName = getPlanetVertexShader('v2');
   
   const uniforms = createPlanetUniforms({
     planet,
@@ -107,7 +113,7 @@ function createPlanetMesh(planet: Exoplanet): THREE.Mesh {
   uniforms.uTime.value = seed * 10; // Some variation in "time" for visual variety
   
   const material = new THREE.ShaderMaterial({
-    vertexShader: shaderService.get('planetVert'),
+    vertexShader: shaderService.get(vertShaderName),
     fragmentShader: shaderService.get(fragShaderName),
     uniforms,
   });

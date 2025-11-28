@@ -1,13 +1,41 @@
 /**
  * Planet Uniform Factory
  * Creates shader uniforms from exoplanet data with normalization
+ * Supports both V1 and V2 shader systems
  */
 
 import * as THREE from 'three';
 import type { Exoplanet } from '../types';
 
-// Detail levels for LOD rendering
+// =============================================================================
+// TYPES
+// =============================================================================
+
+/** Detail levels for LOD rendering */
 export type DetailLevel = 'simple' | 'detailed';
+
+/** Shader version selection */
+export type ShaderVersion = 'v1' | 'v2';
+
+/** V1 shader types (original) */
+export type V1ShaderType = 'hotJupiter' | 'gasGiant' | 'iceGiant' | 'lavaWorld' | 'icyWorld' | 'rocky';
+
+/** V2 shader types (expanded with new planet types) */
+export type V2ShaderType =
+  | 'hotJupiter'
+  | 'gasGiant'
+  | 'iceGiant'
+  | 'subNeptune'
+  | 'lavaWorld'
+  | 'icyWorld'
+  | 'rocky'
+  | 'oceanWorld'
+  | 'desertWorld'
+  | 'tidallyLocked';
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
 
 // Normalization ranges based on real exoplanet data
 const DENSITY_MIN = 0.3;   // g/cm³ - puffy hot Jupiters
@@ -16,8 +44,15 @@ const DENSITY_MAX = 13.0;  // g/cm³ - dense iron-rich worlds (Earth is 5.5)
 const INSOL_MIN = 0.01;    // Earth flux - distant frozen worlds
 const INSOL_MAX = 10000;   // Earth flux - ultra-hot close-in planets
 
-// Temperature range (kept for reference, used directly in shaders)
-// TEMP_MIN = 50 K - coldest, TEMP_MAX = 3000 K - hottest lava worlds
+// Temperature thresholds for shader selection
+const TEMP_FROZEN = 200;      // Below = ice world candidate
+const TEMP_OCEAN_MIN = 250;   // Minimum for liquid water
+const TEMP_OCEAN_MAX = 350;   // Maximum for stable oceans
+const TEMP_DESERT = 400;      // Hot, arid conditions
+const TEMP_LAVA = 800;        // Volcanic/lava surface
+
+// Orbital period threshold for tidal locking
+const PERIOD_TIDAL_LOCK = 30; // Days - planets with shorter periods likely tidally locked
 
 // Color palettes by planet type - more saturated for better shader results
 const PLANET_COLORS: Record<string, string> = {
@@ -30,8 +65,17 @@ const PLANET_COLORS: Record<string, string> = {
   'Terrestrial': '#d9a050',   // Desert tan
 };
 
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
 /**
  * Normalize a value to 0-1 range with clamping
+ * @param value - Raw value
+ * @param min - Minimum expected value
+ * @param max - Maximum expected value
+ * @param fallback - Default if value is null/undefined
+ * @returns Normalized value between 0 and 1
  */
 function normalize(value: number | null, min: number, max: number, fallback: number = 0.5): number {
   if (value === null || value === undefined || isNaN(value)) {
@@ -42,6 +86,8 @@ function normalize(value: number | null, min: number, max: number, fallback: num
 
 /**
  * Get base color for a planet based on type
+ * @param planet - Exoplanet data
+ * @returns Three.js Color object
  */
 function getBaseColor(planet: Exoplanet): THREE.Color {
   const colorHex = PLANET_COLORS[planet.planet_type || 'Terrestrial'] || '#888888';
@@ -50,6 +96,9 @@ function getBaseColor(planet: Exoplanet): THREE.Color {
 
 /**
  * Generate a deterministic seed from planet name (0-1 range)
+ * Same name always produces same seed for consistent appearance
+ * @param name - Planet name
+ * @returns Seed value between 0 and 1
  */
 function generateSeed(name: string): number {
   let hash = 0;
@@ -63,6 +112,8 @@ function generateSeed(name: string): number {
 
 /**
  * Estimate atmosphere factor based on planet type and density
+ * @param planet - Exoplanet data
+ * @returns Atmosphere factor between 0 (none) and 1 (thick)
  */
 function estimateAtmosphere(planet: Exoplanet): number {
   const type = planet.planet_type;
@@ -84,10 +135,74 @@ function estimateAtmosphere(planet: Exoplanet): number {
   return 0.2; // Small rocky worlds - thin or no atmosphere
 }
 
+/**
+ * Check if a planet is likely tidally locked
+ * @param planet - Exoplanet data
+ * @returns True if planet is likely tidally locked
+ */
+function isTidallyLocked(planet: Exoplanet): boolean {
+  // Explicit flag
+  if (planet.is_likely_tidally_locked) return true;
+
+  // Short orbital period around M-dwarf
+  if (planet.pl_orbper !== null && planet.pl_orbper < PERIOD_TIDAL_LOCK) {
+    if (planet.st_teff !== null && planet.st_teff < 4000) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Check if a planet is likely an ocean world
+ * @param planet - Exoplanet data
+ * @returns True if planet is likely an ocean world
+ */
+function isOceanWorld(planet: Exoplanet): boolean {
+  const temp = planet.pl_eqt;
+  const density = planet.pl_dens;
+  const hasAtmosphere = estimateAtmosphere(planet) > 0.3;
+
+  // Temperature in liquid water range
+  if (temp === null || temp < TEMP_OCEAN_MIN || temp > TEMP_OCEAN_MAX) return false;
+
+  // Low density suggests high water content
+  if (density !== null && density < 3.5 && density > 1.0) {
+    return hasAtmosphere;
+  }
+
+  return false;
+}
+
+/**
+ * Check if a planet is likely a desert world
+ * @param planet - Exoplanet data
+ * @returns True if planet is likely a desert world
+ */
+function isDesertWorld(planet: Exoplanet): boolean {
+  const temp = planet.pl_eqt;
+  const density = planet.pl_dens;
+
+  // Hot but not volcanic
+  if (temp === null || temp < TEMP_DESERT || temp > TEMP_LAVA) return false;
+
+  // Rocky density
+  if (density !== null && density > 3.5) {
+    return true;
+  }
+
+  return false;
+}
+
+// =============================================================================
+// UNIFORM INTERFACES
+// =============================================================================
+
 export interface PlanetUniformOptions {
   planet: Exoplanet;
   detailLevel?: DetailLevel;
-  starTemp?: number; // Host star temperature in Kelvin
+  starTemp?: number;
 }
 
 export interface PlanetUniforms {
@@ -103,8 +218,13 @@ export interface PlanetUniforms {
   uDetailLevel: { value: number };
 }
 
+// =============================================================================
+// MAIN FUNCTIONS
+// =============================================================================
+
 /**
  * Create shader uniforms for a planet
+ * Works with both V1 and V2 shader systems
  *
  * @param options - Planet data and rendering options
  * @returns Uniforms object for Three.js shader material
@@ -140,47 +260,33 @@ export function createPlanetUniforms(options: PlanetUniformOptions): PlanetUnifo
 }
 
 /**
- * Determine which fragment shader to use based on planet subtype (preferred) or type
+ * Determine which V1 fragment shader to use based on planet data
+ * Original shader selection logic
  *
- * Subtype-based mapping (more accurate):
- * - hotJupiter: Hot Jupiter (tidally locked, extreme atmospheres)
- * - gasGiant: Jovian, Brown Dwarf Candidate
- * - iceGiant: Ice Giant, Mini-Neptune, Hot Neptune
- * - lavaWorld: Lava World (molten hellscapes)
- * - icyWorld: Ice World (frozen rocky worlds like TRAPPIST-1 f)
- * - rocky: Rocky, Super-Earth, Dense Super-Earth
+ * @param planetSubtype - Planet subtype classification
+ * @param planetType - Planet type classification
+ * @returns V1 shader type identifier
  */
 export function getPlanetShaderType(
   planetSubtype?: string | null,
   planetType?: string | null
-): 'hotJupiter' | 'gasGiant' | 'iceGiant' | 'lavaWorld' | 'icyWorld' | 'rocky' {
+): V1ShaderType {
   // Prefer subtype for more accurate shader selection
   if (planetSubtype) {
     switch (planetSubtype) {
-      // Hot Jupiters - tidally locked extreme gas giants
       case 'Hot Jupiter':
         return 'hotJupiter';
-
-      // Gas giants - large hydrogen/helium dominated
       case 'Jovian':
       case 'Brown Dwarf Candidate':
         return 'gasGiant';
-
-      // Ice giants - Neptune/Uranus-like
       case 'Ice Giant':
       case 'Mini-Neptune':
       case 'Hot Neptune':
         return 'iceGiant';
-
-      // Lava worlds - molten surfaces
       case 'Lava World':
         return 'lavaWorld';
-
-      // Ice worlds - frozen rocky surfaces (Europa-like)
       case 'Ice World':
         return 'icyWorld';
-
-      // Rocky worlds - solid surfaces
       case 'Rocky':
       case 'Super-Earth':
       case 'Dense Super-Earth':
@@ -196,16 +302,96 @@ export function getPlanetShaderType(
     case 'Sub-Neptune':
       return 'iceGiant';
     default:
-      // Earth-sized, Super-Earth, Sub-Earth, Terrestrial
       return 'rocky';
   }
 }
 
 /**
- * Get shader file name from shader type
+ * Determine which V2 fragment shader to use based on planet data
+ * Enhanced shader selection with new planet types
+ *
+ * @param planet - Full exoplanet data for smart selection
+ * @returns V2 shader type identifier
  */
-export function getShaderFileName(shaderType: 'hotJupiter' | 'gasGiant' | 'iceGiant' | 'lavaWorld' | 'icyWorld' | 'rocky'): string {
-  const shaderMap = {
+export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
+  const subtype = planet.planet_subtype;
+  const type = planet.planet_type;
+  const temp = planet.pl_eqt ?? 300;
+
+  // Subtype-based selection (most accurate)
+  if (subtype) {
+    switch (subtype) {
+      case 'Hot Jupiter':
+        return 'hotJupiter';
+      case 'Jovian':
+      case 'Brown Dwarf Candidate':
+        return 'gasGiant';
+      case 'Ice Giant':
+        return 'iceGiant';
+      case 'Mini-Neptune':
+      case 'Hot Neptune':
+        return 'subNeptune';
+      case 'Lava World':
+        return 'lavaWorld';
+      case 'Ice World':
+        return 'icyWorld';
+    }
+  }
+
+  // Type-based with smart inference
+  switch (type) {
+    case 'Gas Giant':
+      // Check if hot Jupiter based on temperature
+      if (temp > 1000) return 'hotJupiter';
+      return 'gasGiant';
+
+    case 'Neptune-like':
+      return 'iceGiant';
+
+    case 'Sub-Neptune':
+      return 'subNeptune';
+
+    default:
+      // Rocky planet variants
+      // Check for special conditions
+
+      // Tidally locked (common for M-dwarf planets)
+      if (isTidallyLocked(planet)) {
+        return 'tidallyLocked';
+      }
+
+      // Lava world (very hot)
+      if (temp > TEMP_LAVA) {
+        return 'lavaWorld';
+      }
+
+      // Ocean world (temperate with low density)
+      if (isOceanWorld(planet)) {
+        return 'oceanWorld';
+      }
+
+      // Desert world (hot and rocky)
+      if (isDesertWorld(planet)) {
+        return 'desertWorld';
+      }
+
+      // Ice world (very cold)
+      if (temp < TEMP_FROZEN) {
+        return 'icyWorld';
+      }
+
+      // Default rocky
+      return 'rocky';
+  }
+}
+
+/**
+ * Get V1 shader file name from shader type
+ * @param shaderType - V1 shader type
+ * @returns Shader name as registered in manifest
+ */
+export function getShaderFileName(shaderType: V1ShaderType): string {
+  const shaderMap: Record<V1ShaderType, string> = {
     hotJupiter: 'hotJupiterFrag',
     gasGiant: 'gasGiantFrag',
     iceGiant: 'iceGiantFrag',
@@ -214,4 +400,56 @@ export function getShaderFileName(shaderType: 'hotJupiter' | 'gasGiant' | 'iceGi
     rocky: 'rockyFrag',
   };
   return shaderMap[shaderType];
+}
+
+/**
+ * Get V2 shader file name from shader type
+ * @param shaderType - V2 shader type
+ * @returns Shader name as registered in manifest (with v2 prefix)
+ */
+export function getV2ShaderFileName(shaderType: V2ShaderType): string {
+  const shaderMap: Record<V2ShaderType, string> = {
+    hotJupiter: 'v2HotJupiterFrag',
+    gasGiant: 'v2GasGiantFrag',
+    iceGiant: 'v2IceGiantFrag',
+    subNeptune: 'v2SubNeptuneFrag',
+    lavaWorld: 'v2LavaWorldFrag',
+    icyWorld: 'v2IcyWorldFrag',
+    rocky: 'v2RockyFrag',
+    oceanWorld: 'v2OceanWorldFrag',
+    desertWorld: 'v2DesertWorldFrag',
+    tidallyLocked: 'v2TidallyLockedFrag',
+  };
+  return shaderMap[shaderType];
+}
+
+/**
+ * Get the vertex shader name for a given shader version
+ * @param version - Shader version (v1 or v2)
+ * @returns Vertex shader name as registered in manifest
+ */
+export function getPlanetVertexShader(version: ShaderVersion = 'v1'): string {
+  return version === 'v2' ? 'v2PlanetVert' : 'planetVert';
+}
+
+/**
+ * Get star surface shader names for a given version
+ * @param version - Shader version (v1 or v2)
+ * @returns Object with vert and frag shader names
+ */
+export function getStarSurfaceShaders(version: ShaderVersion = 'v1'): { vert: string; frag: string } {
+  return version === 'v2'
+    ? { vert: 'v2StarSurfaceVert', frag: 'v2StarSurfaceFrag' }
+    : { vert: 'starSurfaceVert', frag: 'starSurfaceFrag' };
+}
+
+/**
+ * Get star corona shader names for a given version
+ * @param version - Shader version (v1 or v2)
+ * @returns Object with vert and frag shader names
+ */
+export function getStarCoronaShaders(version: ShaderVersion = 'v1'): { vert: string; frag: string } {
+  return version === 'v2'
+    ? { vert: 'v2StarCoronaVert', frag: 'v2StarCoronaFrag' }
+    : { vert: 'starCoronaVert', frag: 'starCoronaFrag' };
 }

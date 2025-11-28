@@ -11,8 +11,11 @@ import type { StellarBody } from '../../utils/solarSystem';
 import { shaderService } from '../../services/shaderService';
 import {
   createPlanetUniforms,
-  getPlanetShaderType,
-  getShaderFileName,
+  getV2PlanetShaderType,
+  getV2ShaderFileName,
+  getPlanetVertexShader,
+  getStarSurfaceShaders,
+  getStarCoronaShaders,
 } from '../../utils/planetUniforms';
 
 // Speed multiplier for orbital animation (lower = slower, 1.0 = original speed)
@@ -64,13 +67,13 @@ export function CelestialBody({
     [body.color, body.emissiveIntensity]
   );
 
-  // Planet shader uniforms using the factory (simple mode for StarSystem view)
+  // Planet shader uniforms using the factory (detailed mode for full visual quality)
   const planetUniforms = useMemo(() => {
     if (body.planetData) {
       // Use real exoplanet data for data-driven visuals
       return createPlanetUniforms({
         planet: body.planetData,
-        detailLevel: 'simple', // Color-focused, performant for StarSystem
+        detailLevel: 'detailed', // Full detail for best visual quality
         starTemp: body.planetData.st_teff ?? undefined,
       });
     }
@@ -84,19 +87,25 @@ export function CelestialBody({
       uDensity: { value: 0.5 },
       uInsolation: { value: 0.5 },
       uStarTemp: { value: 5778 },
-      uDetailLevel: { value: 0.0 },
+      uDetailLevel: { value: 1.0 }, // Full detail mode
     };
   }, [body.planetData, body.color, body.temperature, body.hasAtmosphere]);
 
-  // Get the appropriate planet shader (prefer subtype for accuracy)
+  // Get the appropriate planet shader using V2 system for better variety
   const planetShaderType = useMemo(
-    () => getPlanetShaderType(body.planetData?.planet_subtype, body.planetType),
-    [body.planetData?.planet_subtype, body.planetType]
+    () => body.planetData 
+      ? getV2PlanetShaderType(body.planetData) 
+      : 'rocky',
+    [body.planetData]
   );
   const planetFragShader = useMemo(
-    () => getShaderFileName(planetShaderType),
+    () => getV2ShaderFileName(planetShaderType),
     [planetShaderType]
   );
+  
+  // Get V2 star shaders
+  const starShaders = useMemo(() => getStarSurfaceShaders('v2'), []);
+  const coronaShaders = useMemo(() => getStarCoronaShaders('v2'), []);
 
   // Animate orbit - always keep moving (no pause on hover/focus)
   useFrame((state, delta) => {
@@ -242,24 +251,24 @@ export function CelestialBody({
           </mesh>
         </Billboard>
 
-        {/* Star surface - procedural shader does all the visual work */}
+        {/* Star surface - V2 procedural shader with burning effects */}
         <mesh ref={meshRef}>
           <sphereGeometry args={[body.diameter / 2, 64, 64]} />
           <shaderMaterial
             ref={starMaterialRef}
-            vertexShader={shaderService.get('starSurfaceVert')}
-            fragmentShader={shaderService.get('starSurfaceFrag')}
+            vertexShader={shaderService.get(starShaders.vert)}
+            fragmentShader={shaderService.get(starShaders.frag)}
             uniforms={starUniforms}
           />
         </mesh>
 
-        {/* Corona layer - fiery tendrils radiating outward */}
+        {/* Corona layer - V2 fiery tendrils radiating outward */}
         <mesh>
           <sphereGeometry args={[body.diameter / 2 * 1.15, 64, 64]} />
           <shaderMaterial
             ref={coronaMaterialRef}
-            vertexShader={shaderService.get('starCoronaVert')}
-            fragmentShader={shaderService.get('starCoronaFrag')}
+            vertexShader={shaderService.get(coronaShaders.vert)}
+            fragmentShader={shaderService.get(coronaShaders.frag)}
             uniforms={coronaUniforms}
             transparent
             depthWrite={false}
@@ -327,7 +336,7 @@ export function CelestialBody({
         <sphereGeometry args={[body.diameter / 2, 48, 48]} />
         <shaderMaterial
           ref={planetMaterialRef}
-          vertexShader={shaderService.get('planetVert')}
+          vertexShader={shaderService.get(getPlanetVertexShader('v2'))}
           fragmentShader={shaderService.get(planetFragShader)}
           uniforms={planetUniforms}
         />

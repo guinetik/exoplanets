@@ -16,6 +16,28 @@
     { "name": "lavaWorldFrag", "path": "planet/lavaWorld.frag" },
     { "name": "icyWorldFrag", "path": "planet/icyWorld.frag" },
     { "name": "ringsVert", "path": "planet/rings.vert" },
-    { "name": "ringsFrag", "path": "planet/rings.frag" }
+    { "name": "ringsFrag", "path": "planet/rings.frag" },
+
+    { "name": "v2NoiseGlsl", "path": "v2/common/noise.glsl", "utility": true },
+    { "name": "v2ColorGlsl", "path": "v2/common/color.glsl", "utility": true },
+    { "name": "v2LightingGlsl", "path": "v2/common/lighting.glsl", "utility": true },
+    { "name": "v2SeedGlsl", "path": "v2/common/seed.glsl", "utility": true },
+
+    { "name": "v2PlanetVert", "path": "v2/planet/planet.vert" },
+    { "name": "v2RockyFrag", "path": "v2/planet/rocky.frag" },
+    { "name": "v2GasGiantFrag", "path": "v2/planet/gasGiant.frag" },
+    { "name": "v2HotJupiterFrag", "path": "v2/planet/hotJupiter.frag" },
+    { "name": "v2IceGiantFrag", "path": "v2/planet/iceGiant.frag" },
+    { "name": "v2SubNeptuneFrag", "path": "v2/planet/subNeptune.frag" },
+    { "name": "v2LavaWorldFrag", "path": "v2/planet/lavaWorld.frag" },
+    { "name": "v2IcyWorldFrag", "path": "v2/planet/icyWorld.frag" },
+    { "name": "v2OceanWorldFrag", "path": "v2/planet/oceanWorld.frag" },
+    { "name": "v2DesertWorldFrag", "path": "v2/planet/desertWorld.frag" },
+    { "name": "v2TidallyLockedFrag", "path": "v2/planet/tidallyLocked.frag" },
+
+    { "name": "v2StarSurfaceVert", "path": "v2/star/surface.vert" },
+    { "name": "v2StarSurfaceFrag", "path": "v2/star/surface.frag" },
+    { "name": "v2StarCoronaVert", "path": "v2/star/corona.vert" },
+    { "name": "v2StarCoronaFrag", "path": "v2/star/corona.frag" }
   ]
 }
