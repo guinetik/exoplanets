@@ -4,7 +4,7 @@
  * Layout: 3D hero, comparison sections, data visualizations, reviews
  */
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
@@ -103,6 +103,11 @@ export default function Planet() {
     if (!planet) return [];
     return getPlanetsByHost(planet.hostname);
   }, [planet, getPlanetsByHost]);
+
+  // Scroll to top when planet changes (e.g., when navigating via sibling planets)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [planetId]);
 
   const scrollToStats = () => {
     if (detailsRef.current) {

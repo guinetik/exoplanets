@@ -160,9 +160,15 @@ def classify_planet_subtype(row):
         return "Jovian"
 
 
-def get_star_class(spectype):
+def get_star_class_from_spectype(spectype):
     """
     Extract stellar class (O, B, A, F, G, K, M) from spectral type string.
+    
+    Args:
+        spectype: Spectral type string (e.g., "M8V", "G2V", "K5")
+        
+    Returns:
+        Single character stellar class or None
     """
     if pd.isna(spectype):
         return None
@@ -176,6 +182,76 @@ def get_star_class(spectype):
     if first in ["O", "B", "A", "F", "G", "K", "M", "L", "T", "Y"]:
         return first
     return None
+
+
+def get_star_class_from_temp(temperature):
+    """
+    Infer stellar class from effective temperature.
+    Used as a fallback when spectral type is not available.
+    
+    Temperature ranges based on standard stellar classification:
+    - O: >= 30,000 K (hot blue stars)
+    - B: 10,000 - 30,000 K (blue-white stars)  
+    - A: 7,500 - 10,000 K (white stars)
+    - F: 6,000 - 7,500 K (yellow-white stars)
+    - G: 5,200 - 6,000 K (yellow stars like the Sun)
+    - K: 3,700 - 5,200 K (orange stars)
+    - M: 2,400 - 3,700 K (red dwarfs)
+    - L: 1,300 - 2,400 K (brown dwarfs)
+    - T: 550 - 1,300 K (cool brown dwarfs)
+    - Y: < 550 K (very cool brown dwarfs)
+    
+    Args:
+        temperature: Effective temperature in Kelvin
+        
+    Returns:
+        Single character stellar class or None
+    """
+    if pd.isna(temperature):
+        return None
+    
+    temp = float(temperature)
+    
+    if temp >= 30000:
+        return "O"
+    elif temp >= 10000:
+        return "B"
+    elif temp >= 7500:
+        return "A"
+    elif temp >= 6000:
+        return "F"
+    elif temp >= 5200:
+        return "G"
+    elif temp >= 3700:
+        return "K"
+    elif temp >= 2400:
+        return "M"
+    elif temp >= 1300:
+        return "L"
+    elif temp >= 550:
+        return "T"
+    else:
+        return "Y"
+
+
+def get_star_class(row):
+    """
+    Determine stellar class from spectral type or temperature.
+    Prefers spectral type if available, falls back to temperature.
+    
+    Args:
+        row: DataFrame row with st_spectype and st_teff columns
+        
+    Returns:
+        Single character stellar class or None
+    """
+    # First try spectral type
+    spectype_class = get_star_class_from_spectype(row.get("st_spectype"))
+    if spectype_class:
+        return spectype_class
+    
+    # Fall back to temperature
+    return get_star_class_from_temp(row.get("st_teff"))
 
 
 def calculate_habitability_score(row):
@@ -339,9 +415,9 @@ def add_derived_fields(df):
     """Add all derived fields."""
     print("\nAdding derived fields...")
 
-    # Star class (from spectral type)
+    # Star class (from spectral type, with temperature fallback)
     print("  - star_class")
-    df["star_class"] = df["st_spectype"].apply(get_star_class)
+    df["star_class"] = df.apply(get_star_class, axis=1)
 
     # Planet classifications
     print("  - planet_type")
