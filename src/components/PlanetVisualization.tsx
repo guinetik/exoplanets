@@ -5,6 +5,7 @@
  */
 
 import type { Exoplanet } from '../types';
+import { shouldHaveRings } from '../utils/solarSystem';
 
 interface PlanetVisualizationProps {
   planet: Exoplanet;
@@ -432,7 +433,8 @@ export function PlanetVisualization({ planet, size = 64 }: PlanetVisualizationPr
   const radius = normalizeRadius(planet.pl_rade);
   const planetRadius = (size / 2) * (0.65 + radius * 0.3); // 65-95% of size (larger thumbnails)
   
-  const hasRings = planetType === 'Gas Giant' || planetType === 'Neptune-like';
+  // Use physics-based heuristic for rings (Hill/Roche ratio, temperature, size, age)
+  const hasRings = shouldHaveRings(planet);
   const isRocky = ['Sub-Earth', 'Earth-sized', 'Super-Earth', 'Terrestrial'].includes(planetType);
   const isGasGiant = planetType === 'Gas Giant';
   

@@ -198,14 +198,27 @@ function getSpectralTypeFromTemp(temperature: number): string {
 }
 
 /**
+ * Maximum visual diameter for stars to prevent overwhelming visuals
+ * This caps giant stars at a reasonable size for the scene
+ */
+const MAX_STAR_VISUAL_DIAMETER = 18;
+
+/**
  * Scale stellar radius to visual diameter for rendering
+ * Uses logarithmic scaling for giant stars and clamps to max diameter
+ * @param radiusSolar - Star radius in solar radii
+ * @returns Visual diameter clamped to MAX_STAR_VISUAL_DIAMETER
  */
 function radiusToVisualDiameter(radiusSolar: number): number {
   // Use log scale for giant stars to keep visualization manageable
+  let diameter: number;
   if (radiusSolar <= 5) {
-    return 2 + radiusSolar * 1.5;
+    diameter = 2 + radiusSolar * 1.5;
+  } else {
+    diameter = 2 + 5 * 1.5 + Math.log10(radiusSolar / 5) * 8;
   }
-  return 2 + 5 * 1.5 + Math.log10(radiusSolar / 5) * 8;
+  // Clamp to maximum to prevent overwhelming corona/glow effects
+  return Math.min(diameter, MAX_STAR_VISUAL_DIAMETER);
 }
 
 /**
@@ -225,6 +238,249 @@ function getPlanetColor(planetType: string | null, index: number): string {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
+}
+
+// =============================================================================
+// PHYSICAL CONSTANTS FOR RING CALCULATIONS
+// =============================================================================
+
+/** Sun/Earth mass ratio */
+const SOLAR_MASS_IN_EARTH_MASSES = 332946;
+
+/** AU in kilometers */
+const AU_IN_KM = 1.496e8;
+
+/** Earth radius in kilometers */
+const EARTH_RADIUS_KM = 6371;
+
+/** Default ring particle density (g/cm³) - icy particles like Saturn's rings */
+const DEFAULT_RING_PARTICLE_DENSITY = 1.0;
+
+// =============================================================================
+// RING PROBABILITY HEURISTIC
+// =============================================================================
+
+/**
+ * Estimate planet mass from radius using Chen & Kipping (2017) mass-radius relation
+ * @param radiusEarth - Planet radius in Earth radii
+ * @returns Estimated mass in Earth masses
+ */
+function estimateMassFromRadius(radiusEarth: number): number {
+  // Chen & Kipping "Forecaster" empirical relation (simplified)
+  // Different power laws for different size regimes
+  if (radiusEarth < 1.23) {
+    // Rocky/Earth-like: M ~ R^3.7
+    return Math.pow(radiusEarth, 3.7);
+  } else if (radiusEarth < 2.0) {
+    // Super-Earth transition: M ~ R^1.7
+    return 1.9 * Math.pow(radiusEarth, 1.7);
+  } else if (radiusEarth < 4.0) {
+    // Neptune-like: M ~ R^0.5
+    return 2.7 * Math.pow(radiusEarth, 0.5) * 3;
+  } else {
+    // Gas giant: M ~ R^0.01 (weak dependence, use Jupiter-like)
+    return 17.5 * Math.pow(radiusEarth / 4, 0.59) * 17.8;
+  }
+}
+
+/**
+ * Calculate Hill radius - the gravitational sphere of influence
+ * @param semiMajorAxisAU - Orbital distance in AU
+ * @param planetMassEarth - Planet mass in Earth masses
+ * @param starMassSolar - Star mass in Solar masses
+ * @returns Hill radius in kilometers
+ */
+function calculateHillRadius(
+  semiMajorAxisAU: number,
+  planetMassEarth: number,
+  starMassSolar: number
+): number {
+  // R_H = a * (M_p / (3 * M_star))^(1/3)
+  const massRatio = planetMassEarth / (3 * starMassSolar * SOLAR_MASS_IN_EARTH_MASSES);
+  const hillRadiusAU = semiMajorAxisAU * Math.pow(massRatio, 1/3);
+  return hillRadiusAU * AU_IN_KM;
+}
+
+/**
+ * Calculate Roche limit - minimum distance before tidal forces destroy a satellite
+ * @param planetRadiusEarth - Planet radius in Earth radii
+ * @param planetDensity - Planet density in g/cm³
+ * @param ringParticleDensity - Ring particle density in g/cm³
+ * @returns Roche limit in kilometers
+ */
+function calculateRocheLimit(
+  planetRadiusEarth: number,
+  planetDensity: number,
+  ringParticleDensity: number = DEFAULT_RING_PARTICLE_DENSITY
+): number {
+  // R_Roche ≈ 2.456 * R_p * (ρ_p / ρ_s)^(1/3)
+  const planetRadiusKm = planetRadiusEarth * EARTH_RADIUS_KM;
+  const densityRatio = planetDensity / ringParticleDensity;
+  return 2.456 * planetRadiusKm * Math.pow(densityRatio, 1/3);
+}
+
+/**
+ * Calculate physics-based ring probability score
+ * Based on DeepSeek research heuristic combining multiple factors:
+ * - Giantness: Larger planets more likely to have rings
+ * - Hill/Roche ratio: Must have stable ring zone (R_H >> R_Roche)
+ * - Temperature: Cold planets favor icy rings
+ * - Youth: Young systems have more debris
+ *
+ * @param planet - Exoplanet data
+ * @returns Ring probability score (0-1)
+ */
+export function calculateRingProbability(planet: Exoplanet): number {
+  // ==========================================================================
+  // 1. GIANTNESS SCORE (S_G) - larger planets more likely to have rings
+  // ==========================================================================
+  const radiusEarth = planet.pl_rade ?? 1.0;
+  let giantnessScore: number;
+
+  if (radiusEarth > 8) {
+    // Large gas giants (Jupiter-sized and above)
+    giantnessScore = 1.0;
+  } else if (radiusEarth > 4) {
+    // Saturn-sized, Neptune-sized
+    giantnessScore = 0.6;
+  } else if (radiusEarth > 2) {
+    // Sub-Neptunes, mini-Neptunes
+    giantnessScore = 0.2;
+  } else {
+    // Rocky worlds - very unlikely to have rings
+    giantnessScore = 0.05;
+  }
+
+  // ==========================================================================
+  // 2. HILL/ROCHE AVAILABILITY SCORE (S_HR) - can rings exist?
+  // ==========================================================================
+  const semiMajorAxisAU = planet.pl_orbsmax ?? 1.0;
+  const starMassSolar = planet.st_mass ?? 1.0;
+
+  // Get planet mass - use actual if available, otherwise estimate from radius
+  const planetMassEarth = planet.pl_bmasse ?? estimateMassFromRadius(radiusEarth);
+
+  // Get planet density - use actual if available, otherwise estimate
+  // Typical densities: Gas giant ~1.3, Neptune-like ~1.6, Rocky ~5.5
+  let planetDensity = planet.pl_dens;
+  if (!planetDensity) {
+    const planetType = planet.planet_type || 'Terrestrial';
+    if (planetType === 'Gas Giant') planetDensity = 1.3;
+    else if (planetType === 'Neptune-like' || planetType === 'Sub-Neptune') planetDensity = 1.6;
+    else planetDensity = 5.5;
+  }
+
+  // Calculate Hill radius and Roche limit
+  const hillRadiusKm = calculateHillRadius(semiMajorAxisAU, planetMassEarth, starMassSolar);
+  const rocheKm = calculateRocheLimit(radiusEarth, planetDensity);
+
+  // Ratio X = R_H / R_Roche - how much room for rings?
+  const hillRocheRatio = hillRadiusKm / rocheKm;
+
+  let hillRocheScore: number;
+  if (hillRocheRatio > 10) {
+    // Huge ring zone available (like Saturn at 9.5 AU)
+    hillRocheScore = 1.0;
+  } else if (hillRocheRatio > 3) {
+    // Good ring zone
+    hillRocheScore = 0.8;
+  } else if (hillRocheRatio > 1.5) {
+    // Marginal ring zone
+    hillRocheScore = 0.4;
+  } else {
+    // Ring zone too small or non-existent
+    hillRocheScore = 0.05;
+  }
+
+  // ==========================================================================
+  // 3. COLDNESS/COMPOSITION SCORE (S_T) - icy rings favored if cold
+  // ==========================================================================
+  // Use equilibrium temperature, or estimate from insolation
+  let equilibriumTemp = planet.pl_eqt;
+  if (!equilibriumTemp && planet.pl_insol) {
+    // Estimate: T_eq ≈ 255 * (insolation)^0.25 for Earth-like albedo
+    equilibriumTemp = 255 * Math.pow(planet.pl_insol, 0.25);
+  }
+  equilibriumTemp = equilibriumTemp ?? 300; // Default to Earth-like
+
+  let temperatureScore: number;
+  if (equilibriumTemp < 150) {
+    // Very cold - icy rings stable (like Saturn's)
+    temperatureScore = 1.0;
+  } else if (equilibriumTemp < 250) {
+    // Cold - mixed ice/rock possible
+    temperatureScore = 0.5;
+  } else if (equilibriumTemp < 400) {
+    // Warm - only rocky/dusty rings, less stable
+    temperatureScore = 0.2;
+  } else {
+    // Hot - rings would sublimate quickly
+    temperatureScore = 0.05;
+  }
+
+  // ==========================================================================
+  // 4. YOUTH/DEBRIS SCORE (S_A) - young systems have more debris
+  // ==========================================================================
+  let youthScore: number;
+
+  if (planet.is_young_system) {
+    // Flagged as young (<1 Gyr typically)
+    youthScore = 1.0;
+  } else if (planet.st_age !== null && planet.st_age < 0.3) {
+    // Very young system (<300 Myr) - lots of debris
+    youthScore = 1.0;
+  } else if (planet.st_age !== null && planet.st_age < 1.0) {
+    // Young system (300 Myr - 1 Gyr)
+    youthScore = 0.7;
+  } else if (planet.st_age !== null && planet.st_age < 3.0) {
+    // Middle-aged
+    youthScore = 0.4;
+  } else {
+    // Old or unknown age (most Kepler targets)
+    youthScore = 0.3;
+  }
+
+  // ==========================================================================
+  // COMBINE SCORES WITH WEIGHTS
+  // ==========================================================================
+  // Weights prioritize physical possibility (Hill/Roche) and size (Giantness)
+  const weights = {
+    hillRoche: 0.35,    // Most important - can rings physically exist?
+    giantness: 0.30,    // Large planets capture/retain ring material
+    temperature: 0.20,  // Temperature affects ring composition/stability
+    youth: 0.15,        // Young systems have more debris
+  };
+
+  const totalScore =
+    weights.hillRoche * hillRocheScore +
+    weights.giantness * giantnessScore +
+    weights.temperature * temperatureScore +
+    weights.youth * youthScore;
+
+  return clamp(totalScore, 0, 1);
+}
+
+/**
+ * Determine if a planet should have rings based on physics-based probability
+ * Uses deterministic seed for consistency across renders
+ * @param planet - Exoplanet data
+ * @returns True if planet should have rings
+ */
+export function shouldHaveRings(planet: Exoplanet): boolean {
+  // Only gas giants and ice giants can have significant rings
+  const planetType = planet.planet_type || 'Terrestrial';
+  if (planetType !== 'Gas Giant' && planetType !== 'Neptune-like' && planetType !== 'Sub-Neptune') {
+    return false;
+  }
+
+  // Calculate physics-based probability
+  const ringProbability = calculateRingProbability(planet);
+
+  // Use deterministic seed so same planet always has same result
+  const seed = hashString(planet.pl_name + '-rings');
+
+  // Planet has rings if random seed < probability score
+  return seed < ringProbability;
 }
 
 // =============================================================================
@@ -572,9 +828,9 @@ export function generateSolarSystem(
     // Scale planet size (with reasonable bounds)
     const diameter = clamp(0.3 + planetRadJ * 0.8, 0.2, 2.5);
 
-    // Determine if planet should have rings (gas giants and ice giants)
-    const hasRings =
-      planetType === 'Gas Giant' || planetType === 'Neptune-like';
+    // Determine if planet should have rings using physics-based heuristic
+    // Considers: size, Hill/Roche ratio, temperature, system age
+    const hasRings = shouldHaveRings(planet);
 
     // Estimate atmosphere based on planet type and size
     // Gas giants and ice giants always have thick atmospheres

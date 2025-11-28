@@ -529,3 +529,11 @@ export function getStarCoronaShaders(version: ShaderVersion = 'v1'): { vert: str
 export function getStarFlareShaders(): { vert: string; frag: string } {
   return { vert: 'v2StarFlareVert', frag: 'v2StarFlareFrag' };
 }
+
+/**
+ * Get planetary ring shader names
+ * @returns Object with vert and frag shader names
+ */
+export function getRingShaders(): { vert: string; frag: string } {
+  return { vert: 'ringsVert', frag: 'ringsFrag' };
+}

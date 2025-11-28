@@ -18,6 +18,7 @@ import {
   getStarCoronaShaders,
   generateSeed,
   getStarActivityLevel,
+  getRingShaders,
 } from '../../utils/planetUniforms';
 import { SolarFlares } from './SolarFlares';
 
@@ -124,6 +125,91 @@ export function CelestialBody({
   const starShaders = useMemo(() => getStarSurfaceShaders('v2'), []);
   const coronaShaders = useMemo(() => getStarCoronaShaders('v2'), []);
 
+  // Get ring shaders for gas giants
+  const ringShaders = useMemo(() => getRingShaders(), []);
+  const ringMaterialRef = useRef<THREE.ShaderMaterial>(null);
+
+  // Ring uniforms - color based on planet temperature (icy vs rocky)
+  const ringUniforms = useMemo(() => {
+    const seed = body.id ? generateSeed(body.id) : Math.random();
+    const density = body.planetData?.pl_bmasse
+      ? Math.min(body.planetData.pl_bmasse / 300, 1.0)
+      : 0.5;
+    const insolation = body.planetData?.pl_insol
+      ? Math.min(body.planetData.pl_insol / 2, 1.0)
+      : 0.5;
+
+    // Get planet temperature - use equilibrium temp or estimate from insolation
+    const temp = body.planetData?.pl_eqt
+      ?? (body.planetData?.pl_insol ? Math.sqrt(body.planetData.pl_insol) * 255 : 150);
+
+    // Seed-based variation within the temperature category
+    const variation = (seed * 0.3) - 0.15; // -0.15 to +0.15
+
+    let ringColor: THREE.Color;
+
+    if (temp < 120) {
+      // Very cold: Pure ice rings - bright white/blue
+      ringColor = new THREE.Color().setHSL(
+        0.55 + variation * 0.1,  // Blue-ish hue
+        0.25 + seed * 0.15,      // Low-medium saturation
+        0.8 + seed * 0.1         // Bright
+      );
+    } else if (temp < 200) {
+      // Cold: Mixed ice/rock - pale blue-gray
+      ringColor = new THREE.Color().setHSL(
+        0.58 + variation * 0.08, // Slightly blue
+        0.15 + seed * 0.1,       // Low saturation
+        0.7 + seed * 0.1         // Fairly bright
+      );
+    } else if (temp < 350) {
+      // Cool: Rocky/dusty - tans, browns, grays
+      const subType = Math.floor(seed * 3);
+      if (subType === 0) {
+        // Tan/beige rocky
+        ringColor = new THREE.Color().setHSL(0.08 + variation, 0.35, 0.6);
+      } else if (subType === 1) {
+        // Gray rocky
+        ringColor = new THREE.Color().setHSL(0.6, 0.08 + seed * 0.1, 0.55);
+      } else {
+        // Brown dusty
+        ringColor = new THREE.Color().setHSL(0.06 + variation, 0.4, 0.5);
+      }
+    } else if (temp < 600) {
+      // Warm: Dark rocky/metallic
+      const subType = Math.floor(seed * 2);
+      if (subType === 0) {
+        // Dark gray metallic
+        ringColor = new THREE.Color().setHSL(0.0, 0.05, 0.4 + seed * 0.15);
+      } else {
+        // Rusty/oxidized
+        ringColor = new THREE.Color().setHSL(0.05 + variation * 0.5, 0.45, 0.45);
+      }
+    } else {
+      // Hot: Silicate/volcanic debris - dark with orange/red hints
+      ringColor = new THREE.Color().setHSL(
+        0.03 + variation * 0.3,  // Orange-red hue
+        0.5 + seed * 0.2,        // Medium-high saturation
+        0.35 + seed * 0.15       // Darker
+      );
+    }
+
+    // Ring geometry dimensions (must match ringGeometry args)
+    const innerRadius = body.diameter * 0.6;
+    const outerRadius = body.diameter * 1.3;
+
+    return {
+      uBaseColor: { value: ringColor },
+      uRingColor: { value: ringColor },
+      uTime: { value: 0 },
+      uSeed: { value: seed },
+      uDensity: { value: density },
+      uInsolation: { value: insolation },
+      uInnerRadius: { value: innerRadius },
+      uOuterRadius: { value: outerRadius },
+    };
+  }, [body.id, body.planetData, body.diameter]);
+
   // Animate orbit - always keep moving (no pause on hover/focus)
   useFrame((state, delta) => {
     // Animate planets - always orbit
@@ -212,6 +298,9 @@ export function CelestialBody({
       if (planetMaterialRef.current) {
         planetMaterialRef.current.uniforms.uTime.value = time;
       }
+      if (ringMaterialRef.current) {
+        ringMaterialRef.current.uniforms.uTime.value = time;
+      }
     }
   });
 
@@ -219,6 +308,9 @@ export function CelestialBody({
   const scale = isHovered ? 1.3 : 1;
 
   if (body.type === 'star') {
+    // Calculate scaled visual effect sizes for this star
+    const starRadius = body.diameter / 2;
+    
     // Star content - same for primary and companion
     const StarContent = (
       <>
@@ -281,7 +373,7 @@ export function CelestialBody({
 
         {/* Corona layer - V2 fiery flames extending outward */}
         <mesh>
-          <sphereGeometry args={[body.diameter / 2 * 1.5, 64, 64]} />
+          <sphereGeometry args={[starRadius * 1.5, 64, 64]} />
           <shaderMaterial
             ref={coronaMaterialRef}
             vertexShader={shaderService.get(coronaShaders.vert)}
@@ -296,7 +388,7 @@ export function CelestialBody({
 
         {/* Solar flares - dramatic eruptions */}
         <SolarFlares
-          starRadius={body.diameter / 2}
+          starRadius={starRadius}
           starColor={body.color}
           starSeed={starSeed}
           activityLevel={activityLevel}
@@ -367,17 +459,17 @@ export function CelestialBody({
         />
       </mesh>
 
-      {/* Rings for gas giants - tilted with the planet's axial tilt */}
+      {/* Rings for gas giants - with varied internal bands */}
       {body.hasRings && (
         <mesh rotation={[Math.PI / 2 + body.axialTilt, 0, 0]}>
-          <ringGeometry args={[body.diameter * 0.7, body.diameter * 1.2, 64]} />
-          <meshBasicMaterial
-            color={new THREE.Color(body.color).lerp(
-              new THREE.Color('#ffffff'),
-              0.4
-            )}
+          <ringGeometry args={[body.diameter * 0.6, body.diameter * 1.3, 64]} />
+          <shaderMaterial
+            ref={ringMaterialRef}
+            vertexShader={shaderService.get(ringShaders.vert)}
+            fragmentShader={shaderService.get(ringShaders.frag)}
+            uniforms={ringUniforms}
             transparent
-            opacity={0.5}
+            depthWrite={false}
             side={THREE.DoubleSide}
           />
         </mesh>

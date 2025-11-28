@@ -16,7 +16,7 @@ import {
   getV2ShaderFileName,
   getPlanetVertexShader,
 } from '../../utils/planetUniforms';
-import { estimateRotationSpeed, estimateAxialTilt } from '../../utils/solarSystem';
+import { estimateRotationSpeed, estimateAxialTilt, shouldHaveRings } from '../../utils/solarSystem';
 
 // Background stars for depth
 function BackgroundStars({ count = 2000 }: { count?: number }) {
@@ -53,17 +53,6 @@ function BackgroundStars({ count = 2000 }: { count?: number }) {
     </points>
   );
 }
-
-// Color palette for ring coloring (shared constant)
-const PLANET_COLORS: Record<string, string> = {
-  'Gas Giant': '#c9a86c',
-  'Neptune-like': '#4a90d9',
-  'Sub-Neptune': '#5fa8d3',
-  'Super-Earth': '#8b7355',
-  'Earth-sized': '#4a7c59',
-  'Sub-Earth': '#a0522d',
-  'Terrestrial': '#cd853f',
-};
 
 interface PlanetMeshProps {
   planet: Exoplanet;
@@ -111,18 +100,75 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
   const axialTilt = useMemo(() => estimateAxialTilt(planet), [planet]);
   const isTidallyLocked = planet.is_likely_tidally_locked ?? false;
 
-  // Ring uniforms - data-driven
+  // Ring uniforms - temperature-based color (matches StarSystem view)
   const ringUniforms = useMemo(() => {
     const seed = generateSeed(planet.pl_name);
     const density = normalize(planet.pl_dens, 0.3, 13.0, 0.5);
     const insolation = normalize(planet.pl_insol, 0.01, 10000, 0.5);
 
+    // Get planet temperature - use equilibrium temp or estimate from insolation
+    const temp = planet.pl_eqt
+      ?? (planet.pl_insol ? Math.sqrt(planet.pl_insol) * 255 : 150);
+
+    // Seed-based variation within the temperature category
+    const variation = (seed * 0.3) - 0.15;
+
+    let ringColor: THREE.Color;
+
+    if (temp < 120) {
+      // Very cold: Pure ice rings - bright white/blue
+      ringColor = new THREE.Color().setHSL(
+        0.55 + variation * 0.1,
+        0.25 + seed * 0.15,
+        0.8 + seed * 0.1
+      );
+    } else if (temp < 200) {
+      // Cold: Mixed ice/rock - pale blue-gray
+      ringColor = new THREE.Color().setHSL(
+        0.58 + variation * 0.08,
+        0.15 + seed * 0.1,
+        0.7 + seed * 0.1
+      );
+    } else if (temp < 350) {
+      // Cool: Rocky/dusty - tans, browns, grays
+      const subType = Math.floor(seed * 3);
+      if (subType === 0) {
+        ringColor = new THREE.Color().setHSL(0.08 + variation, 0.35, 0.6);
+      } else if (subType === 1) {
+        ringColor = new THREE.Color().setHSL(0.6, 0.08 + seed * 0.1, 0.55);
+      } else {
+        ringColor = new THREE.Color().setHSL(0.06 + variation, 0.4, 0.5);
+      }
+    } else if (temp < 600) {
+      // Warm: Dark rocky/metallic
+      const subType = Math.floor(seed * 2);
+      if (subType === 0) {
+        ringColor = new THREE.Color().setHSL(0.0, 0.05, 0.4 + seed * 0.15);
+      } else {
+        ringColor = new THREE.Color().setHSL(0.05 + variation * 0.5, 0.45, 0.45);
+      }
+    } else {
+      // Hot: Silicate/volcanic debris
+      ringColor = new THREE.Color().setHSL(
+        0.03 + variation * 0.3,
+        0.5 + seed * 0.2,
+        0.35 + seed * 0.15
+      );
+    }
+
+    // Ring geometry dimensions (must match ringGeometry args below)
+    const innerRadius = 2.5;
+    const outerRadius = 4.0;
+
     return {
-      uBaseColor: { value: new THREE.Color(PLANET_COLORS[planet.planet_type || 'Terrestrial']).lerp(new THREE.Color('#ffffff'), 0.3) },
+      uBaseColor: { value: ringColor },
+      uRingColor: { value: ringColor },
       uTime: { value: 0 },
       uSeed: { value: seed },
       uDensity: { value: density },
       uInsolation: { value: insolation },
+      uInnerRadius: { value: innerRadius },
+      uOuterRadius: { value: outerRadius },
     };
   }, [planet]);
 
@@ -152,8 +198,9 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
     }
   });
 
-  // Determine if planet should have rings (gas giants and some ice giants)
-  const hasRings = planet.planet_type === 'Gas Giant' || planet.planet_type === 'Neptune-like';
+  // Determine if planet should have rings using physics-based heuristic
+  // Uses Hill/Roche ratio, temperature, size, and system age
+  const hasRings = useMemo(() => shouldHaveRings(planet), [planet]);
 
   // Ring tilt uses physics-based axial tilt for consistency
   const ringTilt = useMemo(() => {
