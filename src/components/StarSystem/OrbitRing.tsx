@@ -4,9 +4,12 @@
  * For eccentric orbits, the star is positioned at one focus of the ellipse
  */
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+
+/** Fade-in animation duration for orbit rings (seconds) */
+const ORBIT_FADE_DURATION = 2.2;
 
 interface OrbitRingProps {
   radius: number; // Semi-major axis (a)
@@ -22,6 +25,8 @@ export function OrbitRing({
   isBinaryOrbit = false,
 }: OrbitRingProps) {
   const lineRef = useRef<THREE.Line>(null);
+  const fadeStartTime = useRef<number | null>(null);
+  const [isFullyVisible, setIsFullyVisible] = useState(false);
 
   // Clamp eccentricity to valid range [0, 0.99] to prevent degenerate ellipses
   const e = Math.min(Math.max(eccentricity, 0), 0.99);
@@ -60,34 +65,51 @@ export function OrbitRing({
     return new THREE.Line(geometry, material);
   }, [a, b, focusOffset]);
 
-  // Update material properties reactively
-  useFrame(() => {
-    if (lineRef.current) {
-      const material = lineRef.current.material as THREE.LineBasicMaterial;
+  // Update material properties reactively with fade-in
+  useFrame((state) => {
+    if (!lineRef.current) return;
+    const material = lineRef.current.material as THREE.LineBasicMaterial;
 
-      // Binary orbits: golden/orange to represent the stellar dance
-      // Eccentric planet orbits: blue-ish tint
-      // Normal planet orbits: gray
-      let baseColor: string;
-      let opacity: number;
-
-      if (isHighlighted) {
-        baseColor = '#ffffff';
-        opacity = 0.8;
-      } else if (isBinaryOrbit) {
-        baseColor = '#ffaa44'; // Golden orange for binary star orbit
-        opacity = 0.5;
-      } else if (isEccentric) {
-        baseColor = '#aaaaff'; // Blue-ish for eccentric planet orbits
-        opacity = 0.45;
-      } else {
-        baseColor = '#888888'; // Gray for circular orbits
-        opacity = 0.3;
-      }
-
-      material.color.set(baseColor);
-      material.opacity = opacity;
+    // Initialize fade start time on first frame
+    if (fadeStartTime.current === null) {
+      fadeStartTime.current = state.clock.elapsedTime;
     }
+
+    // Calculate fade-in multiplier
+    let fadeMultiplier = 1;
+    if (!isFullyVisible) {
+      const elapsed = state.clock.elapsedTime - fadeStartTime.current;
+      // Ease-out cubic for smooth deceleration
+      const t = Math.min(elapsed / ORBIT_FADE_DURATION, 1);
+      fadeMultiplier = 1 - Math.pow(1 - t, 3);
+
+      if (t >= 1) {
+        setIsFullyVisible(true);
+      }
+    }
+
+    // Binary orbits: golden/orange to represent the stellar dance
+    // Eccentric planet orbits: blue-ish tint
+    // Normal planet orbits: gray
+    let baseColor: string;
+    let targetOpacity: number;
+
+    if (isHighlighted) {
+      baseColor = '#ffffff';
+      targetOpacity = 0.8;
+    } else if (isBinaryOrbit) {
+      baseColor = '#ffaa44'; // Golden orange for binary star orbit
+      targetOpacity = 0.5;
+    } else if (isEccentric) {
+      baseColor = '#aaaaff'; // Blue-ish for eccentric planet orbits
+      targetOpacity = 0.45;
+    } else {
+      baseColor = '#888888'; // Gray for circular orbits
+      targetOpacity = 0.3;
+    }
+
+    material.color.set(baseColor);
+    material.opacity = targetOpacity * fadeMultiplier;
   });
 
   return <primitive ref={lineRef} object={line} />;

@@ -16,6 +16,7 @@ import {
   TemperatureZoneIndicator,
   OrbitalPositionChart,
   SiblingPlanets,
+  RadialVelocitySection,
 } from '../components/Planet';
 import { TravelTimeCalculator } from '../components/shared';
 import { nameToSlug } from '../utils/urlSlug';
@@ -206,6 +207,14 @@ export default function Planet() {
           className="section-comparison"
         >
           <PlanetEarthComparison planet={planet} />
+        </PlanetSection>
+
+        {/* Radial Velocity Analysis - Flagship Educational Feature */}
+        <PlanetSection
+          title={t('pages.planet.sections.radialVelocity')}
+          className="section-rv"
+        >
+          <RadialVelocitySection planet={planet} siblings={siblings} />
         </PlanetSection>
 
         {/* Habitability & Temperature Row */}

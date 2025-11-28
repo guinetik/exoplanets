@@ -4,7 +4,7 @@
  * All UI overlays should be handled by the parent page
  */
 
-import { useMemo, useCallback, Suspense, useRef, createContext, useContext } from 'react';
+import { useMemo, useCallback, Suspense, useRef, createContext, useContext, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -14,6 +14,9 @@ import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
 import { NebulaBackground } from './NebulaBackground';
+
+/** Fade-in animation duration for background stars (seconds) */
+const STARS_FADE_DURATION = 2.0;
 
 /** Context for sharing body positions between components */
 interface BodyPositionsContextType {
@@ -47,8 +50,15 @@ interface StarSystemProps {
   onBackgroundClick?: () => void;
 }
 
-// Static background stars - no animation, attached to camera
+/**
+ * Static background stars with fade-in animation
+ * Stars are distributed on a sphere and fade in gracefully on mount
+ */
 function BackgroundStars({ count = 3000 }: { count?: number }) {
+  const materialRef = useRef<THREE.PointsMaterial>(null);
+  const fadeStartTime = useRef<number | null>(null);
+  const [isFullyVisible, setIsFullyVisible] = useState(false);
+
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -64,6 +74,30 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
     return pos;
   }, [count]);
 
+  // Animate fade-in
+  useFrame((state) => {
+    if (!materialRef.current) return;
+
+    // Initialize fade start time on first frame
+    if (fadeStartTime.current === null) {
+      fadeStartTime.current = state.clock.elapsedTime;
+    }
+
+    // Calculate and apply fade-in opacity
+    if (!isFullyVisible) {
+      const elapsed = state.clock.elapsedTime - fadeStartTime.current;
+      // Ease-out cubic for smooth deceleration
+      const t = Math.min(elapsed / STARS_FADE_DURATION, 1);
+      const opacity = (1 - Math.pow(1 - t, 3)) * 0.6; // Target opacity is 0.6
+
+      materialRef.current.opacity = opacity;
+
+      if (t >= 1) {
+        setIsFullyVisible(true);
+      }
+    }
+  });
+
   return (
     <points>
       <bufferGeometry>
@@ -75,10 +109,11 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
         />
       </bufferGeometry>
       <pointsMaterial
+        ref={materialRef}
         size={1.5}
         color={0xffffff}
         transparent
-        opacity={0.6}
+        opacity={0} // Start invisible for fade-in
         sizeAttenuation={false}
       />
     </points>

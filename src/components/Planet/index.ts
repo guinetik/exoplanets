@@ -5,3 +5,4 @@ export { HabitabilityGauge } from './HabitabilityGauge';
 export { TemperatureZoneIndicator } from './TemperatureZoneIndicator';
 export { OrbitalPositionChart } from './OrbitalPositionChart';
 export { SiblingPlanets } from './SiblingPlanets';
+export { RadialVelocitySection } from './RadialVelocitySection';

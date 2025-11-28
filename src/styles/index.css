@@ -1116,6 +1116,11 @@
     @apply bg-gray-500/20 border-gray-400/50 text-gray-300;
   }
 
+  /* RV Data */
+  .flag-rv-data {
+    @apply bg-indigo-500/20 border-indigo-400/50 text-indigo-300;
+  }
+
   .planet-card-footer {
     @apply text-xs text-white/40 text-center;
   }
@@ -1522,6 +1527,10 @@
 
   .planet-flag.flag-controversial {
     @apply bg-gray-500/20 border-gray-400/50 text-gray-300;
+  }
+
+  .planet-flag.flag-rv-data {
+    @apply bg-indigo-500/20 border-indigo-400/50 text-indigo-300;
   }
 
   /* Reviews placeholder */
@@ -1982,6 +1991,17 @@
     @apply text-white/50;
   }
 
+  .temp-approximate {
+    @apply text-lg text-yellow-400/70 ml-1;
+    cursor: help;
+  }
+
+  .temp-approximation-notice {
+    @apply text-xs text-yellow-400/60 text-center mt-3 px-4 py-2 rounded;
+    background: rgba(251, 191, 36, 0.05);
+    border: 1px solid rgba(251, 191, 36, 0.1);
+  }
+
   /* =============================================================================
      ORBITAL POSITION CHART
      ============================================================================= */
@@ -2043,6 +2063,230 @@
 
   .orbital-info-item .info-value {
     @apply text-white font-mono;
+  }
+
+  /* =============================================================================
+     RADIAL VELOCITY SECTION
+     ============================================================================= */
+
+  .rv-section {
+    @apply space-y-6;
+  }
+
+  .rv-intro {
+    @apply text-sm text-white/80 leading-relaxed bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-white/10 rounded-lg p-4 mb-6;
+  }
+
+  /* RV Curve Chart - Full Width at Top */
+  .rv-curve-container {
+    @apply bg-black/20 rounded-lg p-6 mb-4;
+  }
+
+  .rv-curve-title {
+    @apply text-base font-semibold text-white/90 mb-4 text-center;
+  }
+
+  .rv-curve-chart {
+    @apply w-full overflow-x-auto;
+  }
+
+  /* Animated marker - positioned via JavaScript */
+  .rv-animated-marker {
+    transition: cx 0.05s linear, cy 0.05s linear;
+  }
+
+  /* Real-time Data Display - Dashboard Style */
+  .rv-data-display {
+    @apply grid grid-cols-3 gap-3 mb-4;
+  }
+
+  .rv-data-item {
+    @apply bg-black/30 rounded-lg p-4 border border-white/10 text-center;
+  }
+
+  .rv-data-label {
+    @apply text-xs text-white/50 uppercase tracking-wider mb-2 font-medium;
+  }
+
+  .rv-data-value {
+    @apply text-2xl font-mono font-bold text-white/90;
+  }
+
+  .rv-data-value.rv-data-current {
+    @apply text-cyan-400;
+  }
+
+  .rv-data-unit {
+    @apply text-sm text-white/60 ml-1 font-normal;
+  }
+
+  /* Synchronized Visualizations Grid */
+  .rv-visualizations-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 mb-6;
+  }
+
+  .rv-orbital-views-card,
+  .rv-spectrum-card {
+    @apply bg-black/20 rounded-lg p-5 border border-white/10;
+  }
+
+  .rv-viz-subtitle {
+    @apply text-sm font-semibold text-white/80 mb-4 text-center;
+  }
+
+  .rv-orbital-diagram,
+  .rv-side-view,
+  .rv-spectrum {
+    @apply flex justify-center items-center;
+  }
+
+  .rv-orbital-views {
+    @apply flex flex-col items-center gap-3;
+  }
+
+  /* RV Comparison Chart */
+  .rv-comparison-container {
+    @apply bg-black/20 rounded-lg p-4 mt-6;
+  }
+
+  .rv-comparison-title {
+    @apply text-sm font-medium text-white/90 mb-3;
+  }
+
+  .rv-comparison-description {
+    @apply text-sm text-white/70 mb-4 leading-relaxed;
+  }
+
+  .rv-comparison-chart {
+    @apply w-full overflow-x-auto;
+  }
+
+  .rv-comparison-legend {
+    @apply flex items-center justify-center gap-6 mt-4 text-xs text-white/60;
+  }
+
+  .rv-comparison-legend-item {
+    @apply flex items-center gap-2;
+  }
+
+  .rv-legend-dot {
+    @apply w-3 h-3 rounded-sm;
+  }
+
+  .rv-legend-dot.current {
+    @apply bg-[#00ff88];
+  }
+
+  .rv-legend-dot.sibling {
+    @apply bg-[#00ccff] opacity-60;
+  }
+
+  .rv-legend-dot.threshold {
+    @apply bg-[#ff6b6b];
+  }
+
+  /* Educational Accordion */
+  .rv-explanation-header {
+    @apply space-y-2 mb-6;
+  }
+
+  .rv-explanation-section {
+    @apply border border-white/10 rounded-lg overflow-hidden;
+  }
+
+  .rv-explanation-trigger {
+    @apply w-full px-4 py-3 flex items-center justify-between;
+    @apply bg-black/20 hover:bg-black/30 transition-colors;
+    @apply text-left text-sm font-medium text-white/80;
+    @apply cursor-pointer;
+  }
+
+  .rv-explanation-trigger:hover {
+    @apply text-white/90;
+  }
+
+  .rv-explanation-icon {
+    @apply text-white/40 transition-transform duration-200;
+  }
+
+  .rv-explanation-icon.expanded {
+    @apply rotate-90;
+  }
+
+  .rv-explanation-content {
+    @apply px-4 py-3 text-sm text-white/70 leading-relaxed;
+    @apply bg-black/10;
+  }
+
+  .rv-explanation-image {
+    @apply mt-4 flex flex-col items-center;
+  }
+
+  .rv-diagram-image {
+    @apply w-full max-w-2xl rounded-lg border border-white/10;
+  }
+
+  .rv-image-caption {
+    @apply mt-2 text-xs text-white/60 text-center italic max-w-2xl;
+  }
+
+  /* Technical Details */
+  .rv-technical-details {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+    @apply p-4 bg-black/20 rounded-lg mt-6;
+  }
+
+  .rv-detail-item {
+    @apply flex flex-col;
+  }
+
+  .rv-detail-label {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-1;
+  }
+
+  .rv-detail-value {
+    @apply text-base font-mono text-white/90;
+  }
+
+  .rv-detail-unit {
+    @apply text-xs text-white/50 ml-1;
+  }
+
+  /* No Data View */
+  .rv-no-data-container {
+    @apply space-y-6;
+  }
+
+  .rv-no-data-message {
+    @apply text-center p-6 bg-black/20 rounded-lg;
+  }
+
+  .rv-no-data-title {
+    @apply text-sm font-medium text-white/70 mb-2;
+  }
+
+  .rv-no-data-explanation {
+    @apply text-xs text-white/50 leading-relaxed;
+  }
+
+  .rv-example {
+    @apply p-4 bg-black/20 rounded-lg;
+  }
+
+  .rv-example ul {
+    @apply list-disc list-inside text-sm text-white/70 mt-2;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .rv-curve-container,
+    .rv-comparison-container {
+      @apply p-3;
+    }
+
+    .rv-technical-details {
+      @apply grid-cols-1;
+    }
   }
 
   /* =============================================================================

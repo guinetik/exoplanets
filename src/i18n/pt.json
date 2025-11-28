@@ -219,6 +219,7 @@
         "earthLikeOnly": "Apenas Semelhantes à Terra",
         "eccentricOnly": "Órbita Excêntrica",
         "circumbinaryOnly": "Sistema Circumbinário",
+        "hasRvDataOnly": "Com Dados RV",
         "clearFilters": "Limpar Filtros"
       },
       "sort": {
@@ -258,6 +259,7 @@
         "habitability": "Pontuação de Habitabilidade",
         "temperature": "Zona de Temperatura",
         "orbitalPosition": "Posição Orbital",
+        "radialVelocity": "Análise de Velocidade Radial",
         "travelTime": "Tempo de Viagem"
       },
       "comparison": {
@@ -327,6 +329,51 @@
         "distance": "Distância da Estrela",
         "period": "Período Orbital",
         "eccentricity": "Excentricidade"
+      },
+      "rv": {
+        "title": "Detecção por Velocidade Radial",
+        "intro": "O método de velocidade radial revolucionou a astrobiologia ao permitir detectar planetas orbitando estrelas distantes—incluindo mundos potencialmente habitáveis que nunca poderíamos ver diretamente. Esta visualização usa medições reais da estrela hospedeira deste planeta para simular a sutil oscilação estelar que revelou sua existência. Observe como as visualizações sincronizadas mostram como os astrônomos decodificam pequenos desvios Doppler na luz das estrelas para descobrir novos mundos pela galáxia.",
+        "curveTitle": "Velocidade Radial ao Longo do Tempo",
+        "xAxisLabel": "Tempo (dias)",
+        "yAxisLabel": "Velocidade Radial (m/s)",
+        "comparisonTitle": "Comparação de Amplitude RV",
+        "comparisonDescription": "A amplitude RV (semi-amplitude K) indica quanto a estrela oscila devido a cada planeta. Amplitudes maiores significam que o planeta tem uma atração gravitacional mais forte sobre sua estrela—seja porque é mais massivo, orbita mais perto, ou ambos. Planetas com amplitudes abaixo de ~1 m/s são extremamente difíceis de detectar com a tecnologia atual. Este gráfico compara todos os planetas neste sistema para mostrar quais criam a oscilação estelar mais detectável.",
+        "detectionThreshold": "Limite de Detecção Moderno (~1 m/s)",
+        "dataDisplay": {
+          "currentRV": "RV Atual",
+          "amplitude": "Amplitude (K)",
+          "baseline": "Linha de Base"
+        },
+        "visualizations": {
+          "orbitalMotion": "Movimento Orbital",
+          "spectralDoppler": "Desvio Doppler Espectral"
+        },
+        "noData": {
+          "title": "Dados de Velocidade Radial Não Disponíveis",
+          "message": "Este planeta foi descoberto usando {{method}}, que não fornece medições RV.",
+          "example": "Para comparação, no nosso Sistema Solar:",
+          "jupiterExample": "Júpiter faz o Sol oscilar a ~12 m/s",
+          "earthExample": "A Terra causa ~0,09 m/s (indetectável com a tecnologia atual)",
+          "detectionLimit": "Limite de detecção para espectrógrafos modernos: ~1 m/s"
+        },
+        "explanation": {
+          "dopplerTitle": "O que é o Efeito Doppler?",
+          "dopplerContent": "Assim como uma sirene de ambulância soa mais aguda quando se aproxima e mais grave quando se afasta, a luz de uma estrela muda para comprimentos de onda mais azuis quando se move em nossa direção e mais vermelhos quando se afasta. Os astrônomos medem essas pequenas mudanças de comprimento de onda nas linhas espectrais da estrela para detectar seu movimento.",
+          "dopplerImageCaption": "Detecção por velocidade radial: À medida que um planeta orbita, ele faz sua estrela hospedeira oscilar. Este movimento produz um desvio Doppler no espectro da estrela que podemos medir da Terra.",
+          "wobbleTitle": "Como Funciona a Oscilação Estelar?",
+          "wobbleContent": "Planetas e suas estrelas hospedeiras orbitam em torno de um centro de massa comum (baricentro). À medida que um planeta orbita, ele puxa a estrela, fazendo com que a estrela 'oscile' para frente e para trás. Planetas maiores ou aqueles mais próximos de suas estrelas causam oscilações mais perceptíveis. Por exemplo, Júpiter faz o nosso Sol oscilar a cerca de 12 m/s, enquanto o efeito da Terra é apenas 0,09 m/s—pequeno demais para detectar com a tecnologia atual.",
+          "discoveryTitle": "A Descoberta de 51 Pegasi (1995)",
+          "discoveryContent": "51 Pegasi b foi o primeiro exoplaneta descoberto em torno de uma estrela semelhante ao Sol usando o método de velocidade radial. Sua amplitude RV de ~50 m/s e período orbital de 4,2 dias chocou os astrônomos, revelando um planeta da massa de Júpiter orbitando mais perto de sua estrela do que Mercúrio está do nosso Sol. Esta descoberta introduziu a classe de exoplanetas 'Júpiter Quente' e revolucionou nossa compreensão dos sistemas planetários."
+        },
+        "technical": {
+          "title": "Detalhes Técnicos",
+          "amplitude": "Amplitude RV",
+          "period": "Período Orbital",
+          "baseline": "Velocidade Basal",
+          "eccentricity": "Excentricidade",
+          "stellarRotation": "Rotação Estelar",
+          "stellarRotationNote": "A rotação estelar adiciona ruído às medições RV"
+        }
       },
       "siblings": {
         "title": "Outros Planetas em {{system}}",
@@ -524,7 +571,8 @@
         "veryNearby": "Muito Próximo",
         "solarAnalog": "Análogo Solar",
         "redDwarfHost": "Anã Vermelha",
-        "controversial": "Controverso"
+        "controversial": "Controverso",
+        "hasRvData": "Dados RV"
       },
       "viewDetails": "Ver detalhes →"
     },

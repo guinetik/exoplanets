@@ -5,10 +5,13 @@
  * Uses seed-based generation for unique nebulae per system.
  */
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderService } from '../../services/shaderService';
+
+/** Fade-in animation duration in seconds */
+const FADE_DURATION = 2.5;
 
 // Generate a deterministic seed from star name
 function generateSeed(name: string): number {
@@ -86,22 +89,46 @@ export function NebulaBackground({
   const seed = useMemo(() => generateSeed(systemName), [systemName]);
   const colors = useMemo(() => generateNebulaColors(seed), [seed]);
 
+  // Track fade-in start time
+  const fadeStartTime = useRef<number | null>(null);
+  const [isFullyVisible, setIsFullyVisible] = useState(false);
+
   // Create uniforms
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
       uSeed: { value: seed },
       uDensity: { value: density },
+      uOpacity: { value: 0 }, // Start invisible for fade-in
       uPrimaryColor: { value: colors.primary },
       uSecondaryColor: { value: colors.secondary },
     }),
     [seed, density, colors]
   );
 
-  // Animate
+  // Animate time and fade-in
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+
+      // Initialize fade start time on first frame
+      if (fadeStartTime.current === null) {
+        fadeStartTime.current = state.clock.elapsedTime;
+      }
+
+      // Calculate and apply fade-in opacity
+      if (!isFullyVisible) {
+        const elapsed = state.clock.elapsedTime - fadeStartTime.current;
+        // Ease-out cubic for smooth deceleration
+        const t = Math.min(elapsed / FADE_DURATION, 1);
+        const opacity = 1 - Math.pow(1 - t, 3);
+
+        materialRef.current.uniforms.uOpacity.value = opacity;
+
+        if (t >= 1) {
+          setIsFullyVisible(true);
+        }
+      }
     }
   });
 

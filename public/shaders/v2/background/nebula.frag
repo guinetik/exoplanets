@@ -18,6 +18,7 @@
 uniform float uTime;
 uniform float uSeed;          // System seed for unique nebula per system
 uniform float uDensity;       // Overall nebula density (0-1)
+uniform float uOpacity;       // Fade-in opacity (0-1)
 uniform vec3 uPrimaryColor;   // Primary nebula color
 uniform vec3 uSecondaryColor; // Secondary nebula color
 
@@ -217,5 +218,6 @@ void main() {
     // Very subtle base glow
     finalAlpha = max(finalAlpha, 0.02);
 
-    gl_FragColor = vec4(finalColor, finalAlpha);
+    // Apply fade-in opacity
+    gl_FragColor = vec4(finalColor, finalAlpha * uOpacity);
 }

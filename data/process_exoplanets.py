@@ -87,6 +87,10 @@ ESSENTIAL_COLUMNS = [
     # IDs
     "tic_id",
     "gaia_dr3_id",
+    # Radial Velocity properties
+    "pl_rvamp",      # RV semi-amplitude (m/s)
+    "st_radv",       # Stellar radial velocity (km/s)
+    "st_vsin",       # Stellar rotation velocity (km/s)
 ]
 
 

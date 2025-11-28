@@ -54,6 +54,11 @@ export interface Exoplanet {
   st_rotp: number | null; // Rotation period (days)
   st_spectype: string | null; // Spectral type
 
+  // Radial Velocity Properties
+  pl_rvamp: number | null; // RV semi-amplitude (m/s)
+  st_radv: number | null; // Stellar radial velocity (km/s)
+  st_vsin: number | null; // Stellar rotation velocity (km/s)
+
   // System Properties
   sy_snum: number; // Number of stars
   sy_pnum: number; // Number of planets

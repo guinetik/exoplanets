@@ -39,6 +39,10 @@ export const mockPlanet: Exoplanet = {
   st_met: 0,
   st_rotp: 25,
   st_spectype: 'G2V',
+  // Radial Velocity Properties
+  pl_rvamp: null,
+  st_radv: 15.2,
+  st_vsin: 4.5,
   sy_snum: 1,
   sy_pnum: 1,
   sy_mnum: 0,
@@ -149,12 +153,18 @@ export const mockPlanet3: Exoplanet = {
   hostname: 'Another Star',
   pl_rade: 11.2,
   pl_eqt: 1200,
+  pl_orbper: 3.5,
   discoverymethod: 'Radial Velocity',
   planet_type: 'Gas Giant',
   habitability_score: 5,
   is_habitable_zone: false,
   is_earth_like: false,
   star_class: 'K',
+  rv_flag: 1,
+  has_rv_data: true,
+  pl_rvamp: 85.5,
+  st_radv: 25.8,
+  st_vsin: 3.2,
 };
 
 export const mockPlanets: Exoplanet[] = [mockPlanet, mockPlanet2, mockPlanet3];

@@ -13,7 +13,7 @@
       "title": "Home",
       "infoCard": {
         "title": "Welcome to the Exoplanets",
-        "description": "You're viewing the night sky from Earth — but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
+        "description": "You're viewing the night sky from Earth, but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
         "stats": "Over {{starCount}} stellar systems harboring {{planetCount}}+ confirmed worlds",
         "hint": "Click any star to explore its planetary system",
         "dismiss": "Got it"
@@ -154,23 +154,23 @@
           "solarAnalog": "Solar Analog",
           "solarAnalogDesc": "Most similar to our Sun in temperature, mass, and luminosity",
           "sunLike": "Sun-like Star",
-          "sunLikeDesc": "F, G, or K spectral class — stable and long-lived",
+          "sunLikeDesc": "F, G, or K spectral class, stable and long-lived",
           "redDwarf": "Red Dwarf Host",
-          "redDwarfDesc": "M-class star — the most common type in the galaxy",
+          "redDwarfDesc": "M-class star, the most common type in the galaxy",
           "youngSystem": "Young System",
-          "youngSystemDesc": "Less than 1 billion years old — still in cosmic youth",
+          "youngSystemDesc": "Less than 1 billion years old, still in cosmic youth",
           "matureSystem": "Mature System",
-          "matureSystemDesc": "1-8 billion years old — similar age to our solar system",
+          "matureSystemDesc": "1-8 billion years old, similar age to our solar system",
           "ancientSystem": "Ancient System",
-          "ancientSystemDesc": "Over 10 billion years old — older than most stars",
+          "ancientSystemDesc": "Over 10 billion years old, older than most stars",
           "metalRich": "Metal-Rich Star",
-          "metalRichDesc": "High heavy element content — favorable for planet formation",
+          "metalRichDesc": "High heavy element content, favorable for planet formation",
           "metalPoor": "Metal-Poor Star",
-          "metalPoorDesc": "Low metallicity — formed from primordial gas",
+          "metalPoorDesc": "Low metallicity, formed from primordial gas",
           "binarySystem": "Binary Star System",
           "binarySystemDesc": "Two stars orbiting each other",
           "circumbinary": "Circumbinary Planets",
-          "circumbinaryDesc": "Planets orbiting both stars — like Tatooine"
+          "circumbinaryDesc": "Planets orbiting both stars, like Tatooine"
         },
         "habitability": {
           "title": "System Habitability",
@@ -219,6 +219,7 @@
         "earthLikeOnly": "Earth-like Only",
         "eccentricOnly": "Eccentric Orbit",
         "circumbinaryOnly": "Circumbinary System",
+        "hasRvDataOnly": "Has RV Data",
         "clearFilters": "Clear Filters"
       },
       "sort": {
@@ -258,6 +259,7 @@
         "habitability": "Habitability Score",
         "temperature": "Temperature Zone",
         "orbitalPosition": "Orbital Position",
+        "radialVelocity": "Radial Velocity Analysis",
         "travelTime": "Travel Time"
       },
       "comparison": {
@@ -327,6 +329,51 @@
         "distance": "Distance from Star",
         "period": "Orbital Period",
         "eccentricity": "Eccentricity"
+      },
+      "rv": {
+        "title": "Radial Velocity Detection",
+        "intro": "The radial velocity method revolutionized astrobiology by enabling us to detect planets orbiting distant stars including potentially habitable worlds we could never see directly. This visualization uses real measurements from this planet's host star to simulate the subtle stellar wobble that revealed its existence. Watch as the synchronized views show how astronomers decode tiny Doppler shifts in starlight to discover new worlds across the galaxy.",
+        "curveTitle": "Radial Velocity Over Time",
+        "xAxisLabel": "Time (days)",
+        "yAxisLabel": "Radial Velocity (m/s)",
+        "comparisonTitle": "RV Amplitude Comparison",
+        "comparisonDescription": "The RV amplitude (semi-amplitude K) indicates how much the star wobbles due to each planet. Larger amplitudes mean the planet has a stronger gravitational pull on its star, either because it's more massive, orbits closer, or both. Planets with amplitudes below ~1 m/s are extremely difficult to detect with current technology. This chart compares all planets in this system to show which ones create the most detectable stellar wobble.",
+        "detectionThreshold": "Modern Detection Limit (~1 m/s)",
+        "dataDisplay": {
+          "currentRV": "Current RV",
+          "amplitude": "Amplitude (K)",
+          "baseline": "Baseline"
+        },
+        "visualizations": {
+          "orbitalMotion": "Orbital Motion",
+          "spectralDoppler": "Spectral Doppler Shift"
+        },
+        "noData": {
+          "title": "No Radial Velocity Data Available",
+          "message": "This planet was discovered using {{method}}, which doesn't provide RV measurements.",
+          "example": "For comparison, in our Solar System:",
+          "jupiterExample": "Jupiter causes the Sun to wobble at ~12 m/s",
+          "earthExample": "Earth causes ~0.09 m/s (undetectable with current technology)",
+          "detectionLimit": "Detection limit for modern spectrographs: ~1 m/s"
+        },
+        "explanation": {
+          "dopplerTitle": "What is the Doppler Shift?",
+          "dopplerContent": "Just like an ambulance siren sounds higher-pitched as it approaches and lower as it moves away, light from a star shifts to bluer wavelengths when moving toward us and redder when moving away. Astronomers measure these tiny wavelength shifts in the star's spectral lines to detect its motion.",
+          "dopplerImageCaption": "Radial velocity detection: As a planet orbits, it causes its host star to wobble. This motion produces a Doppler shift in the star's spectrum that we can measure from Earth.",
+          "wobbleTitle": "How Does Stellar Wobble Work?",
+          "wobbleContent": "Planets and their host stars orbit around a common center of mass (barycenter). As a planet orbits, it tugs on the star, causing the star to 'wobble' back and forth. Larger planets or those closer to their stars cause more noticeable wobbles. For example, Jupiter causes our Sun to wobble at about 12 m/s, while Earth's effect is only 0.09 m/s; too small to detect with current technology.",
+          "discoveryTitle": "The 51 Pegasi Discovery (1995)",
+          "discoveryContent": "51 Pegasi b was the first exoplanet discovered around a Sun-like star using the radial velocity method. Its RV amplitude of ~50 m/s and 4.2-day orbital period shocked astronomers, revealing a Jupiter-mass planet orbiting closer to its star than Mercury is to our Sun. This discovery introduced the 'Hot Jupiter' class of exoplanets and revolutionized our understanding of planetary systems."
+        },
+        "technical": {
+          "title": "Technical Details",
+          "amplitude": "RV Amplitude",
+          "period": "Orbital Period",
+          "baseline": "Baseline Velocity",
+          "eccentricity": "Eccentricity",
+          "stellarRotation": "Stellar Rotation",
+          "stellarRotationNote": "Stellar rotation adds noise to RV measurements"
+        }
       },
       "siblings": {
         "title": "Other Planets in {{system}}",
@@ -404,14 +451,14 @@
           "controversial": "Controversial Detection"
         },
         "flagDescriptions": {
-          "habitableZone": "This planet orbits within the habitable zone — the region around a star where liquid water could exist on the surface.",
+          "habitableZone": "This planet orbits within the habitable zone, the region around a star where liquid water could exist on the surface.",
           "earthLike": "This planet has characteristics similar to Earth: rocky composition, similar size, and potentially habitable conditions.",
           "topCandidate": "Among the best candidates for potential habitability based on multiple factors including temperature, size, and stellar environment.",
           "potentiallyRocky": "Based on its mass and radius, this planet likely has a rocky composition similar to Earth, Mars, or Venus.",
           "earthLikeInsolation": "This planet receives a similar amount of energy from its star as Earth does from the Sun (0.5-2.0× Earth's insolation).",
           "hotJupiter": "A gas giant orbiting very close to its star, resulting in extreme surface temperatures and rapid orbital periods.",
           "hotNeptune": "A Neptune-sized planet orbiting close to its star, experiencing intense stellar radiation.",
-          "ultraHot": "Surface temperature exceeds 2000K — hot enough to vaporize most metals and rocks.",
+          "ultraHot": "Surface temperature exceeds 2000K hot enough to vaporize most metals and rocks.",
           "frozenWorld": "An extremely cold world where surface temperatures are too low for liquid water, likely covered in ice.",
           "ultraDense": "This planet has exceptionally high density, suggesting a composition dominated by heavy elements like iron.",
           "puffy": "A low-density planet with an extended atmosphere, likely inflated by intense stellar heating.",
@@ -426,17 +473,17 @@
           "multiPlanet": "Part of a system with multiple confirmed planets orbiting the same star.",
           "richSystem": "Belongs to a planetary system with 4 or more confirmed planets.",
           "multiStar": "Located in a system with multiple stars (binary, triple, or more).",
-          "veryNearby": "Less than 65 light-years from Earth — one of our closest exoplanet neighbors.",
+          "veryNearby": "Less than 65 light-years from Earth, one of our closest exoplanet neighbors.",
           "nearby": "Within 163 light-years of Earth, making it a relatively close interstellar neighbor.",
           "solarAnalog": "Orbits a star very similar to our Sun in temperature, size, and luminosity.",
           "redDwarfHost": "Orbits a red dwarf (M-type star), the most common type of star in the galaxy.",
-          "youngSystem": "Part of a stellar system less than 1 billion years old — still in its cosmic youth.",
-          "ancientSystem": "Part of a stellar system over 10 billion years old — older than most stars in our galaxy.",
+          "youngSystem": "Part of a stellar system less than 1 billion years old, still in its cosmic youth.",
+          "ancientSystem": "Part of a stellar system over 10 billion years old, older than most stars in our galaxy.",
           "metalRich": "Host star has high metallicity, which correlates with increased planet formation.",
           "metalPoor": "Host star has low metallicity, suggesting the system formed from primordial gas.",
           "transiting": "This planet passes in front of its star from our viewpoint, enabling detailed atmospheric studies.",
           "hasRvData": "Detected or confirmed using radial velocity measurements, which track the star's wobble caused by the planet.",
-          "hasTtv": "Shows Transit Timing Variations — changes in transit timing that reveal gravitational interactions with other bodies.",
+          "hasTtv": "Shows Transit Timing Variations, changes in transit timing that reveal gravitational interactions with other bodies.",
           "controversial": "The existence or properties of this planet are debated among astronomers."
         },
         "reviews": {
@@ -524,7 +571,8 @@
         "veryNearby": "Very Nearby",
         "solarAnalog": "Solar Analog",
         "redDwarfHost": "Red Dwarf Host",
-        "controversial": "Controversial"
+        "controversial": "Controversial",
+        "hasRvData": "RV Data"
       },
       "viewDetails": "View details →"
     },
@@ -571,7 +619,7 @@
       },
       "project": {
         "title": "Project Evolution",
-        "author_message": "Greetings, Travelers! Guinetik here 👩‍🚀, your guide to the stars and beyond. I'm a software engineer and space enthusiast, and this project is a labor of love. It started as a way to learn Firebase — I thought, why not use NASA's exoplanet dataset to build a TripAdvisor for the stars, where future space travelers could leave reviews about the planets they visit? We began with TESS data and a simple catalog. Then I wanted to learn Three.js, so I gave this old project a complete makeover — adding 3D procedural planets, custom shaders, habitability scoring, and much more. Welcome aboard!",
+        "author_message": "Greetings, Travelers! Guinetik here 👩‍🚀, your guide to the stars and beyond. I'm a software engineer and space enthusiast, and this project is a labor of love. It started as a way to learn Firebase, I thought, why not use NASA's exoplanet dataset to build a TripAdvisor for the stars, where future space travelers could leave reviews about the planets they visit? We began with TESS data and a simple catalog. Then I wanted to learn Three.js, so I gave this old project a complete makeover, adding 3D procedural planets, custom shaders, habitability scoring, and much more. Welcome aboard!",
         "legacy": {
           "name": "TESS Explorer (2022)",
           "features": [

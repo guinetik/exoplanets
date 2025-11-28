@@ -53,6 +53,9 @@ export default function Planets() {
   const [circumbinaryOnly, setCircumbinaryOnly] = useState(
     searchParams.get('circumbinary') === 'true'
   );
+  const [hasRvDataOnly, setHasRvDataOnly] = useState(
+    searchParams.get('rv') === 'true'
+  );
   const [currentPage, setCurrentPage] = useState(
     parseInt(searchParams.get('page') || '1', 10)
   );
@@ -118,6 +121,11 @@ export default function Planets() {
       result = result.filter((planet) => planet.is_circumbinary);
     }
 
+    // Apply RV data filter
+    if (hasRvDataOnly) {
+      result = result.filter((planet) => planet.has_rv_data);
+    }
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -158,6 +166,7 @@ export default function Planets() {
     earthLikeOnly,
     eccentricOnly,
     circumbinaryOnly,
+    hasRvDataOnly,
     searchQuery,
     sortBy,
   ]);
@@ -182,6 +191,7 @@ export default function Planets() {
     if (earthLikeOnly) params.set('earthlike', 'true');
     if (eccentricOnly) params.set('eccentric', 'true');
     if (circumbinaryOnly) params.set('circumbinary', 'true');
+    if (hasRvDataOnly) params.set('rv', 'true');
     if (validPage !== 1) params.set('page', String(validPage));
 
     setSearchParams(params, { replace: true });
@@ -194,6 +204,7 @@ export default function Planets() {
     earthLikeOnly,
     eccentricOnly,
     circumbinaryOnly,
+    hasRvDataOnly,
     validPage,
     setSearchParams,
   ]);
@@ -248,6 +259,11 @@ export default function Planets() {
     handleFilterChange();
   };
 
+  const handleHasRvDataToggle = () => {
+    setHasRvDataOnly((prev) => !prev);
+    handleFilterChange();
+  };
+
   const clearFilters = () => {
     setSelectedTypes([]);
     setSelectedClasses([]);
@@ -256,6 +272,7 @@ export default function Planets() {
     setEarthLikeOnly(false);
     setEccentricOnly(false);
     setCircumbinaryOnly(false);
+    setHasRvDataOnly(false);
     setSortBy('name');
     setCurrentPage(1);
   };
@@ -291,7 +308,8 @@ export default function Planets() {
     habitableOnly ||
     earthLikeOnly ||
     eccentricOnly ||
-    circumbinaryOnly;
+    circumbinaryOnly ||
+    hasRvDataOnly;
 
   return (
     <div className="page-container">
@@ -399,6 +417,15 @@ export default function Planets() {
               className="toggle-checkbox"
             />
             <span>{t('pages.planets.filters.circumbinaryOnly')}</span>
+          </label>
+          <label className="toggle-filter">
+            <input
+              type="checkbox"
+              checked={hasRvDataOnly}
+              onChange={handleHasRvDataToggle}
+              className="toggle-checkbox"
+            />
+            <span>{t('pages.planets.filters.hasRvDataOnly')}</span>
           </label>
         </div>
 

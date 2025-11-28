@@ -148,6 +148,9 @@ export function PlanetCard({ planet }: PlanetCardProps) {
           )}
           
           {/* Detection flags */}
+          {planet.has_rv_data && (
+            <span className="flag-badge flag-rv-data">{t('pages.planetCard.flags.hasRvData')}</span>
+          )}
           {planet.is_controversial && (
             <span className="flag-badge flag-controversial">{t('pages.planetCard.flags.controversial')}</span>
           )}
