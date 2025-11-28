@@ -230,27 +230,6 @@ function CameraControls({
   );
 }
 
-/**
- * Invisible plane to catch background clicks
- */
-function BackgroundClickPlane({ onClick }: { onClick?: () => void }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  return (
-    <mesh
-      ref={meshRef}
-      position={[0, 0, -100]}
-      onClick={(e) => {
-        // Only trigger if clicking the background, not a body
-        e.stopPropagation();
-        onClick?.();
-      }}
-    >
-      <planeGeometry args={[2000, 2000]} />
-      <meshBasicMaterial transparent opacity={0} />
-    </mesh>
-  );
-}
 
 /**
  * Generates stellar bodies and exposes them via callback for parent use

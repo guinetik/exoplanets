@@ -35,7 +35,7 @@ export function SystemOverviewModal({
   // Calculate system statistics
   const systemStats = useMemo(() => {
     const habitableCount = planets.filter(
-      (p) => p.in_habitable_zone || p.is_potentially_habitable
+      (p) => p.is_habitable_zone
     ).length;
     const earthLikeCount = planets.filter((p) => p.is_earth_like).length;
     const avgHabitability =
@@ -333,7 +333,6 @@ function StarSunComparison({ star }: { star: Star }) {
   const { t } = useTranslation();
 
   // Sun reference values
-  const sunRadius = 1;
   const sunTemp = 5778;
 
   // Star values (default to Sun if unknown)
@@ -566,7 +565,7 @@ function OrbitalDistancesChart({ planets }: { planets: Exoplanet[] }) {
       .map((p) => ({
         name: p.pl_name,
         distance: p.pl_orbsmax!,
-        habitable: p.in_habitable_zone || false,
+        habitable: p.is_habitable_zone || false,
       }))
       .sort((a, b) => a.distance - b.distance);
 

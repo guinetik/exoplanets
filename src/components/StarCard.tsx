@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Star } from '../types';
-import { getStarColorHex } from '../utils/astronomy';
 import { nameToSlug } from '../utils/urlSlug';
+import { StarThumbnail } from './CelestialBodyThumbnail';
 
 interface StarCardProps {
   star: Star;
@@ -10,8 +10,6 @@ interface StarCardProps {
 
 export function StarCard({ star }: StarCardProps) {
   const { t } = useTranslation();
-  const colorHex = getStarColorHex(star.star_class);
-  const colorRgb = `rgb(${(colorHex >> 16) & 255}, ${(colorHex >> 8) & 255}, ${colorHex & 255})`;
 
   return (
     <Link
@@ -21,13 +19,7 @@ export function StarCard({ star }: StarCardProps) {
       <div className="star-card">
         {/* Star visualization thumbnail */}
         <div className="star-card-visualization">
-          <div
-            className="star-visualization-dot"
-            style={{ 
-              backgroundColor: colorRgb,
-              boxShadow: `0 0 20px ${colorRgb}, 0 0 40px ${colorRgb}40`
-            }}
-          />
+          <StarThumbnail star={star} size={60} />
         </div>
 
         {/* Header */}

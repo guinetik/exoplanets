@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../types';
 import { nameToSlug } from '../utils/urlSlug';
-import { PlanetVisualization } from './PlanetVisualization';
+import { PlanetThumbnail } from './CelestialBodyThumbnail';
 
 interface PlanetCardProps {
   planet: Exoplanet;
@@ -21,7 +21,7 @@ export function PlanetCard({ planet }: PlanetCardProps) {
       <div className="planet-card">
         {/* Planet visualization thumbnail */}
         <div className="planet-card-visualization">
-          <PlanetVisualization planet={planet} size={80} />
+          <PlanetThumbnail planet={planet} size={80} />
         </div>
 
         {/* Header */}
