@@ -78,16 +78,17 @@ export const ASTRONOMY_CONSTANTS = {
  * Star spectral class colors (hex values)
  */
 export const STAR_COLORS: Record<string, number> = {
-  O: 0x5b7cff, // Blue
-  B: 0x7b9fff, // Blue-white
-  A: 0xcad7ff, // White
-  F: 0xf8f7ff, // Yellow-white
-  G: 0xfff4ea, // Yellow (like our Sun)
-  K: 0xffd2a1, // Orange
-  M: 0xff3333, // Red-orange
-  L: 0xff4444, // Red-brown (brown dwarf)
-  T: 0xff5555, // Brown (cool brown dwarf)
-  Y: 0xff2200, // Dark brown (coolest)
+  O: 0x5b7cff, // Blue (>30,000 K)
+  B: 0x7b9fff, // Blue-white (10,000-30,000 K)
+  A: 0xcad7ff, // White (7,500-10,000 K)
+  F: 0xf8f7ff, // Yellow-white (6,000-7,500 K)
+  G: 0xfff4ea, // Yellow (5,200-6,000 K) - like our Sun
+  K: 0xffd2a1, // Orange (3,700-5,200 K)
+  M: 0xff6644, // Red-orange (2,400-3,700 K) - red dwarfs
+  // Brown dwarfs (substellar objects - not true stars)
+  L: 0xcc4422, // Deep red-brown (1,300-2,400 K) - early brown dwarfs
+  T: 0x9944aa, // Magenta-purple (500-1,400 K) - methane brown dwarfs
+  Y: 0x663377, // Dark purple (< 500 K) - ultra-cool brown dwarfs
 };
 
 const DEFAULT_STAR_COLOR = 0xffffff; // White

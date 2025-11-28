@@ -1,16 +1,22 @@
 /**
  * Icy World Fragment Shader V2
- * 
+ *
  * Creates frozen worlds like Europa and Enceladus with:
  * - Ice fracture patterns (lineae)
  * - Subsurface ocean hints
  * - Impact craters
  * - Smooth ice plains
  * - Subtle color variations in ice
- * 
+ *
  * Physics: Frozen surfaces over possible subsurface oceans
  * Examples: Europa, Enceladus, TRAPPIST-1 f/g
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // ICY WORLD CONSTANTS
@@ -202,38 +214,54 @@ void main() {
     }
     
     // === COLOR CALCULATION ===
+    // Generate physical base color for data-driven variety
+    vec3 physColor = physicalPlanetColor(
+        uColorTempFactor,
+        uColorCompositionFactor,
+        uColorIrradiationFactor,
+        uColorMetallicityFactor,
+        uSeed
+    );
+
+    // Blend physical color with ice palette (ice dominates but physical adds variety)
+    vec3 iceBlue = mix(ICE_COLOR_BLUE, physColor, 0.2);
+    vec3 iceWhite = mix(ICE_COLOR_WHITE, physColor * 1.1, 0.15);
+
     // Base ice color varies with terrain
-    vec3 iceColor = mix(ICE_COLOR_BLUE, ICE_COLOR_WHITE, terrain);
-    
+    vec3 iceColor = mix(iceBlue, iceWhite, terrain);
+
     // Add grey/brown variations
     float dirtiness = vnoise3D(p * 8.0 + vec3(phaseOffset)) * 0.5 + 0.5;
     dirtiness *= seedHash(uSeed + 0.7) * 0.5;  // Seed determines overall dirtiness
-    iceColor = mix(iceColor, ICE_COLOR_GREY, dirtiness * 0.3);
-    
+    vec3 greyTinted = mix(ICE_COLOR_GREY, physColor * 0.8, 0.2);
+    iceColor = mix(iceColor, greyTinted, dirtiness * 0.3);
+
     // Density affects color - higher density = more rock/mineral content
-    iceColor = mix(iceColor, ICE_COLOR_BROWN, uDensity * 0.15);
-    
+    vec3 brownTinted = mix(ICE_COLOR_BROWN, physColor * 0.7, 0.25);
+    iceColor = mix(iceColor, brownTinted, uDensity * 0.15);
+
     // Apply fractures
     if (fractures > 0.0) {
-        // Fractures are darker with hint of warmth
-        vec3 fractureCol = mix(FRACTURE_COLOR, SUBSURFACE_COLOR, FRACTURE_GLOW);
+        // Fractures are darker with hint of warmth - tinted by physical color
+        vec3 fractureBase = mix(FRACTURE_COLOR, physColor * 0.5, 0.2);
+        vec3 fractureCol = mix(fractureBase, SUBSURFACE_COLOR, FRACTURE_GLOW);
         iceColor = mix(iceColor, fractureCol, fractures * FRACTURE_DEPTH);
     }
-    
+
     // Apply chaos terrain
     iceColor *= 1.0 - chaos * 0.3;
-    iceColor = mix(iceColor, ICE_COLOR_GREY, chaos * 0.5);
-    
+    iceColor = mix(iceColor, greyTinted, chaos * 0.5);
+
     // Apply craters
     iceColor *= mix(1.0, CRATER_FLOOR_DARKNESS, craterMask);
     iceColor *= mix(1.0, CRATER_RIM_BRIGHTNESS, craterRim);
-    
-    // Subsurface hints (blue-ish undertones)
+
+    // Subsurface hints (blue-ish undertones with physical tint)
     float subsurface = vnoise3D(p * 3.0 + vec3(phaseOffset * 2.0)) * 0.5 + 0.5;
-    iceColor = mix(iceColor, SUBSURFACE_COLOR, subsurface * SUBSURFACE_HINT * (1.0 - fractures));
-    
-    // Apply base color influence
-    vec3 baseHSV = rgb2hsv(uBaseColor);
+    vec3 subsurfaceTinted = mix(SUBSURFACE_COLOR, physColor * 0.7, 0.15);
+    iceColor = mix(iceColor, subsurfaceTinted, subsurface * SUBSURFACE_HINT * (1.0 - fractures));
+
+    // Apply hue shift for seed-based variety
     vec3 iceHSV = rgb2hsv(iceColor);
     iceHSV.x = fract(iceHSV.x + hueShift);
     iceColor = hsv2rgb(iceHSV);

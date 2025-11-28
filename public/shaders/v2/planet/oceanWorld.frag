@@ -1,16 +1,22 @@
 /**
  * Ocean World Fragment Shader V2
- * 
+ *
  * Creates water-dominated worlds with:
  * - Deep global oceans with wave patterns
  * - Optional small landmasses/islands
  * - Dynamic cloud systems
  * - Specular reflections
  * - Depth color gradients
- * 
+ *
  * Physics: Low density rocky worlds with significant water content
  * Possibly tidally heated moons or planets in habitable zone
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // OCEAN WORLD CONSTANTS

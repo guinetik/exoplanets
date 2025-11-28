@@ -75,6 +75,7 @@ export function CelestialBody({
         planet: body.planetData,
         detailLevel: 'detailed', // Full detail for best visual quality
         starTemp: body.planetData.st_teff ?? undefined,
+        showTerminator: false, // Disable dark side - star provides illumination
       });
     }
     // Fallback for bodies without full exoplanet data
@@ -88,6 +89,12 @@ export function CelestialBody({
       uInsolation: { value: 0.5 },
       uStarTemp: { value: 5778 },
       uDetailLevel: { value: 1.0 }, // Full detail mode
+      uEnableTerminator: { value: 0.0 }, // Disable dark side on star map
+      // Physical color factors - defaults for fallback
+      uColorTempFactor: { value: 0.5 },
+      uColorCompositionFactor: { value: 0.5 },
+      uColorIrradiationFactor: { value: 0.5 },
+      uColorMetallicityFactor: { value: 0.5 },
     };
   }, [body.planetData, body.color, body.temperature, body.hasAtmosphere]);
 

@@ -203,6 +203,10 @@ export interface PlanetUniformOptions {
   planet: Exoplanet;
   detailLevel?: DetailLevel;
   starTemp?: number;
+  /** Show terminator effect (day/night zones) for tidally locked planets
+   * Default: true (planet page), set to false for star map view
+   */
+  showTerminator?: boolean;
 }
 
 export interface PlanetUniforms {
@@ -216,6 +220,12 @@ export interface PlanetUniforms {
   uInsolation: { value: number };
   uStarTemp: { value: number };
   uDetailLevel: { value: number };
+  uEnableTerminator: { value: number };
+  // Physical color factors (0-1 normalized)
+  uColorTempFactor: { value: number };        // Temperature: 0 = cold/blue, 1 = hot/red
+  uColorCompositionFactor: { value: number }; // Composition: 0 = gas, 0.5 = ice, 1 = rock
+  uColorIrradiationFactor: { value: number }; // Irradiation: 0 = dim, 1 = bright
+  uColorMetallicityFactor: { value: number }; // Metallicity: 0 = metal-poor, 1 = metal-rich
 }
 
 // =============================================================================
@@ -230,7 +240,7 @@ export interface PlanetUniforms {
  * @returns Uniforms object for Three.js shader material
  */
 export function createPlanetUniforms(options: PlanetUniformOptions): PlanetUniforms {
-  const { planet, detailLevel = 'simple', starTemp } = options;
+  const { planet, detailLevel = 'simple', starTemp, showTerminator = true } = options;
 
   // Normalize physical properties to 0-1 range
   const density = normalize(planet.pl_dens, DENSITY_MIN, DENSITY_MAX, 0.5);
@@ -246,6 +256,17 @@ export function createPlanetUniforms(options: PlanetUniformOptions): PlanetUnifo
   // Star temperature (defaults to Sun-like if not provided)
   const effectiveStarTemp = starTemp ?? planet.st_teff ?? 5778;
 
+  // Enable terminator effect (day/night zones) for tidally locked planets
+  // Planet page: showTerminator = true (show dark side effect)
+  // Star map: showTerminator = false (star already provides lighting)
+  const enableTerminator = showTerminator ? 1.0 : 0.0;
+
+  // Physical color factors from pre-computed data (fallback to 0.5 if null)
+  const colorTempFactor = planet.color_temp_factor ?? 0.5;
+  const colorCompositionFactor = planet.color_composition_factor ?? 0.5;
+  const colorIrradiationFactor = planet.color_irradiation_factor ?? 0.5;
+  const colorMetallicityFactor = planet.color_metallicity_factor ?? 0.5;
+
   return {
     uBaseColor: { value: getBaseColor(planet) },
     uTime: { value: 0 },
@@ -256,6 +277,12 @@ export function createPlanetUniforms(options: PlanetUniformOptions): PlanetUnifo
     uInsolation: { value: insolation },
     uStarTemp: { value: effectiveStarTemp },
     uDetailLevel: { value: detailLevel === 'detailed' ? 1.0 : 0.0 },
+    uEnableTerminator: { value: enableTerminator },
+    // Physical color factors for procedural generation
+    uColorTempFactor: { value: colorTempFactor },
+    uColorCompositionFactor: { value: colorCompositionFactor },
+    uColorIrradiationFactor: { value: colorIrradiationFactor },
+    uColorMetallicityFactor: { value: colorMetallicityFactor },
   };
 }
 
@@ -355,15 +382,28 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
       // Rocky planet variants
       // Check for special conditions
 
-      // Tidally locked (common for M-dwarf planets)
+      // PRIORITY 1: Extreme temperatures override everything
+      // A frozen or molten world should look that way even if tidally locked
+
+      // Lava world (very hot) - highest priority
+      if (temp > TEMP_LAVA) {
+        return 'lavaWorld';
+      }
+
+      // Ice world (very cold) - takes priority over tidal locking
+      // A frozen tidally locked world still looks frozen
+      if (temp < TEMP_FROZEN) {
+        return 'icyWorld';
+      }
+
+      // PRIORITY 2: Tidal locking for temperate rocky worlds
+      // Only use tidallyLocked shader when temperature is in the
+      // habitable/temperate range where day/night contrast matters
       if (isTidallyLocked(planet)) {
         return 'tidallyLocked';
       }
 
-      // Lava world (very hot)
-      if (temp > TEMP_LAVA) {
-        return 'lavaWorld';
-      }
+      // PRIORITY 3: Other environmental conditions
 
       // Ocean world (temperate with low density)
       if (isOceanWorld(planet)) {
@@ -373,11 +413,6 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
       // Desert world (hot and rocky)
       if (isDesertWorld(planet)) {
         return 'desertWorld';
-      }
-
-      // Ice world (very cold)
-      if (temp < TEMP_FROZEN) {
-        return 'icyWorld';
       }
 
       // Default rocky

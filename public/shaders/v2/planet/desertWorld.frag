@@ -1,16 +1,22 @@
 /**
  * Desert World Fragment Shader V2
- * 
+ *
  * Creates arid worlds with:
  * - Dune fields with realistic patterns
  * - Rocky canyons and mesas
  * - Dust storms
  * - Salt flats and dried lakebeds
  * - Minimal or no vegetation
- * 
+ *
  * Physics: Rocky worlds that lost their water, or formed dry
  * Examples: Mars, Arrakis-like worlds
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // DESERT WORLD CONSTANTS

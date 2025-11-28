@@ -535,6 +535,47 @@ def add_derived_fields(df):
         (df["pl_dens"] >= 3.5) | pd.isna(df["pl_dens"])
     )
 
+    # =========================================================================
+    # COLOR FACTORS (for procedural shader generation)
+    # These normalized values drive physically-based planet appearance
+    # =========================================================================
+    print("  - color factors (for shaders)")
+
+    # Temperature factor: 0 = cold/blue (50K), 1 = hot/red (2500K)
+    # Affects hue: cold planets are blue, hot planets are orange/red
+    temp_min, temp_max = 50.0, 2500.0
+    df["color_temp_factor"] = df["pl_eqt"].apply(
+        lambda t: np.clip((t - temp_min) / (temp_max - temp_min), 0, 1)
+        if pd.notna(t) else 0.5
+    )
+
+    # Composition factor: 0 = gas (low density), 0.5 = ice, 1 = rock (high density)
+    # Affects saturation: rocky planets are more saturated, gas giants are muted
+    dens_min, dens_max = 0.3, 8.0  # g/cm³
+    df["color_composition_factor"] = df["pl_dens"].apply(
+        lambda d: np.clip((d - dens_min) / (dens_max - dens_min), 0, 1)
+        if pd.notna(d) else 0.5
+    )
+
+    # Irradiation factor: 0 = dim (low flux), 1 = bright (high flux)
+    # Affects brightness/value: highly irradiated planets appear brighter
+    insol_min, insol_max = 0.01, 10000.0  # Earth flux
+    df["color_irradiation_factor"] = df["pl_insol"].apply(
+        lambda i: np.clip(
+            (np.log10(i) - np.log10(insol_min)) /
+            (np.log10(insol_max) - np.log10(insol_min)), 0, 1
+        ) if pd.notna(i) and i > 0 else 0.5
+    )
+
+    # Metallicity factor: affects planetary composition coloring
+    # High metallicity = more minerals = warmer colors
+    # Low metallicity = more volatiles = cooler colors
+    met_min, met_max = -0.5, 0.5  # [Fe/H] dex
+    df["color_metallicity_factor"] = df["st_met"].apply(
+        lambda m: np.clip((m - met_min) / (met_max - met_min), 0, 1)
+        if pd.notna(m) else 0.5
+    )
+
     return df
 
 

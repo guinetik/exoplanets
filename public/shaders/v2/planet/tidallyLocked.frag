@@ -1,16 +1,22 @@
 /**
  * Tidally Locked World Fragment Shader V2
- * 
+ *
  * Creates worlds locked to their star with:
  * - Permanent dayside (possibly scorched/lava)
  * - Permanent nightside (frozen)
  * - Dramatic terminator zone
  * - Heat transport patterns
  * - Potential habitable terminator ring
- * 
+ *
  * Physics: Close-in rocky planets around M-dwarfs
  * Examples: Proxima b, TRAPPIST-1 planets
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,13 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+uniform float uEnableTerminator;  // 1.0 = show day/night zones, 0.0 = uniform lighting
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // TIDALLY LOCKED CONSTANTS
@@ -209,7 +222,26 @@ void main() {
         nightGlacier = vec3(0.6, 0.78, 0.75);
         nightDark = vec3(0.1, 0.18, 0.16);
     }
-    
+
+    // === PHYSICAL COLOR INFLUENCE ===
+    // Generate physical base color for data-driven variety
+    vec3 physColor = physicalPlanetColor(
+        uColorTempFactor,
+        uColorCompositionFactor,
+        uColorIrradiationFactor,
+        uColorMetallicityFactor,
+        uSeed
+    );
+
+    // Tint palette colors with physical data (subtle influence)
+    // This adds variety while preserving the palette structure
+    daysideRock = mix(daysideRock, daysideRock * physColor * 1.3, 0.25);
+    daysideScorched = mix(daysideScorched, daysideScorched * physColor * 1.2, 0.2);
+    termRock = mix(termRock, termRock * physColor * 1.2, 0.2);
+    termVeg = mix(termVeg, termVeg * physColor * 1.1, 0.15);
+    nightIce = mix(nightIce, nightIce * physColor * 1.1, 0.1);
+    nightGlacier = mix(nightGlacier, nightGlacier * physColor * 1.1, 0.1);
+
     // Determine characteristics
     float hasWater = (uTemperature > TEMP_FROZEN && uTemperature < TEMP_SCORCHED) ? 1.0 : 0.0;
     hasWater *= uHasAtmosphere;
@@ -222,9 +254,20 @@ void main() {
     
     // === ZONE CALCULATION ===
     vec3 zones = calculateZones(longitude);
-    float dayside = zones.x;
-    float terminator = zones.y;
-    float nightside = zones.z;
+    float dayside, terminator, nightside;
+
+    if (uEnableTerminator > 0.5) {
+        // Full day/night zones (planet page view)
+        dayside = zones.x;
+        terminator = zones.y;
+        nightside = zones.z;
+    } else {
+        // Uniform rendering (star map view - star provides lighting)
+        // Treat entire surface as terminator zone for natural look
+        dayside = 0.4;
+        terminator = 0.6;
+        nightside = 0.0;
+    }
     
     // Substellar point (hottest) - use 3D derived coordinates
     float latNormalized = p.y * 0.5 + 0.5;  // 0-1 range
@@ -312,18 +355,26 @@ void main() {
     // Light comes from locked direction (dayside)
     vec3 lightDir = normalize(vec3(1.0, 0.0, 0.3));
     float diff = max(dot(vNormal, lightDir), 0.0);
-    
-    // Mix lighting by zone
-    float zoneLighting = dayside * (diff * 0.9 + 0.1) + 
-                         terminator * (diff * 0.5 + 0.3) + 
-                         nightside * 0.05;  // Minimal nightside illumination
+
+    float zoneLighting;
+    if (uEnableTerminator > 0.5) {
+        // Mix lighting by zone (planet page - show day/night effect)
+        zoneLighting = dayside * (diff * 0.9 + 0.1) +
+                       terminator * (diff * 0.5 + 0.3) +
+                       nightside * 0.05;  // Minimal nightside illumination
+    } else {
+        // Normal diffuse lighting (star map - star provides illumination)
+        zoneLighting = diff * 0.8 + 0.2;
+    }
     
     // Self-illumination for lava
     float emission = isScorched * substellarFactor * dayside * 0.5;
     
     // Limb darkening varies by zone
-    float limb = limbDarkeningStylized(vNormal, LIMB_EDGE_LOW, LIMB_EDGE_HIGH, 
-                                        LIMB_MIN_BRIGHTNESS + dayside * 0.3);
+    float limbMinBright = uEnableTerminator > 0.5
+        ? LIMB_MIN_BRIGHTNESS + dayside * 0.3  // Darker on nightside
+        : 0.45;  // Normal limb darkening for star map view
+    float limb = limbDarkeningStylized(vNormal, LIMB_EDGE_LOW, LIMB_EDGE_HIGH, limbMinBright);
     
     vec3 litColor = surfaceColor * zoneLighting * limb;
     litColor += surfaceColor * emission;

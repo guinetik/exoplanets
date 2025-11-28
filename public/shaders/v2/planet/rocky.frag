@@ -1,6 +1,6 @@
 /**
  * Rocky Planet Fragment Shader V2
- * 
+ *
  * Creates Earth-like and Mars-like terrestrial worlds with:
  * - Domain-warped terrain generation
  * - Biome system (desert, forest, ice, ocean)
@@ -8,9 +8,15 @@
  * - Cloud layers
  * - Polar ice caps
  * - Atmospheric scattering
- * 
+ *
  * Physics: Solid silicate surfaces, possible atmospheres and water
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // ROCKY PLANET CONSTANTS
@@ -220,15 +232,31 @@ void main() {
     // === BIOME COLOR ===
     float effectiveHeight = isOcean ? height : max(height, oceanLevel);
     vec3 surfaceColor = getBiomeColor(effectiveHeight, uTemperature, humidity, uSeed);
-    
-    // Apply base color influence
-    vec3 baseHSV = rgb2hsv(uBaseColor);
+
+    // Generate physical base color for data-driven variety
+    vec3 physColor = physicalPlanetColor(
+        uColorTempFactor,
+        uColorCompositionFactor,
+        uColorIrradiationFactor,
+        uColorMetallicityFactor,
+        uSeed
+    );
+
+    // Apply physical color influence - blend with biome colors for variety
+    // Physical color tints the biome palette rather than replacing it
     vec3 surfaceHSV = rgb2hsv(surfaceColor);
-    surfaceHSV.x = fract(surfaceHSV.x + hueShift * 0.5);
+    vec3 physHSV = rgb2hsv(physColor);
+
+    // Apply hue shift from seed + subtle influence from physical color
+    surfaceHSV.x = fract(surfaceHSV.x + hueShift * 0.4 + (physHSV.x - 0.5) * 0.15);
+    // Physical color affects saturation and brightness
+    surfaceHSV.y *= 0.85 + physHSV.y * 0.3;
+    surfaceHSV.z *= 0.9 + physHSV.z * 0.2;
+
     surfaceColor = hsv2rgb(surfaceHSV);
-    
-    // Blend with base color
-    surfaceColor = mix(surfaceColor, surfaceColor * uBaseColor * 2.0, 0.3);
+
+    // Blend with physical color for additional variety (subtle)
+    surfaceColor = mix(surfaceColor, surfaceColor * physColor * 1.5, 0.2);
     
     // === POLAR ICE CAPS ===
     if (uTemperature < TEMP_HOT && uHasAtmosphere > 0.2) {

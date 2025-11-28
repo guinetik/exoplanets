@@ -45,9 +45,11 @@ const float FEATURE_VERY_COMMON = 0.85; // ~85% chance
 const float UV_OFFSET_SCALE = 10.0;     // Scale for UV coordinate offset
 
 // --- Hash Constants ---
-const float HASH_A = 12.9898;
-const float HASH_B = 78.233;
-const float HASH_C = 43758.5453123;
+// Using integer-based constants for stable hashing (avoids sin() precision issues)
+const float HASH_K1 = 0.1031;
+const float HASH_K2 = 0.1030;
+const float HASH_K3 = 0.0973;
+const float HASH_K4 = 33.33;
 
 // =============================================================================
 // SEED HASHING
@@ -56,12 +58,18 @@ const float HASH_C = 43758.5453123;
 /**
  * Generate a pseudo-random value from seed
  * Same seed always returns same value
- * 
+ *
+ * Uses integer-based hashing instead of sin() to avoid Chrome/ANGLE
+ * floating-point precision issues that cause flickering.
+ *
  * @param seed - Input seed (0-1)
  * @return Pseudo-random value (0-1)
  */
 float seedHash(float seed) {
-    return fract(sin(seed * HASH_A + HASH_B) * HASH_C);
+    // Use fract-based hash (Dave Hoskins' technique) - avoids sin() precision issues
+    vec3 p3 = fract(vec3(seed) * vec3(HASH_K1, HASH_K2, HASH_K3));
+    p3 += dot(p3, p3.yzx + HASH_K4);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 /**

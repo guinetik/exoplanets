@@ -1,15 +1,21 @@
 /**
  * Gas Giant Fragment Shader V2
- * 
+ *
  * Creates Jupiter/Saturn-like gas giants with:
  * - Atmospheric banding with seed-varied count/width
  * - Storm systems (Great Red Spot-like features)
  * - Turbulent flow patterns
  * - Domain-warped cloud structures
  * - Proper limb darkening
- * 
+ *
  * Physics: Large H/He dominated worlds with deep atmospheres
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -29,6 +35,12 @@ uniform float uDensity;                   // Normalized density (affects storm i
 uniform float uInsolation;                // Stellar energy input
 uniform float uStarTemp;                  // Host star temperature
 uniform float uDetailLevel;               // LOD (0 = simple, 1 = detailed)
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // GAS GIANT CONSTANTS

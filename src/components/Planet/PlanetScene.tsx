@@ -10,9 +10,9 @@ import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Exoplanet } from '../../types';
 import { shaderService } from '../../services/shaderService';
-import { 
-  createPlanetUniforms, 
-  getV2PlanetShaderType, 
+import {
+  createPlanetUniforms,
+  getV2PlanetShaderType,
   getV2ShaderFileName,
   getPlanetVertexShader,
 } from '../../utils/planetUniforms';

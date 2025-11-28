@@ -1,17 +1,23 @@
 /**
  * Lava World Fragment Shader V2
- * 
+ *
  * Creates volcanic hellscapes with:
  * - Molten lava flows and lakes
  * - Glowing fractures and cracks
  * - Dark solidified crust
  * - Heat distortion effects
  * - Volcanic highlands
- * 
+ *
  * Physics: Extremely hot rocky worlds with active volcanism
  * Examples: CoRoT-7 b, Kepler-10 b
  * Based on Morgan McGuire's "Vulcan" Shadertoy
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -31,6 +37,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // LAVA WORLD CONSTANTS

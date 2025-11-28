@@ -161,6 +161,12 @@ export interface Exoplanet {
   is_puffy: boolean;
   is_super_massive: boolean;
   is_lightweight: boolean;
+
+  // Color factors for shader generation (0-1 normalized)
+  color_temp_factor: number | null;         // Temperature: 0 = cold/blue, 1 = hot/red
+  color_composition_factor: number | null;  // Composition: 0 = gas, 0.5 = ice, 1 = rock
+  color_irradiation_factor: number | null;  // Irradiation: 0 = dim, 1 = bright
+  color_metallicity_factor: number | null;  // Star metallicity: 0 = metal-poor, 1 = metal-rich
 }
 
 export type PlanetType =

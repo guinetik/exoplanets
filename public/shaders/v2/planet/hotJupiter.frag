@@ -1,16 +1,22 @@
 /**
  * Hot Jupiter Fragment Shader V2
- * 
+ *
  * Creates ultra-hot, tidally locked gas giants with:
  * - Dramatic day/night contrast
  * - Molten/glowing dayside
  * - Cooler nightside with visible heat transport
  * - Violent atmospheric dynamics
  * - Heat redistribution patterns
- * 
+ *
  * Physics: Tidally locked giants receiving extreme stellar irradiation
  * Examples: 51 Pegasi b, HD 189733 b, WASP-12 b
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // HOT JUPITER CONSTANTS

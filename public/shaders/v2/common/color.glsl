@@ -33,12 +33,22 @@ const vec3 LUMINANCE_WEIGHTS = vec3(0.2126, 0.7152, 0.0722);
 // =============================================================================
 
 // Temperature ranges for blackbody approximation
-const float BLACKBODY_TEMP_MIN = 1000.0;            // Kelvin - deep red
-const float BLACKBODY_TEMP_MAX = 40000.0;           // Kelvin - blue-white
+// Extended to cover brown dwarfs (Y, T, L types)
+const float BLACKBODY_TEMP_MIN = 300.0;             // Kelvin - ultra-cool Y-dwarf
+const float BLACKBODY_TEMP_MAX = 40000.0;           // Kelvin - blue-white O-star
 
 // Blackbody color at key temperatures (pre-computed)
-// These are approximate sRGB values for stellar temperatures
-const vec3 TEMP_1000K = vec3(1.0, 0.22, 0.0);      // Deep red (dying ember)
+// These are approximate sRGB values for stellar/substellar temperatures
+// Note: T and Y dwarfs deviate from blackbody due to methane absorption
+
+// Brown dwarfs (substellar objects)
+const vec3 TEMP_300K = vec3(0.35, 0.2, 0.45);      // Dark purple (Y-dwarf, ultra-cool)
+const vec3 TEMP_500K = vec3(0.5, 0.25, 0.55);      // Purple (Y-dwarf)
+const vec3 TEMP_800K = vec3(0.6, 0.27, 0.65);      // Magenta-purple (T-dwarf, methane)
+const vec3 TEMP_1300K = vec3(0.8, 0.3, 0.35);      // Deep red-magenta (L-dwarf boundary)
+
+// Main sequence stars
+const vec3 TEMP_2000K = vec3(1.0, 0.35, 0.1);      // Deep red (late L-dwarf/early M)
 const vec3 TEMP_3000K = vec3(1.0, 0.65, 0.35);     // Orange-red (M-dwarf)
 const vec3 TEMP_4000K = vec3(1.0, 0.78, 0.55);     // Orange (K-dwarf)
 const vec3 TEMP_5778K = vec3(1.0, 0.96, 0.91);     // Yellow-white (Sun, G-type)
@@ -48,6 +58,10 @@ const vec3 TEMP_20000K = vec3(0.70, 0.78, 1.0);    // Blue (B-type)
 const vec3 TEMP_40000K = vec3(0.62, 0.72, 1.0);    // Deep blue (O-type)
 
 // Temperature boundaries for interpolation
+const float TEMP_BD_1 = 500.0;   // Y to T transition
+const float TEMP_BD_2 = 800.0;   // T-dwarf peak methane
+const float TEMP_BD_3 = 1300.0;  // T to L transition
+const float TEMP_BD_4 = 2000.0;  // L to M transition
 const float TEMP_BOUND_1 = 3000.0;
 const float TEMP_BOUND_2 = 4000.0;
 const float TEMP_BOUND_3 = 5778.0;
@@ -171,17 +185,38 @@ vec3 gammaCorrect(vec3 color, float gamma) {
 /**
  * Convert temperature (Kelvin) to approximate RGB color
  * Uses piecewise linear interpolation between key stellar temperatures
- * 
- * @param tempK - Temperature in Kelvin (1000-40000 range)
+ * Extended to cover brown dwarfs (Y, T, L types) with methane absorption colors
+ *
+ * @param tempK - Temperature in Kelvin (300-40000 range)
  * @return RGB color approximation
  */
 vec3 temperatureToColor(float tempK) {
     tempK = clamp(tempK, BLACKBODY_TEMP_MIN, BLACKBODY_TEMP_MAX);
-    
-    if (tempK < TEMP_BOUND_1) {
-        float t = (tempK - BLACKBODY_TEMP_MIN) / (TEMP_BOUND_1 - BLACKBODY_TEMP_MIN);
-        return mix(TEMP_1000K, TEMP_3000K, t);
-    } else if (tempK < TEMP_BOUND_2) {
+
+    // Brown dwarf range (Y, T, L types) - non-blackbody due to methane
+    if (tempK < TEMP_BD_1) {
+        // Ultra-cool Y-dwarfs (300-500 K)
+        float t = (tempK - BLACKBODY_TEMP_MIN) / (TEMP_BD_1 - BLACKBODY_TEMP_MIN);
+        return mix(TEMP_300K, TEMP_500K, t);
+    } else if (tempK < TEMP_BD_2) {
+        // T-dwarfs with methane absorption (500-800 K) - peak magenta
+        float t = (tempK - TEMP_BD_1) / (TEMP_BD_2 - TEMP_BD_1);
+        return mix(TEMP_500K, TEMP_800K, t);
+    } else if (tempK < TEMP_BD_3) {
+        // Late T to early L transition (800-1300 K)
+        float t = (tempK - TEMP_BD_2) / (TEMP_BD_3 - TEMP_BD_2);
+        return mix(TEMP_800K, TEMP_1300K, t);
+    } else if (tempK < TEMP_BD_4) {
+        // L-dwarfs (1300-2000 K) - transitioning to red
+        float t = (tempK - TEMP_BD_3) / (TEMP_BD_4 - TEMP_BD_3);
+        return mix(TEMP_1300K, TEMP_2000K, t);
+    } else if (tempK < TEMP_BOUND_1) {
+        // Late L to M transition (2000-3000 K)
+        float t = (tempK - TEMP_BD_4) / (TEMP_BOUND_1 - TEMP_BD_4);
+        return mix(TEMP_2000K, TEMP_3000K, t);
+    }
+    // Main sequence stars
+    else if (tempK < TEMP_BOUND_2) {
         float t = (tempK - TEMP_BOUND_1) / (TEMP_BOUND_2 - TEMP_BOUND_1);
         return mix(TEMP_3000K, TEMP_4000K, t);
     } else if (tempK < TEMP_BOUND_3) {
@@ -318,7 +353,7 @@ vec3 softLight(vec3 base, vec3 blend) {
 /**
  * Blend two colors using overlay blending mode
  * Increases contrast
- * 
+ *
  * @param base - Base color
  * @param blend - Blend color
  * @return Blended color
@@ -329,5 +364,77 @@ vec3 overlay(vec3 base, vec3 blend) {
         1.0 - 2.0 * (1.0 - base) * (1.0 - blend),
         step(0.5, base)
     );
+}
+
+// =============================================================================
+// PHYSICAL COLOR GENERATION
+// =============================================================================
+
+// Temperature gradient colors (cold to hot)
+const vec3 PHYS_TEMP_COLD = vec3(0.6, 0.75, 0.9);      // Icy blue
+const vec3 PHYS_TEMP_COOL = vec3(0.5, 0.6, 0.65);      // Cool gray-blue
+const vec3 PHYS_TEMP_MILD = vec3(0.55, 0.5, 0.45);     // Earthy gray
+const vec3 PHYS_TEMP_WARM = vec3(0.7, 0.55, 0.4);      // Warm tan
+const vec3 PHYS_TEMP_HOT = vec3(0.85, 0.45, 0.3);      // Hot orange
+
+// Composition gradient colors (gas to rock)
+const vec3 PHYS_COMP_GAS = vec3(0.75, 0.7, 0.6);       // Gas giant tan
+const vec3 PHYS_COMP_ICE = vec3(0.65, 0.7, 0.8);       // Ice blue-gray
+const vec3 PHYS_COMP_ROCK = vec3(0.6, 0.5, 0.45);      // Rocky brown
+
+/**
+ * Generate physically-accurate base color from planet properties
+ * Uses NASA data factors to create data-driven variety
+ *
+ * @param tempFactor - Temperature factor (0 = cold/200K, 1 = hot/2500K)
+ * @param compFactor - Composition factor (0 = gas, 0.5 = ice, 1 = rock)
+ * @param irradFactor - Irradiation factor (0 = dim, 1 = bright)
+ * @param metalFactor - Metallicity factor (0 = metal-poor, 1 = metal-rich)
+ * @param seed - Seed for variation (0-1)
+ * @return RGB base color
+ */
+vec3 physicalPlanetColor(float tempFactor, float compFactor, float irradFactor, float metalFactor, float seed) {
+    // Temperature gradient: cold (blue) to hot (orange/red)
+    vec3 tempColor;
+    if (tempFactor < 0.25) {
+        tempColor = mix(PHYS_TEMP_COLD, PHYS_TEMP_COOL, tempFactor * 4.0);
+    } else if (tempFactor < 0.5) {
+        tempColor = mix(PHYS_TEMP_COOL, PHYS_TEMP_MILD, (tempFactor - 0.25) * 4.0);
+    } else if (tempFactor < 0.75) {
+        tempColor = mix(PHYS_TEMP_MILD, PHYS_TEMP_WARM, (tempFactor - 0.5) * 4.0);
+    } else {
+        tempColor = mix(PHYS_TEMP_WARM, PHYS_TEMP_HOT, (tempFactor - 0.75) * 4.0);
+    }
+
+    // Composition gradient: gas (tan) to ice (blue) to rock (brown)
+    vec3 compColor;
+    if (compFactor < 0.5) {
+        compColor = mix(PHYS_COMP_GAS, PHYS_COMP_ICE, compFactor * 2.0);
+    } else {
+        compColor = mix(PHYS_COMP_ICE, PHYS_COMP_ROCK, (compFactor - 0.5) * 2.0);
+    }
+
+    // Blend temperature and composition (temperature dominant for extremes)
+    float tempWeight = abs(tempFactor - 0.5) * 2.0; // 0 at middle, 1 at extremes
+    vec3 baseColor = mix(compColor, tempColor, tempWeight * 0.7 + 0.3);
+
+    // Metallicity affects color saturation and warmth
+    // High metallicity = warmer, more saturated colors
+    vec3 baseHSV = rgb2hsv(baseColor);
+    baseHSV.y *= 0.8 + metalFactor * 0.4;  // Saturation: 0.8-1.2
+    baseHSV.x += (metalFactor - 0.5) * 0.05; // Slight hue shift
+    baseColor = hsv2rgb(baseHSV);
+
+    // Irradiation affects brightness
+    // High irradiation = brighter, slightly washed out
+    baseColor = mix(baseColor, baseColor * 1.2 + vec3(0.05), irradFactor * 0.3);
+
+    // Add seed-based variation for uniqueness
+    vec3 seedHSV = rgb2hsv(baseColor);
+    float seedHue = fract(seed * 0.1031 + seed * seed * 0.0973);
+    seedHSV.x = fract(seedHSV.x + (seedHue - 0.5) * 0.1); // ±5% hue variation
+    seedHSV.y *= 0.9 + seedHue * 0.2; // ±10% saturation variation
+
+    return hsv2rgb(seedHSV);
 }
 

@@ -1,16 +1,22 @@
 /**
  * Sub-Neptune Fragment Shader V2
- * 
+ *
  * Creates mini-Neptune/sub-Neptune worlds with:
  * - Thick, hazy atmospheres obscuring any surface
  * - Smooth, featureless appearance at low detail
  * - Subtle atmospheric structure at high detail
  * - Varied coloring from hydrogen-rich to water-rich
- * 
+ *
  * Physics: 2-4 Earth radii, low density, thick H/He envelopes
  * These are the most common type of exoplanet found
  * Examples: Kepler-11 planets, many K2 discoveries
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // SUB-NEPTUNE CONSTANTS

@@ -1,16 +1,22 @@
 /**
  * Ice Giant Fragment Shader V2
- * 
+ *
  * Creates Neptune/Uranus-like ice giants with:
  * - Subtle atmospheric banding
  * - Methane-blue coloring (varies with seed)
  * - High-altitude haze layers
  * - Occasional storm features
  * - Deep atmospheric structure hints
- * 
+ *
  * Physics: Smaller than gas giants, water/ammonia/methane mantles
  * Examples: Neptune, Uranus, many "mini-Neptunes"
  */
+
+// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
@@ -30,6 +36,12 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+
+// Physical color factors for data-driven variety
+uniform float uColorTempFactor;
+uniform float uColorCompositionFactor;
+uniform float uColorIrradiationFactor;
+uniform float uColorMetallicityFactor;
 
 // =============================================================================
 // ICE GIANT CONSTANTS
