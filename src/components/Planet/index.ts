@@ -1,2 +1,7 @@
 export { PlanetScene } from './PlanetScene';
 export { PlanetInfo } from './PlanetInfo';
+export { PlanetEarthComparison } from './PlanetEarthComparison';
+export { HabitabilityGauge } from './HabitabilityGauge';
+export { TemperatureZoneIndicator } from './TemperatureZoneIndicator';
+export { OrbitalPositionChart } from './OrbitalPositionChart';
+export { SiblingPlanets } from './SiblingPlanets';

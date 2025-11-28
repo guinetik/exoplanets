@@ -40,37 +40,30 @@ export function PlanetCard({ planet }: PlanetCardProps) {
         {/* Planet properties grid */}
         <div className="planet-card-properties">
           {planet.pl_rade !== null && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.radius')}</span>
-              <span className="property-value">{planet.pl_rade.toFixed(2)} R⊕</span>
+            <div className="planet-card-property">
+              <span className="planet-card-property-label">{t('pages.planetCard.properties.radius')}</span>
+              <span className="planet-card-property-value">{planet.pl_rade.toFixed(2)} R⊕</span>
             </div>
           )}
 
           {planet.pl_bmasse !== null && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.mass')}</span>
-              <span className="property-value">{planet.pl_bmasse.toFixed(2)} M⊕</span>
+            <div className="planet-card-property">
+              <span className="planet-card-property-label">{t('pages.planetCard.properties.mass')}</span>
+              <span className="planet-card-property-value">{planet.pl_bmasse.toFixed(2)} M⊕</span>
             </div>
           )}
 
           {planet.pl_orbper !== null && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.period')}</span>
-              <span className="property-value">{planet.pl_orbper.toFixed(2)} d</span>
-            </div>
-          )}
-
-          {planet.pl_eqt !== null && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.temp')}</span>
-              <span className="property-value">{Math.round(planet.pl_eqt)} K</span>
+            <div className="planet-card-property">
+              <span className="planet-card-property-label">{t('pages.planetCard.properties.period')}</span>
+              <span className="planet-card-property-value">{planet.pl_orbper.toFixed(2)} d</span>
             </div>
           )}
 
           {planet.distance_ly !== null && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.distance')}</span>
-              <span className="property-value">
+            <div className="planet-card-property">
+              <span className="planet-card-property-label">{t('pages.planetCard.properties.distance')}</span>
+              <span className="planet-card-property-value">
                 {planet.distance_ly < 1000
                   ? `${planet.distance_ly.toFixed(1)} ly`
                   : `${(planet.distance_ly / 1000).toFixed(1)} kly`}
@@ -79,9 +72,9 @@ export function PlanetCard({ planet }: PlanetCardProps) {
           )}
 
           {planet.disc_year && (
-            <div className="planet-property">
-              <span className="property-label">{t('pages.planetCard.properties.discovered')}</span>
-              <span className="property-value">{planet.disc_year}</span>
+            <div className="planet-card-property">
+              <span className="planet-card-property-label">{t('pages.planetCard.properties.discovered')}</span>
+              <span className="planet-card-property-value">{planet.disc_year}</span>
             </div>
           )}
         </div>

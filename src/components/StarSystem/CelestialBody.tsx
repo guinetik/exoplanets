@@ -16,7 +16,10 @@ import {
   getPlanetVertexShader,
   getStarSurfaceShaders,
   getStarCoronaShaders,
+  generateSeed,
+  getStarActivityLevel,
 } from '../../utils/planetUniforms';
+import { SolarFlares } from './SolarFlares';
 
 // Speed multiplier for orbital animation (lower = slower, 1.0 = original speed)
 const ORBIT_SPEED = 0.15;
@@ -46,25 +49,32 @@ export function CelestialBody({
   const planetMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const orbitAngleRef = useRef(Math.random() * Math.PI * 2); // Random starting position
 
-  // Star shader uniforms
+  // Star shader uniforms with seed and activity for dynamic effects
+  const starSeed = useMemo(() => generateSeed(body.id ?? body.name), [body.id, body.name]);
+  const activityLevel = useMemo(() => getStarActivityLevel(body.spectralType), [body.spectralType]);
+
   const starUniforms = useMemo(
     () => ({
       uStarColor: { value: new THREE.Color(body.color) },
       uTime: { value: 0 },
       uTemperature: { value: body.temperature ?? 5778 },
+      uSeed: { value: starSeed },
+      uActivityLevel: { value: activityLevel },
     }),
-    [body.color, body.temperature]
+    [body.color, body.temperature, starSeed, activityLevel]
   );
 
-  // Corona shader uniforms
+  // Corona shader uniforms with seed and activity for dynamic effects
   const coronaMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const coronaUniforms = useMemo(
     () => ({
       uStarColor: { value: new THREE.Color(body.color) },
       uTime: { value: 0 },
       uIntensity: { value: body.emissiveIntensity ?? 1.0 },
+      uSeed: { value: starSeed },
+      uActivityLevel: { value: activityLevel },
     }),
-    [body.color, body.emissiveIntensity]
+    [body.color, body.emissiveIntensity, starSeed, activityLevel]
   );
 
   // Planet shader uniforms using the factory (detailed mode for full visual quality)
@@ -269,9 +279,9 @@ export function CelestialBody({
           />
         </mesh>
 
-        {/* Corona layer - V2 fiery tendrils radiating outward */}
+        {/* Corona layer - V2 fiery flames extending outward */}
         <mesh>
-          <sphereGeometry args={[body.diameter / 2 * 1.15, 64, 64]} />
+          <sphereGeometry args={[body.diameter / 2 * 1.5, 64, 64]} />
           <shaderMaterial
             ref={coronaMaterialRef}
             vertexShader={shaderService.get(coronaShaders.vert)}
@@ -283,6 +293,14 @@ export function CelestialBody({
             side={THREE.FrontSide}
           />
         </mesh>
+
+        {/* Solar flares - dramatic eruptions */}
+        <SolarFlares
+          starRadius={body.diameter / 2}
+          starColor={body.color}
+          starSeed={starSeed}
+          activityLevel={activityLevel}
+        />
       </>
     );
 

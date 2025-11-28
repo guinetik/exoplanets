@@ -217,6 +217,8 @@
         "sortBy": "Ordenar por:",
         "habitableOnly": "Apenas Zona Habitável",
         "earthLikeOnly": "Apenas Semelhantes à Terra",
+        "eccentricOnly": "Órbita Excêntrica",
+        "circumbinaryOnly": "Sistema Circumbinário",
         "clearFilters": "Limpar Filtros"
       },
       "sort": {
@@ -251,6 +253,91 @@
       "exoplanet": "Exoplaneta",
       "viewSystem": "Ver Sistema {{hostname}} →",
       "viewStats": "Ver estatísticas do planeta",
+      "sections": {
+        "earthComparison": "Comparado à Terra",
+        "habitability": "Pontuação de Habitabilidade",
+        "temperature": "Zona de Temperatura",
+        "orbitalPosition": "Posição Orbital",
+        "travelTime": "Tempo de Viagem"
+      },
+      "comparison": {
+        "earth": "Terra",
+        "radius": "Raio",
+        "mass": "Massa",
+        "density": "Densidade",
+        "gravity": "Gravidade Superficial",
+        "temperature": "Temperatura",
+        "largerThanEarth": "{{times}}× maior que a Terra",
+        "smallerThanEarth": "{{pct}}% menor que a Terra",
+        "similarToEarth": "Tamanho similar à Terra",
+        "timesLarger": "{{times}}× maior",
+        "timesSmaller": "{{times}}× menor",
+        "similar": "Similar"
+      },
+      "habitability": {
+        "breakdown": "Detalhamento da Pontuação",
+        "temperature": "Temperatura",
+        "size": "Tamanho",
+        "starType": "Tipo de Estrela",
+        "insolation": "Insolação",
+        "inHabitableZone": "Na Zona Habitável",
+        "earthLikeSize": "Tamanho Tipo Terra",
+        "potentiallyRocky": "Potencialmente Rochoso",
+        "topCandidate": "Top Candidato",
+        "tiers": {
+          "excellent": "Habitabilidade Excelente",
+          "good": "Boa Habitabilidade",
+          "moderate": "Habitabilidade Moderada",
+          "low": "Baixa Habitabilidade",
+          "minimal": "Habitabilidade Mínima"
+        }
+      },
+      "temperature": {
+        "title": "Zona de Temperatura",
+        "unknown": "Temperatura Desconhecida",
+        "habitableZone": "Zona Habitável (200-320K)",
+        "frozen": "Congelado",
+        "habitable": "Habitável",
+        "scorching": "Escaldante",
+        "zones": {
+          "unknown": "Desconhecido",
+          "frozen": "Congelado",
+          "cold": "Frio",
+          "cool": "Fresco",
+          "habitable": "Habitável",
+          "warm": "Morno",
+          "hot": "Quente",
+          "scorching": "Escaldante"
+        },
+        "descriptions": {
+          "unknown": "Dados de temperatura não disponíveis para este planeta.",
+          "frozen": "Condições criogênicas - muito mais frio que qualquer ambiente natural na Terra.",
+          "cold": "Extremamente frio - água estaria permanentemente congelada na superfície.",
+          "cool": "Temperaturas frias - água líquida improvável sem atmosfera espessa.",
+          "habitable": "Dentro da faixa de temperatura onde água líquida pode existir na superfície.",
+          "warm": "Muito quente para água líquida sem condições especiais.",
+          "hot": "Muito quente - temperaturas da superfície seriam extremamente hostis à vida.",
+          "scorching": "Calor extremo - metais e rochas podem vaporizar na atmosfera."
+        }
+      },
+      "orbital": {
+        "title": "Posição no Sistema",
+        "noData": "Dados orbitais não disponíveis",
+        "habitableZone": "Zona Habitável",
+        "distance": "Distância da Estrela",
+        "period": "Período Orbital",
+        "eccentricity": "Excentricidade"
+      },
+      "siblings": {
+        "title": "Outros Planetas em {{system}}",
+        "count": "{{count}} outro planeta neste sistema",
+        "count_plural": "{{count}} outros planetas neste sistema",
+        "earthLikeHabitable": "Tipo Terra, Zona Habitável",
+        "habitable": "Zona Habitável",
+        "hotJupiter": "Júpiter Quente",
+        "frozen": "Mundo Congelado",
+        "exoplanet": "Exoplaneta"
+      },
       "visualization": {
         "title": "Como Visualizamos Este Planeta",
         "intro": "Nossas visualizações de planetas são geradas proceduralmente usando dados científicos reais do Arquivo de Exoplanetas da NASA. Veja como diferentes propriedades influenciam o que você vê:",
@@ -635,5 +722,28 @@
     "loading": "Carregando...",
     "error": "Ocorreu um erro",
     "notFound": "Página não encontrada"
+  },
+  "components": {
+    "travelTime": {
+      "lightYearsAway": "anos-luz de distância",
+      "reachableAt": "Alcançável a {{speed}} ou mais rápido",
+      "reachableInLifetime": "← Alcançável em sua vida",
+      "withinLifetime": "Dentro da sua vida",
+      "lifetimes": "{{count}} vida",
+      "lifetimes_plural": "{{count}} vidas",
+      "unknownDistance": "Distância desconhecida",
+      "replayRace": "Repetir Corrida",
+      "speeds": {
+        "walking": "Caminhando",
+        "car": "Carro",
+        "jet": "Avião Comercial",
+        "voyager": "Voyager 1",
+        "newHorizons": "New Horizons",
+        "parkerProbe": "Sonda Parker Solar",
+        "onePercentC": "1% Veloc. da Luz",
+        "tenPercentC": "10% Veloc. da Luz",
+        "lightSpeed": "Velocidade da Luz"
+      }
+    }
   }
 }

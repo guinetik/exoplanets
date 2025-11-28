@@ -47,6 +47,12 @@ export default function Planets() {
   const [earthLikeOnly, setEarthLikeOnly] = useState(
     searchParams.get('earthlike') === 'true'
   );
+  const [eccentricOnly, setEccentricOnly] = useState(
+    searchParams.get('eccentric') === 'true'
+  );
+  const [circumbinaryOnly, setCircumbinaryOnly] = useState(
+    searchParams.get('circumbinary') === 'true'
+  );
   const [currentPage, setCurrentPage] = useState(
     parseInt(searchParams.get('page') || '1', 10)
   );
@@ -102,6 +108,16 @@ export default function Planets() {
       result = result.filter((planet) => planet.is_earth_like);
     }
 
+    // Apply eccentric orbit filter
+    if (eccentricOnly) {
+      result = result.filter((planet) => planet.is_eccentric_orbit);
+    }
+
+    // Apply circumbinary filter
+    if (circumbinaryOnly) {
+      result = result.filter((planet) => planet.is_circumbinary);
+    }
+
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -140,6 +156,8 @@ export default function Planets() {
     selectedClasses,
     habitableOnly,
     earthLikeOnly,
+    eccentricOnly,
+    circumbinaryOnly,
     searchQuery,
     sortBy,
   ]);
@@ -162,6 +180,8 @@ export default function Planets() {
     if (searchQuery) params.set('search', searchQuery);
     if (habitableOnly) params.set('habitable', 'true');
     if (earthLikeOnly) params.set('earthlike', 'true');
+    if (eccentricOnly) params.set('eccentric', 'true');
+    if (circumbinaryOnly) params.set('circumbinary', 'true');
     if (validPage !== 1) params.set('page', String(validPage));
 
     setSearchParams(params, { replace: true });
@@ -172,6 +192,8 @@ export default function Planets() {
     searchQuery,
     habitableOnly,
     earthLikeOnly,
+    eccentricOnly,
+    circumbinaryOnly,
     validPage,
     setSearchParams,
   ]);
@@ -216,12 +238,24 @@ export default function Planets() {
     handleFilterChange();
   };
 
+  const handleEccentricToggle = () => {
+    setEccentricOnly((prev) => !prev);
+    handleFilterChange();
+  };
+
+  const handleCircumbinaryToggle = () => {
+    setCircumbinaryOnly((prev) => !prev);
+    handleFilterChange();
+  };
+
   const clearFilters = () => {
     setSelectedTypes([]);
     setSelectedClasses([]);
     setSearchQuery('');
     setHabitableOnly(false);
     setEarthLikeOnly(false);
+    setEccentricOnly(false);
+    setCircumbinaryOnly(false);
     setSortBy('name');
     setCurrentPage(1);
   };
@@ -255,7 +289,9 @@ export default function Planets() {
     selectedClasses.length > 0 ||
     searchQuery ||
     habitableOnly ||
-    earthLikeOnly;
+    earthLikeOnly ||
+    eccentricOnly ||
+    circumbinaryOnly;
 
   return (
     <div className="page-container">
@@ -345,6 +381,24 @@ export default function Planets() {
               className="toggle-checkbox"
             />
             <span>{t('pages.planets.filters.earthLikeOnly')}</span>
+          </label>
+          <label className="toggle-filter">
+            <input
+              type="checkbox"
+              checked={eccentricOnly}
+              onChange={handleEccentricToggle}
+              className="toggle-checkbox"
+            />
+            <span>{t('pages.planets.filters.eccentricOnly')}</span>
+          </label>
+          <label className="toggle-filter">
+            <input
+              type="checkbox"
+              checked={circumbinaryOnly}
+              onChange={handleCircumbinaryToggle}
+              className="toggle-checkbox"
+            />
+            <span>{t('pages.planets.filters.circumbinaryOnly')}</span>
           </label>
         </div>
 

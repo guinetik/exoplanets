@@ -122,6 +122,11 @@ export const mockPlanet: Exoplanet = {
   is_puffy: false,
   is_super_massive: false,
   is_lightweight: false,
+  // Color factors for shader generation
+  color_temp_factor: 0.5,
+  color_composition_factor: 0.7,
+  color_irradiation_factor: 0.5,
+  color_metallicity_factor: 0.5,
 };
 
 export const mockPlanet2: Exoplanet = {

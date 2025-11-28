@@ -217,6 +217,8 @@
         "sortBy": "Sort by:",
         "habitableOnly": "Habitable Zone Only",
         "earthLikeOnly": "Earth-like Only",
+        "eccentricOnly": "Eccentric Orbit",
+        "circumbinaryOnly": "Circumbinary System",
         "clearFilters": "Clear Filters"
       },
       "sort": {
@@ -251,6 +253,91 @@
       "exoplanet": "Exoplanet",
       "viewSystem": "View {{hostname}} System →",
       "viewStats": "View planet statistics",
+      "sections": {
+        "earthComparison": "Compared to Earth",
+        "habitability": "Habitability Score",
+        "temperature": "Temperature Zone",
+        "orbitalPosition": "Orbital Position",
+        "travelTime": "Travel Time"
+      },
+      "comparison": {
+        "earth": "Earth",
+        "radius": "Radius",
+        "mass": "Mass",
+        "density": "Density",
+        "gravity": "Surface Gravity",
+        "temperature": "Temperature",
+        "largerThanEarth": "{{times}}× larger than Earth",
+        "smallerThanEarth": "{{pct}}% smaller than Earth",
+        "similarToEarth": "Similar size to Earth",
+        "timesLarger": "{{times}}× larger",
+        "timesSmaller": "{{times}}× smaller",
+        "similar": "Similar"
+      },
+      "habitability": {
+        "breakdown": "Score Breakdown",
+        "temperature": "Temperature",
+        "size": "Size",
+        "starType": "Star Type",
+        "insolation": "Insolation",
+        "inHabitableZone": "In Habitable Zone",
+        "earthLikeSize": "Earth-like Size",
+        "potentiallyRocky": "Potentially Rocky",
+        "topCandidate": "Top Candidate",
+        "tiers": {
+          "excellent": "Excellent Habitability",
+          "good": "Good Habitability",
+          "moderate": "Moderate Habitability",
+          "low": "Low Habitability",
+          "minimal": "Minimal Habitability"
+        }
+      },
+      "temperature": {
+        "title": "Temperature Zone",
+        "unknown": "Temperature Unknown",
+        "habitableZone": "Habitable Zone (200-320K)",
+        "frozen": "Frozen",
+        "habitable": "Habitable",
+        "scorching": "Scorching",
+        "zones": {
+          "unknown": "Unknown",
+          "frozen": "Frozen",
+          "cold": "Cold",
+          "cool": "Cool",
+          "habitable": "Habitable",
+          "warm": "Warm",
+          "hot": "Hot",
+          "scorching": "Scorching"
+        },
+        "descriptions": {
+          "unknown": "Temperature data is not available for this planet.",
+          "frozen": "Cryogenic conditions - far colder than any natural environment on Earth.",
+          "cold": "Extremely cold - water would be permanently frozen on the surface.",
+          "cool": "Cool temperatures - liquid water unlikely without a thick atmosphere.",
+          "habitable": "Within the temperature range where liquid water could exist on the surface.",
+          "warm": "Too warm for liquid water without special conditions.",
+          "hot": "Very hot - surface temperatures would be extremely hostile to life.",
+          "scorching": "Extreme heat - metals and rocks may vaporize in the atmosphere."
+        }
+      },
+      "orbital": {
+        "title": "Position in System",
+        "noData": "Orbital data not available",
+        "habitableZone": "Habitable Zone",
+        "distance": "Distance from Star",
+        "period": "Orbital Period",
+        "eccentricity": "Eccentricity"
+      },
+      "siblings": {
+        "title": "Other Planets in {{system}}",
+        "count": "{{count}} other planet in this system",
+        "count_plural": "{{count}} other planets in this system",
+        "earthLikeHabitable": "Earth-like, Habitable Zone",
+        "habitable": "Habitable Zone",
+        "hotJupiter": "Hot Jupiter",
+        "frozen": "Frozen World",
+        "exoplanet": "Exoplanet"
+      },
       "visualization": {
         "title": "How We Visualize This Planet",
         "intro": "Our planet visualizations are generated procedurally using real scientific data from NASA's Exoplanet Archive. Here's how different properties influence what you see:",
@@ -635,5 +722,28 @@
     "loading": "Loading...",
     "error": "An error occurred",
     "notFound": "Page not found"
+  },
+  "components": {
+    "travelTime": {
+      "lightYearsAway": "light-years away",
+      "reachableAt": "Reachable at {{speed}} or faster",
+      "reachableInLifetime": "← Reachable in your lifetime",
+      "withinLifetime": "Within your lifetime",
+      "lifetimes": "{{count}} lifetime",
+      "lifetimes_plural": "{{count}} lifetimes",
+      "unknownDistance": "Distance unknown",
+      "replayRace": "Replay Race",
+      "speeds": {
+        "walking": "Walking",
+        "car": "Car",
+        "jet": "Commercial Jet",
+        "voyager": "Voyager 1",
+        "newHorizons": "New Horizons",
+        "parkerProbe": "Parker Solar Probe",
+        "onePercentC": "1% Light Speed",
+        "tenPercentC": "10% Light Speed",
+        "lightSpeed": "Light Speed"
+      }
+    }
   }
 }

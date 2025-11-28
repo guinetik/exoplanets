@@ -1,13 +1,23 @@
 /**
  * Planet Page
- * Vertical stack: 3D planet on top, hero name centered, details below
+ * Rich planetary profile with visualizations and detailed information
+ * Layout: 3D hero, comparison sections, data visualizations, reviews
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
-import { PlanetScene, PlanetInfo } from '../components/Planet';
+import {
+  PlanetScene,
+  PlanetInfo,
+  PlanetEarthComparison,
+  HabitabilityGauge,
+  TemperatureZoneIndicator,
+  OrbitalPositionChart,
+  SiblingPlanets,
+} from '../components/Planet';
+import { TravelTimeCalculator } from '../components/shared';
 import { nameToSlug } from '../utils/urlSlug';
 
 /**
@@ -57,20 +67,46 @@ function VisualizationInfoDialog({ isOpen, onClose }: { isOpen: boolean; onClose
   );
 }
 
+/**
+ * Section wrapper component for consistent styling
+ */
+function PlanetSection({
+  title,
+  children,
+  className = '',
+}: {
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`planet-section ${className}`}>
+      {title && <h2 className="planet-section-title">{title}</h2>}
+      <div className="planet-section-content">{children}</div>
+    </section>
+  );
+}
+
 export default function Planet() {
   const { t } = useTranslation();
   const { planetId } = useParams();
   const navigate = useNavigate();
-  const { getPlanetBySlug, isLoading } = useData();
+  const { getPlanetBySlug, getPlanetsByHost, isLoading } = useData();
   const [showVizInfo, setShowVizInfo] = useState(false);
   const detailsRef = useRef<HTMLDivElement>(null);
 
   // Get planet by slug from URL
   const planet = planetId ? getPlanetBySlug(planetId) : undefined;
 
+  // Get sibling planets in the same system
+  const siblings = useMemo(() => {
+    if (!planet) return [];
+    return getPlanetsByHost(planet.hostname);
+  }, [planet, getPlanetsByHost]);
+
   const scrollToStats = () => {
     if (detailsRef.current) {
-      const offset = 120; // Keep title visible
+      const offset = 120;
       const elementPosition = detailsRef.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.scrollY - offset;
       window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
@@ -157,9 +193,62 @@ export default function Planet() {
         </div>
       </div>
 
-      {/* Bottom: Details section */}
-      <div className="planet-details" ref={detailsRef}>
-        <PlanetInfo planet={planet} />
+      {/* Main content area */}
+      <div className="planet-content" ref={detailsRef}>
+        {/* Planet vs Earth Comparison */}
+        <PlanetSection
+          title={t('pages.planet.sections.earthComparison')}
+          className="section-comparison"
+        >
+          <PlanetEarthComparison planet={planet} />
+        </PlanetSection>
+
+        {/* Habitability & Temperature Row */}
+        <div className="planet-section-row">
+          <PlanetSection
+            title={t('pages.planet.sections.habitability')}
+            className="section-habitability"
+          >
+            <HabitabilityGauge planet={planet} />
+          </PlanetSection>
+
+          <PlanetSection
+            title={t('pages.planet.sections.temperature')}
+            className="section-temperature"
+          >
+            <TemperatureZoneIndicator planet={planet} />
+          </PlanetSection>
+        </div>
+
+        {/* Orbital Position */}
+        <PlanetSection
+          title={t('pages.planet.sections.orbitalPosition')}
+          className="section-orbital"
+        >
+          <OrbitalPositionChart planet={planet} siblings={siblings} />
+        </PlanetSection>
+
+        {/* Travel Time Calculator */}
+        {planet.distance_ly && planet.distance_ly > 0 && (
+          <PlanetSection
+            title={t('pages.planet.sections.travelTime')}
+            className="section-travel"
+          >
+            <TravelTimeCalculator distanceLy={planet.distance_ly} />
+          </PlanetSection>
+        )}
+
+        {/* Detailed Properties */}
+        <PlanetSection className="section-details">
+          <PlanetInfo planet={planet} />
+        </PlanetSection>
+
+        {/* Sibling Planets */}
+        {siblings.length > 1 && (
+          <PlanetSection className="section-siblings">
+            <SiblingPlanets currentPlanet={planet} siblings={siblings} />
+          </PlanetSection>
+        )}
       </div>
     </div>
   );

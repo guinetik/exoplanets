@@ -1002,6 +1002,18 @@
     @apply flex-1 grid grid-cols-2 gap-3 mb-4;
   }
 
+  .planet-card-property {
+    @apply flex flex-col gap-0.5;
+  }
+
+  .planet-card-property-label {
+    @apply block text-xs uppercase tracking-wider text-white/40 whitespace-nowrap;
+  }
+
+  .planet-card-property-value {
+    @apply block text-sm font-mono text-white whitespace-nowrap;
+  }
+
   .planet-card-flags {
     @apply flex flex-wrap gap-2 mb-3 pt-3 border-t border-white/10;
   }
@@ -1611,6 +1623,598 @@
   .viz-disclaimer {
     @apply text-xs text-white/30 italic pt-3 mt-3;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* =============================================================================
+     PLANET PAGE - Enhanced Content Sections
+     ============================================================================= */
+
+  /* Main content container */
+  .planet-content {
+    @apply w-full max-w-5xl mx-auto px-4 md:px-6 py-8;
+    @apply space-y-8;
+  }
+
+  /* Section wrapper */
+  .planet-section {
+    @apply p-6 rounded-xl;
+    @apply border border-white/[0.06] backdrop-blur-sm;
+    background: rgba(10, 10, 14, 0.8);
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .planet-section:hover {
+    @apply border-white/[0.1];
+  }
+
+  .planet-section-title {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-6;
+    letter-spacing: 0.15em;
+  }
+
+  .planet-section-content {
+    @apply w-full;
+  }
+
+  /* Two-column row layout */
+  .planet-section-row {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+  }
+
+  /* =============================================================================
+     PLANET VS EARTH COMPARISON
+     ============================================================================= */
+
+  .planet-earth-comparison {
+    @apply space-y-6;
+  }
+
+  .comparison-visual {
+    @apply flex items-center justify-center gap-8 md:gap-16 py-6;
+  }
+
+  .comparison-body {
+    @apply flex flex-col items-center gap-2;
+  }
+
+  .comparison-sphere {
+    @apply rounded-full relative;
+    @apply flex items-center justify-center;
+    box-shadow:
+      inset -10px -10px 30px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(100, 150, 255, 0.2);
+    transition: transform 0.3s ease;
+  }
+
+  .comparison-sphere:hover {
+    transform: scale(1.05);
+  }
+
+  .comparison-sphere .sphere-highlight {
+    @apply absolute w-1/3 h-1/3 rounded-full;
+    top: 15%;
+    left: 20%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  }
+
+  .comparison-sphere.earth {
+    box-shadow:
+      inset -10px -10px 30px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(74, 144, 217, 0.3);
+  }
+
+  .comparison-label {
+    @apply text-sm font-medium text-white/90 mt-2;
+  }
+
+  .comparison-stats {
+    @apply text-xs text-white/50 font-mono;
+  }
+
+  .comparison-vs {
+    @apply text-2xl font-light text-white/30;
+  }
+
+  .comparison-summary {
+    @apply text-center;
+  }
+
+  .comparison-summary p {
+    @apply text-sm text-white/70;
+  }
+
+  .comparison-metrics {
+    @apply grid grid-cols-1 gap-2 mt-4 pt-4;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .comparison-metric-row {
+    @apply grid grid-cols-4 gap-2 py-2 text-xs;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .metric-label {
+    @apply text-white/50;
+  }
+
+  .metric-earth {
+    @apply text-cyan-400/70 font-mono text-right;
+  }
+
+  .metric-planet {
+    @apply text-white font-mono text-right;
+  }
+
+  .metric-ratio {
+    @apply text-white/40 text-right;
+  }
+
+  /* =============================================================================
+     HABITABILITY GAUGE
+     ============================================================================= */
+
+  .habitability-gauge {
+    @apply flex flex-col items-center gap-4;
+  }
+
+  .gauge-container {
+    @apply relative;
+  }
+
+  .gauge-svg {
+    transform: rotate(0deg);
+  }
+
+  .gauge-background {
+    opacity: 0.3;
+  }
+
+  .gauge-progress {
+    transition: stroke-dashoffset 1s ease-out;
+  }
+
+  .gauge-center {
+    @apply absolute inset-0 flex flex-col items-center justify-center;
+  }
+
+  .gauge-score {
+    @apply text-4xl font-bold;
+    text-shadow: 0 0 20px currentColor;
+  }
+
+  .gauge-label {
+    @apply text-sm text-white/40;
+  }
+
+  .gauge-tier {
+    @apply text-sm font-medium uppercase tracking-wider;
+  }
+
+  .habitability-breakdown {
+    @apply w-full max-w-xs space-y-2;
+  }
+
+  .breakdown-title {
+    @apply text-xs uppercase tracking-wider text-white/40 mb-3 text-center;
+  }
+
+  .breakdown-item {
+    @apply space-y-1;
+  }
+
+  .breakdown-header {
+    @apply flex justify-between text-xs;
+  }
+
+  .breakdown-label {
+    @apply text-white/60;
+  }
+
+  .breakdown-value {
+    @apply text-white/40 font-mono;
+  }
+
+  .breakdown-bar-track {
+    @apply h-1.5 rounded-full overflow-hidden;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .breakdown-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  .habitability-indicators {
+    @apply flex flex-wrap justify-center gap-2 mt-4;
+  }
+
+  .habitability-indicators .indicator {
+    @apply text-xs px-2 py-1 rounded;
+    @apply backdrop-blur-sm;
+  }
+
+  .habitability-indicators .indicator.positive {
+    @apply text-green-400;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .habitability-indicators .indicator.highlight {
+    @apply text-yellow-400;
+    background: rgba(234, 179, 8, 0.15);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+  }
+
+  /* =============================================================================
+     TEMPERATURE ZONE INDICATOR
+     ============================================================================= */
+
+  .temperature-zone-indicator {
+    @apply space-y-4;
+  }
+
+  .temp-zone-title {
+    @apply text-xs uppercase tracking-wider text-white/40 text-center;
+  }
+
+  .temp-value-display {
+    @apply text-center;
+  }
+
+  .temp-value {
+    @apply text-3xl font-bold;
+    text-shadow: 0 0 15px currentColor;
+  }
+
+  .temp-celsius {
+    @apply text-sm text-white/40 ml-2;
+  }
+
+  .temp-unknown {
+    @apply text-lg text-white/30;
+  }
+
+  .temp-zone-label {
+    @apply text-sm font-medium uppercase tracking-wider text-center;
+  }
+
+  .temp-scale-container {
+    @apply py-4;
+  }
+
+  .temp-scale-bar {
+    @apply relative h-8 rounded-full overflow-visible;
+    background: linear-gradient(
+      to right,
+      #4444ff 0%,
+      #0088ff 15%,
+      #00ccff 25%,
+      #00ff88 40%,
+      #00ff88 50%,
+      #ffaa00 65%,
+      #ff6600 80%,
+      #ff2200 100%
+    );
+  }
+
+  .temp-habitable-zone {
+    @apply absolute h-full;
+    background: rgba(0, 255, 136, 0.3);
+    border-left: 2px dashed rgba(0, 255, 136, 0.5);
+    border-right: 2px dashed rgba(0, 255, 136, 0.5);
+  }
+
+  .temp-scale-gradient {
+    @apply absolute inset-0;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  }
+
+  .temp-reference-marker {
+    @apply absolute top-0 transform -translate-x-1/2;
+    @apply flex flex-col items-center;
+  }
+
+  .temp-reference-marker .reference-emoji {
+    @apply text-lg transform -translate-y-full;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  .temp-reference-marker .reference-line {
+    @apply w-px h-8 bg-white/30;
+  }
+
+  .temp-planet-marker {
+    @apply absolute top-1/2 transform -translate-x-1/2 -translate-y-1/2;
+    @apply flex flex-col items-center z-10;
+  }
+
+  .temp-planet-marker .marker-dot {
+    @apply w-4 h-4 rounded-full border-2 border-white;
+    box-shadow: 0 0 10px currentColor;
+  }
+
+  .temp-planet-marker .marker-label {
+    @apply text-xs font-bold text-white mt-1;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  }
+
+  .temp-scale-labels {
+    @apply flex justify-between mt-2 text-xs text-white/40;
+  }
+
+  .temp-zone-description {
+    @apply text-sm text-white/60 text-center;
+  }
+
+  .temp-legend {
+    @apply flex justify-center gap-6 mt-2 text-xs;
+  }
+
+  .temp-legend .legend-item {
+    @apply flex items-center gap-2;
+  }
+
+  .temp-legend .legend-marker {
+    @apply w-3 h-3;
+  }
+
+  .temp-legend .legend-marker.habitable-zone {
+    @apply rounded;
+    background: rgba(34, 197, 94, 0.3);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+  }
+
+  .temp-legend .legend-text {
+    @apply text-white/50;
+  }
+
+  /* =============================================================================
+     ORBITAL POSITION CHART
+     ============================================================================= */
+
+  .orbital-position-container {
+    @apply space-y-4;
+  }
+
+  .orbital-title {
+    @apply text-xs uppercase tracking-wider text-white/40 text-center;
+  }
+
+  .orbital-chart {
+    @apply flex justify-center;
+  }
+
+  .orbital-no-data {
+    @apply text-center text-white/40 py-8;
+  }
+
+  .orbital-legend {
+    @apply flex justify-center gap-4 text-xs;
+  }
+
+  .orbital-legend-item {
+    @apply flex items-center gap-2;
+  }
+
+  .orbital-legend-dot {
+    @apply w-3 h-3 rounded-full;
+  }
+
+  .orbital-legend-dot.star {
+    @apply bg-yellow-400;
+    box-shadow: 0 0 6px rgba(255, 200, 0, 0.5);
+  }
+
+  .orbital-legend-dot.current {
+    @apply bg-white border-2 border-white;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+  }
+
+  .orbital-legend-dot.hz {
+    background: rgba(34, 197, 94, 0.3);
+    border: 1px solid rgba(34, 197, 94, 0.5);
+  }
+
+  .orbital-info {
+    @apply flex justify-center gap-6 mt-4 text-xs;
+  }
+
+  .orbital-info-item {
+    @apply flex flex-col items-center;
+  }
+
+  .orbital-info-item .info-label {
+    @apply text-white/40;
+  }
+
+  .orbital-info-item .info-value {
+    @apply text-white font-mono;
+  }
+
+  /* =============================================================================
+     TRAVEL TIME CALCULATOR
+     ============================================================================= */
+
+  .travel-time-section {
+    @apply space-y-4;
+  }
+
+  .travel-time-header {
+    @apply flex flex-col md:flex-row justify-between items-center gap-4;
+  }
+
+  .travel-time-distance {
+    @apply text-center md:text-left;
+  }
+
+  .travel-time-distance .distance-value {
+    @apply text-4xl font-bold text-cyan-400;
+    text-shadow: 0 0 20px rgba(0, 204, 255, 0.5);
+  }
+
+  .travel-time-distance .distance-label {
+    @apply text-sm text-white/50 ml-2;
+  }
+
+  .travel-time-reachable {
+    @apply flex items-center gap-2 text-sm text-green-400;
+  }
+
+  .travel-time-reachable .reachable-icon {
+    @apply w-5 h-5 rounded-full bg-green-500/20 text-center;
+  }
+
+  .travel-time-chart {
+    @apply w-full overflow-x-auto;
+  }
+
+  .travel-time-details {
+    @apply flex items-center gap-4 p-4 rounded-lg;
+    @apply border border-white/[0.06] backdrop-blur-sm;
+    background: rgba(10, 10, 14, 0.6);
+  }
+
+  .travel-time-details .detail-icon {
+    @apply text-2xl;
+  }
+
+  .travel-time-details .detail-info {
+    @apply flex-1;
+  }
+
+  .travel-time-details .detail-name {
+    @apply block text-sm text-white/70;
+  }
+
+  .travel-time-details .detail-time {
+    @apply block text-lg font-bold text-white;
+  }
+
+  .travel-time-details .detail-stats {
+    @apply flex items-center;
+  }
+
+  .travel-time-details .detail-badge {
+    @apply text-xs px-2 py-1 rounded;
+    @apply text-white/60;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .travel-time-details .detail-badge.reachable {
+    @apply text-green-400;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .travel-time-replay {
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply border border-white/[0.06] text-white/50;
+    @apply hover:border-white/[0.12] hover:text-white/70;
+    @apply transition-all duration-200;
+    background: rgba(10, 10, 14, 0.6);
+  }
+
+  .travel-time-replay:hover {
+    background: rgba(15, 15, 20, 0.8);
+  }
+
+  .travel-unreachable {
+    @apply text-center text-white/40 py-8;
+  }
+
+  /* =============================================================================
+     SIBLING PLANETS
+     ============================================================================= */
+
+  .sibling-planets-section {
+    @apply space-y-4;
+  }
+
+  .sibling-planets-title {
+    @apply text-lg font-medium text-white;
+  }
+
+  .sibling-planets-subtitle {
+    @apply text-sm text-white/50;
+  }
+
+  .sibling-planets-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4;
+  }
+
+  .sibling-planet-card {
+    @apply flex items-center gap-3 p-3 rounded-lg;
+    @apply border border-white/[0.06] backdrop-blur-sm;
+    @apply hover:border-white/[0.12];
+    @apply transition-all duration-200;
+    background: rgba(10, 10, 14, 0.6);
+  }
+
+  .sibling-planet-card:hover {
+    background: rgba(15, 15, 20, 0.8);
+  }
+
+  .sibling-thumbnail {
+    @apply flex-shrink-0;
+  }
+
+  .sibling-info {
+    @apply flex-1 min-w-0;
+  }
+
+  .sibling-name {
+    @apply block text-sm font-medium text-white truncate;
+  }
+
+  .sibling-type {
+    @apply block text-xs text-white/50 truncate;
+  }
+
+  .sibling-stats {
+    @apply flex gap-2;
+  }
+
+  .sibling-stat {
+    @apply text-center;
+  }
+
+  .sibling-stat .stat-value {
+    @apply block text-xs font-mono text-white;
+  }
+
+  .sibling-stat .stat-unit {
+    @apply block text-xs text-white/30;
+  }
+
+  .sibling-badges {
+    @apply flex gap-1;
+  }
+
+  .sibling-badge {
+    @apply text-xs px-1.5 py-0.5 rounded;
+    @apply backdrop-blur-sm;
+  }
+
+  .sibling-badge.habitable {
+    @apply text-green-400;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .sibling-badge.earth-like {
+    @apply text-blue-400;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .sibling-badge.hot {
+    @apply text-orange-400;
+    background: rgba(249, 115, 22, 0.15);
+    border: 1px solid rgba(249, 115, 22, 0.2);
   }
 }
 
