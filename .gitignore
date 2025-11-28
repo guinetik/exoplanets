@@ -28,4 +28,6 @@ coverage/
 
 # Data (large files)
 data/raw/*.csv
+#temporar stuff
 tmp
+studies
