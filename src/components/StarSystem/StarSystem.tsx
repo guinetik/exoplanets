@@ -23,6 +23,13 @@ interface BodyPositionsContextType {
 
 const BodyPositionsContext = createContext<BodyPositionsContextType | null>(null);
 
+/** Context for sharing camera distance with celestial bodies */
+interface CameraContextType {
+  cameraDistance: React.MutableRefObject<number>;
+}
+
+export const CameraContext = createContext<CameraContextType | null>(null);
+
 interface StarSystemProps {
   /** Star data */
   star: Star;
@@ -110,6 +117,7 @@ function CameraControls({
   const controlsRef = useRef<OrbitControlsImpl>(null);
   const { camera, viewport } = useThree();
   const positionsContext = useContext(BodyPositionsContext);
+  const cameraContext = useContext(CameraContext);
   
   // Store the default target (center of system)
   const defaultTarget = useRef(new THREE.Vector3(0, 0, 0));
@@ -125,7 +133,12 @@ function CameraControls({
 
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
-    
+
+    // Update camera distance for zoom-based detail in shaders
+    if (cameraContext) {
+      cameraContext.cameraDistance.current = camera.position.length();
+    }
+
     // Calculate responsive multiplier based on current viewport aspect ratio
     const aspect = viewport.width / viewport.height;
     const responsiveMultiplier = getResponsiveMultiplier(aspect);
@@ -250,13 +263,21 @@ export function StarSystem({
 }: StarSystemProps) {
   // Ref map to track body positions in real-time
   const bodyPositionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
-  
+
+  // Ref to track camera distance for zoom-based detail
+  const cameraDistanceRef = useRef<number>(100);
+
   // Context value for sharing positions
   const positionsContextValue = useMemo(() => ({
     positions: bodyPositionsRef,
     registerPosition: (id: string, position: THREE.Vector3) => {
       bodyPositionsRef.current.set(id, position.clone());
     },
+  }), []);
+
+  // Context value for sharing camera distance
+  const cameraContextValue = useMemo(() => ({
+    cameraDistance: cameraDistanceRef,
   }), []);
 
   // Generate solar system data
@@ -315,8 +336,9 @@ export function StarSystem({
         style={{ background: 'black' }}
         onPointerMissed={() => onBackgroundClick?.()}
       >
-        <BodyPositionsContext.Provider value={positionsContextValue}>
-          <Suspense fallback={null}>
+        <CameraContext.Provider value={cameraContextValue}>
+          <BodyPositionsContext.Provider value={positionsContextValue}>
+            <Suspense fallback={null}>
             {/* Ambient light for base visibility */}
             <ambientLight intensity={0.6} />
 
@@ -377,8 +399,9 @@ export function StarSystem({
               focusedBody={focusedBody}
               baseCameraDistance={baseCameraDistance}
             />
-          </Suspense>
-        </BodyPositionsContext.Provider>
+            </Suspense>
+          </BodyPositionsContext.Provider>
+        </CameraContext.Provider>
       </Canvas>
     </div>
   );

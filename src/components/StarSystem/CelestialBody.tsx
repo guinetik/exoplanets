@@ -3,12 +3,13 @@
  * Renders a star or planet as a 3D sphere with procedural shaders
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useContext } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { StellarBody } from '../../utils/solarSystem';
 import { shaderService } from '../../services/shaderService';
+import { CameraContext } from './StarSystem';
 import {
   createPlanetUniforms,
   getV2PlanetShaderType,
@@ -50,6 +51,9 @@ export function CelestialBody({
   const starMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const planetMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const orbitAngleRef = useRef(Math.random() * Math.PI * 2); // Random starting position
+
+  // Get camera distance for zoom-based detail
+  const cameraContext = useContext(CameraContext);
 
   // Star shader uniforms with seed and activity for dynamic effects
   const starSeed = useMemo(() => generateSeed(body.id ?? body.name), [body.id, body.name]);
@@ -97,12 +101,18 @@ export function CelestialBody({
   const planetUniforms = useMemo(() => {
     if (body.planetData) {
       // Use real exoplanet data for data-driven visuals
-      return createPlanetUniforms({
+      const uniforms = createPlanetUniforms({
         planet: body.planetData,
         detailLevel: 'detailed', // Full detail for best visual quality
         starTemp: body.planetData.st_teff ?? undefined,
         showTerminator: false, // Disable dark side - star provides illumination
       });
+      // Add zoom level uniform for camera distance-based detail
+      return {
+        ...uniforms,
+        uZoomLevel: { value: 0.0 },
+        uBodyDiameter: { value: body.diameter },
+      };
     }
     // Fallback for bodies without full exoplanet data
     return {
@@ -121,8 +131,10 @@ export function CelestialBody({
       uColorCompositionFactor: { value: 0.5 },
       uColorIrradiationFactor: { value: 0.5 },
       uColorMetallicityFactor: { value: 0.5 },
+      uZoomLevel: { value: 0.0 },
+      uBodyDiameter: { value: body.diameter },
     };
-  }, [body.planetData, body.color, body.temperature, body.hasAtmosphere]);
+  }, [body.planetData, body.color, body.temperature, body.hasAtmosphere, body.diameter]);
 
   // Get the appropriate planet shader using V2 system for better variety
   const planetShaderType = useMemo(
@@ -316,6 +328,26 @@ export function CelestialBody({
     } else if (body.type === 'planet') {
       if (planetMaterialRef.current) {
         planetMaterialRef.current.uniforms.uTime.value = time;
+
+        // Calculate zoom level based on camera distance relative to body size
+        // Higher zoom level = camera is closer = more detail
+        if (cameraContext && groupRef.current) {
+          const camDist = cameraContext.cameraDistance.current;
+          const bodyPos = groupRef.current.position;
+          // Distance from camera to this specific body
+          const distToBody = Math.sqrt(
+            Math.pow(bodyPos.x, 2) +
+            Math.pow(bodyPos.y - camDist * 0.4, 2) + // Account for camera Y offset
+            Math.pow(bodyPos.z - camDist, 2)
+          );
+          // Zoom level: 1.0 when very close (4x diameter), 0.0 when far (20x+ diameter)
+          const closeThreshold = body.diameter * 4;
+          const farThreshold = body.diameter * 20;
+          const zoomLevel = 1.0 - Math.min(1.0, Math.max(0.0,
+            (distToBody - closeThreshold) / (farThreshold - closeThreshold)
+          ));
+          planetMaterialRef.current.uniforms.uZoomLevel.value = zoomLevel;
+        }
       }
       if (ringMaterialRef.current) {
         ringMaterialRef.current.uniforms.uTime.value = time;

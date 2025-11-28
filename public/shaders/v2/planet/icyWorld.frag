@@ -36,6 +36,8 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+uniform float uZoomLevel;      // 0 = far, 1 = close - controls surface detail visibility
+uniform float uBodyDiameter;   // Body diameter for scale reference
 
 // Physical color factors for data-driven variety
 uniform float uColorTempFactor;
@@ -95,6 +97,10 @@ const float LIMB_MIN_BRIGHTNESS = 0.5;               // Minimum brightness of li
 // --- Albedo ---
 const float ICE_ALBEDO = 0.7;                       // Ice is highly reflective
 
+// --- Zoom Detail ---
+const float ICE_CRACK_SCALE = 50.0;                // Fine ice cracks scale
+const float CRYSTAL_SCALE = 80.0;                  // Crystalline structure scale
+
 // =============================================================================
 // VARYINGS
 // =============================================================================
@@ -102,6 +108,48 @@ const float ICE_ALBEDO = 0.7;                       // Ice is highly reflective
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
+
+// =============================================================================
+// ZOOM DETAIL FUNCTION
+// =============================================================================
+
+/**
+ * Add fine ice details when zoomed in - cracks, crystals, and texture
+ */
+vec3 iceZoomDetail(vec3 p, vec3 iceColor, float zoomLevel, float seed) {
+    if (zoomLevel < 0.15) {
+        return iceColor;
+    }
+
+    float detailFade = smoothstep(0.15, 0.5, zoomLevel);
+
+    // Fine surface cracks
+    float crackNoise = abs(snoise3D(p * ICE_CRACK_SCALE + vec3(seed * 10.0)));
+    float cracks = 1.0 - smoothstep(0.0, 0.08, crackNoise);
+    iceColor = mix(iceColor, iceColor * 0.7, cracks * 0.4 * detailFade);
+
+    // Crystalline structure highlights
+    float crystalNoise = vnoise3D(p * CRYSTAL_SCALE + vec3(seed * 5.0));
+    float crystals = smoothstep(0.6, 0.8, crystalNoise);
+    iceColor += vec3(0.1, 0.12, 0.15) * crystals * 0.3 * detailFade;
+
+    // Small impact pits at high zoom
+    if (zoomLevel > 0.4) {
+        float pitFade = smoothstep(0.4, 0.7, zoomLevel);
+        float pitNoise = vnoise3D(p * 40.0 + vec3(seed * 8.0));
+        float pits = smoothstep(0.65, 0.8, pitNoise);
+        iceColor *= (1.0 - pits * 0.15 * pitFade);
+    }
+
+    // Fine ice grain at maximum zoom
+    if (zoomLevel > 0.6) {
+        float grainFade = smoothstep(0.6, 0.9, zoomLevel);
+        float grain = snoise3D(p * 150.0 + vec3(seed * 3.0)) * 0.5 + 0.5;
+        iceColor *= 0.96 + grain * 0.08 * grainFade;
+    }
+
+    return iceColor;
+}
 
 // =============================================================================
 // FRACTURE FUNCTION
@@ -265,7 +313,11 @@ void main() {
     vec3 iceHSV = rgb2hsv(iceColor);
     iceHSV.x = fract(iceHSV.x + hueShift);
     iceColor = hsv2rgb(iceHSV);
-    
+
+    // === ZOOM-BASED DETAIL ===
+    // Add fine ice cracks, crystals and texture when zoomed in
+    iceColor = iceZoomDetail(p, iceColor, uZoomLevel, uSeed);
+
     // === LIGHTING ===
     vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
     float diff = diffuseLambert(vNormal, lightDir);

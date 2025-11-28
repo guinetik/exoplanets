@@ -37,6 +37,8 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+uniform float uZoomLevel;      // 0 = far, 1 = close - controls surface detail visibility
+uniform float uBodyDiameter;   // Body diameter for scale reference
 
 // Physical color factors for data-driven variety
 uniform float uColorTempFactor;
@@ -94,6 +96,10 @@ const float AMBIENT_GLOW = 0.15;                    // Minimum glow from heat
 const float LIMB_GLOW_POWER = 3.0;                  // Power of limb glow
 const float LIMB_GLOW_COLOR_SHIFT = 0.3;            // Shift towards orange at edges
 
+// --- Zoom Detail ---
+const float COOLING_CRACK_SCALE = 45.0;            // Fine cooling crack scale
+const float LAVA_CELL_SCALE = 30.0;                // Convection cell scale
+
 // =============================================================================
 // VARYINGS
 // =============================================================================
@@ -101,6 +107,51 @@ const float LIMB_GLOW_COLOR_SHIFT = 0.3;            // Shift towards orange at e
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
+
+// =============================================================================
+// ZOOM DETAIL FUNCTION
+// =============================================================================
+
+/**
+ * Add fine volcanic details when zoomed in - cooling cracks, convection cells
+ */
+vec3 lavaZoomDetail(vec3 p, vec3 surfaceColor, float zoomLevel, float isLava, float seed, float time) {
+    if (zoomLevel < 0.15) {
+        return surfaceColor;
+    }
+
+    float detailFade = smoothstep(0.15, 0.5, zoomLevel);
+
+    // Fine cooling cracks in solidified crust
+    if (isLava < 0.5) {
+        float crackNoise = abs(snoise3D(p * COOLING_CRACK_SCALE + vec3(seed * 10.0)));
+        float cracks = 1.0 - smoothstep(0.0, 0.06, crackNoise);
+
+        // Cracks glow faintly from heat below
+        vec3 glowColor = mix(LAVA_COLOR_COOL, LAVA_COLOR_WARM, 0.3);
+        surfaceColor = mix(surfaceColor, glowColor, cracks * 0.5 * detailFade);
+    }
+
+    // Convection cells in active lava
+    if (isLava > 0.3 && zoomLevel > 0.3) {
+        float cellFade = smoothstep(0.3, 0.6, zoomLevel);
+        float cellNoise = vnoise3D(p * LAVA_CELL_SCALE + vec3(time * 0.01, seed * 5.0, time * 0.008));
+        float cells = smoothstep(0.4, 0.6, cellNoise);
+
+        // Cell boundaries are brighter (hot upwelling)
+        float boundary = smoothstep(0.45, 0.5, cellNoise) * smoothstep(0.55, 0.5, cellNoise);
+        surfaceColor = mix(surfaceColor, LAVA_COLOR_HOT, boundary * 0.4 * cellFade * isLava);
+    }
+
+    // Fine rock texture at maximum zoom
+    if (zoomLevel > 0.6 && isLava < 0.5) {
+        float grainFade = smoothstep(0.6, 0.9, zoomLevel);
+        float grain = vnoise3D(p * 100.0 + vec3(seed * 3.0)) * 0.5 + 0.5;
+        surfaceColor *= 0.92 + grain * 0.16 * grainFade;
+    }
+
+    return surfaceColor;
+}
 
 // =============================================================================
 // LAVA PATTERN FUNCTION
@@ -251,7 +302,12 @@ void main() {
     vec3 surfaceHSV = rgb2hsv(surfaceColor);
     surfaceHSV.x = fract(surfaceHSV.x + hueShift);
     surfaceColor = hsv2rgb(surfaceHSV);
-    
+
+    // === ZOOM-BASED DETAIL ===
+    // Add cooling cracks, convection cells, and fine texture when zoomed in
+    float lavaFactor = isLava ? lavaDepth : 0.0;
+    surfaceColor = lavaZoomDetail(p, surfaceColor, uZoomLevel, lavaFactor, uSeed, wrappedTime);
+
     // === LIGHTING ===
     vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
     float diff = diffuseLambert(vNormal, lightDir);

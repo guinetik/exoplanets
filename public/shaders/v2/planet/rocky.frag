@@ -36,6 +36,8 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+uniform float uZoomLevel;      // 0 = far, 1 = close - controls surface detail visibility
+uniform float uBodyDiameter;   // Body diameter for scale reference
 
 // Physical color factors for data-driven variety
 uniform float uColorTempFactor;
@@ -111,6 +113,12 @@ const float LIMB_EDGE_LOW = -0.2;
 const float LIMB_EDGE_HIGH = 0.8;
 const float LIMB_MIN_BRIGHTNESS = 0.4;
 
+// --- Crater Generation (zoom-based) ---
+const float CRATER_SCALE = 25.0;          // Base scale for crater distribution
+const float CRATER_DETAIL_SCALE = 80.0;   // Finer crater detail scale
+const float CRATER_DEPTH = 0.15;          // How much craters darken the surface
+const float CRATER_RIM_BRIGHTNESS = 0.08; // Brightness boost at crater rims
+
 // =============================================================================
 // VARYINGS
 // =============================================================================
@@ -118,6 +126,82 @@ const float LIMB_MIN_BRIGHTNESS = 0.4;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
+
+// =============================================================================
+// CRATER FUNCTIONS (for zoom-based detail)
+// =============================================================================
+
+/**
+ * Generate procedural crater field
+ * Uses Voronoi-like cellular noise to create crater shapes
+ */
+float craterField(vec3 p, float scale, float seed) {
+    vec3 scaledP = p * scale + vec3(seed * 10.0);
+
+    // Cellular noise for crater positions
+    float cellNoise = vnoise3D(scaledP);
+
+    // Create crater shapes - deeper in center, raised rim
+    float crater = smoothstep(0.3, 0.5, cellNoise) - smoothstep(0.5, 0.7, cellNoise) * 0.5;
+
+    // Add some variation
+    float variation = snoise3D(scaledP * 2.0 + vec3(seed)) * 0.3;
+
+    return crater + variation * 0.2;
+}
+
+/**
+ * Generate crater rim highlights
+ */
+float craterRims(vec3 p, float scale, float seed) {
+    vec3 scaledP = p * scale + vec3(seed * 10.0);
+
+    float cellNoise = vnoise3D(scaledP);
+
+    // Rim is at the edge of crater (around 0.45-0.55)
+    float rim = smoothstep(0.4, 0.48, cellNoise) * smoothstep(0.56, 0.48, cellNoise);
+
+    return rim;
+}
+
+/**
+ * Multi-scale crater detail combining large and small craters
+ */
+vec3 zoomBasedCraterDetail(vec3 p, vec3 surfaceColor, float zoomLevel, float seed) {
+    if (zoomLevel < 0.1) {
+        return surfaceColor;
+    }
+
+    // Fade in detail based on zoom
+    float detailFade = smoothstep(0.1, 0.5, zoomLevel);
+
+    // Large craters (visible at medium zoom)
+    float largeCraters = craterField(p, CRATER_SCALE, seed);
+    float largeRims = craterRims(p, CRATER_SCALE, seed);
+
+    // Small craters (visible at high zoom)
+    float smallCraters = craterField(p, CRATER_DETAIL_SCALE, seed + 5.0);
+    float smallRims = craterRims(p, CRATER_DETAIL_SCALE, seed + 5.0);
+
+    // Combine crater effects
+    float totalCrater = largeCraters * 0.7 + smallCraters * 0.3 * smoothstep(0.3, 0.7, zoomLevel);
+    float totalRim = largeRims * 0.6 + smallRims * 0.4 * smoothstep(0.4, 0.8, zoomLevel);
+
+    // Apply crater darkening
+    vec3 result = surfaceColor * (1.0 - totalCrater * CRATER_DEPTH * detailFade);
+
+    // Add rim highlights
+    result += vec3(1.0) * totalRim * CRATER_RIM_BRIGHTNESS * detailFade;
+
+    // Fine surface texture at maximum zoom
+    if (zoomLevel > 0.6) {
+        float fineTexture = snoise3D(p * 150.0 + vec3(seed * 3.0)) * 0.5 + 0.5;
+        float fineFade = smoothstep(0.6, 0.9, zoomLevel);
+        result *= 0.95 + fineTexture * 0.1 * fineFade;
+    }
+
+    return result;
+}
 
 // =============================================================================
 // BIOME FUNCTION
@@ -272,6 +356,13 @@ void main() {
     if (uDetailLevel > 0.5 && !isOcean) {
         float detail = vnoise3D(p * 40.0 + vec3(phaseOffset));
         surfaceColor *= 0.95 + detail * 0.1;
+    }
+
+    // === ZOOM-BASED CRATER DETAIL ===
+    // Apply craters and fine surface features when zoomed in close
+    // Only on non-ocean surfaces with minimal atmosphere (exposed rock)
+    if (!isOcean && uHasAtmosphere < 0.7) {
+        surfaceColor = zoomBasedCraterDetail(p, surfaceColor, uZoomLevel, uSeed);
     }
     
     // === LIGHTING ===

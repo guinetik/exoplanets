@@ -743,6 +743,13 @@ export function generateSolarSystem(
     // Each star orbits ~half the total separation, so total sep needs to be > sum of diameters
     const binaryOrbitRadius = isMultiStarSystem ? (starDiameter + companionDiameter) * 1.2 + 4 : 0;
 
+    // Calculate emissive intensity with cap to prevent washout on very luminous stars
+    // Use logarithmic scaling for luminous stars to keep visual distinction
+    const linearLum = Math.pow(10, starLum);
+    // Cap the intensity: normal stars ~1.0, bright stars up to 1.5 max
+    const primaryEmissive = Math.min(0.8 + linearLum * 0.15, 1.5);
+    const companionEmissive = Math.min(0.6 + Math.pow(10, starLum * 0.7) * 0.1, 1.3);
+
     // Add the primary star
     bodies.push({
       id: star.id,
@@ -754,7 +761,7 @@ export function generateSolarSystem(
       diameter: starDiameter,
       color: getStarColor(star.star_class),
       emissive: getStarColor(star.star_class),
-      emissiveIntensity: 0.8 + Math.pow(10, starLum) * 0.2,
+      emissiveIntensity: primaryEmissive,
       temperature: star.st_teff ?? 5778,
       spectralType: star.st_spectype ?? star.star_class ?? undefined,
       orbitRadius: isMultiStarSystem ? binaryOrbitRadius * 0.4 : 0,
@@ -781,7 +788,7 @@ export function generateSolarSystem(
         diameter: companionDiameter,
         color: getCompanionStarColor(star.star_class),
         emissive: getCompanionStarColor(star.star_class),
-        emissiveIntensity: 0.6 + Math.pow(10, starLum * 0.7) * 0.15,
+        emissiveIntensity: companionEmissive,
         temperature: companionTemp,
         spectralType: getSpectralTypeFromTemp(companionTemp),
         orbitRadius: binaryOrbitRadius * 0.6,

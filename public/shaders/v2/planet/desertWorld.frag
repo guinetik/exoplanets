@@ -36,6 +36,8 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
+uniform float uZoomLevel;      // 0 = far, 1 = close - controls surface detail visibility
+uniform float uBodyDiameter;   // Body diameter for scale reference
 
 // Physical color factors for data-driven variety
 uniform float uColorTempFactor;
@@ -95,6 +97,12 @@ const float LIMB_EDGE_LOW = -0.1;                       // Lower edge of limb da
 const float LIMB_EDGE_HIGH = 0.8;                       // Upper edge of limb darkening by limb darkening
 const float LIMB_MIN_BRIGHTNESS = 0.35;                 // Minimum brightness of limb darkening
 
+// --- Crater/Rock Generation (zoom-based) ---
+const float CRATER_SCALE = 20.0;                        // Base scale for impact craters
+const float ROCK_SCALE = 60.0;                          // Scale for scattered rocks
+const float CRATER_DEPTH = 0.12;                        // How much craters darken surface
+const float ROCK_SHADOW = 0.08;                         // Shadow from scattered rocks
+
 // =============================================================================
 // VARYINGS
 // =============================================================================
@@ -102,6 +110,47 @@ const float LIMB_MIN_BRIGHTNESS = 0.35;                 // Minimum brightness of
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
+
+// =============================================================================
+// ZOOM-BASED DETAIL FUNCTIONS
+// =============================================================================
+
+/**
+ * Generate impact craters and scattered rocks when zoomed in
+ */
+vec3 desertZoomDetail(vec3 p, vec3 surfaceColor, float zoomLevel, float terrain, float seed) {
+    if (zoomLevel < 0.15) {
+        return surfaceColor;
+    }
+
+    float detailFade = smoothstep(0.15, 0.5, zoomLevel);
+
+    // Impact craters on rocky areas
+    if (terrain > HEIGHT_PLAINS) {
+        float craterNoise = vnoise3D(p * CRATER_SCALE + vec3(seed * 10.0));
+        float crater = smoothstep(0.35, 0.5, craterNoise) - smoothstep(0.5, 0.65, craterNoise) * 0.4;
+        float rim = smoothstep(0.42, 0.48, craterNoise) * smoothstep(0.52, 0.48, craterNoise);
+
+        surfaceColor *= (1.0 - crater * CRATER_DEPTH * detailFade);
+        surfaceColor += vec3(0.8, 0.7, 0.6) * rim * 0.06 * detailFade;
+    }
+
+    // Scattered rocks and boulders on all terrain types
+    float rockNoise = vnoise3D(p * ROCK_SCALE + vec3(seed * 5.0));
+    float rocks = smoothstep(0.6, 0.75, rockNoise);
+
+    // Rock shadows
+    surfaceColor *= (1.0 - rocks * ROCK_SHADOW * detailFade);
+
+    // Fine grain texture at maximum zoom
+    if (zoomLevel > 0.6) {
+        float grainFade = smoothstep(0.6, 0.9, zoomLevel);
+        float grain = snoise3D(p * 120.0 + vec3(seed * 3.0)) * 0.5 + 0.5;
+        surfaceColor *= 0.96 + grain * 0.08 * grainFade;
+    }
+
+    return surfaceColor;
+}
 
 // =============================================================================
 // DUNE FUNCTION
@@ -241,7 +290,11 @@ void main() {
     
     // Blend with base color
     surfaceColor = mix(surfaceColor, surfaceColor * uBaseColor * 1.5, 0.25);
-    
+
+    // === ZOOM-BASED DETAIL ===
+    // Add craters, rocks, and fine texture when zoomed in
+    surfaceColor = desertZoomDetail(p, surfaceColor, uZoomLevel, terrain, uSeed);
+
     // === POLAR ICE (if cold enough) ===
     if (uTemperature < 280.0) {
         float iceFactor = smoothstep(280.0, 200.0, uTemperature);
