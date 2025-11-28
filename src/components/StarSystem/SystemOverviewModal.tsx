@@ -4,10 +4,14 @@
  * Includes star comparison, system stats, charts, and discovery info
  */
 
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import type { Star, Exoplanet } from '../../types';
+import {
+  getHabitabilityStats,
+  getHabitabilityBreakdown,
+} from '../../utils/habitabilityAnalytics';
 
 interface SystemOverviewModalProps {
   /** Star data */
@@ -158,6 +162,34 @@ export function SystemOverviewModal({
             </div>
           </section>
 
+          {/* Notable Star Features */}
+          <section className="overview-section">
+            <h2 className="overview-section-title">
+              {t('pages.starSystem.systemOverview.starFeatures.title')}
+            </h2>
+            <StarFeaturesSection star={star} planets={planets} />
+          </section>
+
+          {/* System Habitability Overview */}
+          {planets.length > 0 && (
+            <section className="overview-section">
+              <h2 className="overview-section-title">
+                {t('pages.starSystem.systemOverview.habitability.title')}
+              </h2>
+              <SystemHabitabilitySection planets={planets} />
+            </section>
+          )}
+
+          {/* Travel Time Calculator */}
+          {star.distance_ly && star.distance_ly > 0 && (
+            <section className="overview-section">
+              <h2 className="overview-section-title">
+                {t('pages.starSystem.systemOverview.travelTime.title')}
+              </h2>
+              <TravelTimeCalculator distanceLy={star.distance_ly} />
+            </section>
+          )}
+
           {/* Charts Section */}
           {planets.length > 0 && (
             <section className="overview-section">
@@ -172,6 +204,22 @@ export function SystemOverviewModal({
                 <div className="overview-chart-card">
                   <h3>{t('pages.starSystem.systemOverview.orbitalDistances')}</h3>
                   <OrbitalDistancesChart planets={planets} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Orbital Architecture & Temperature-Size Charts */}
+          {planets.length > 0 && (
+            <section className="overview-section">
+              <h2 className="overview-section-title">
+                {t('pages.starSystem.systemOverview.orbitalView.title')}
+              </h2>
+              <div className="overview-charts-grid">
+                <OrbitalTopDownChart star={star} planets={planets} />
+                <div className="overview-chart-card">
+                  <h3>{t('pages.starSystem.systemOverview.tempSizeChart.title')}</h3>
+                  <TempSizeBubbleChart planets={planets} />
                 </div>
               </div>
             </section>
@@ -650,6 +698,975 @@ function OrbitalDistancesChart({ planets }: { planets: Exoplanet[] }) {
   return (
     <div ref={containerRef} className="chart-container">
       <svg ref={svgRef} />
+    </div>
+  );
+}
+
+// =============================================================================
+// SPEED RACE VISUALIZATION CONSTANTS
+// =============================================================================
+
+/** Speed constants in km/s */
+const TRAVEL_SPEEDS = {
+  WALKING_KMS: 0.0014,
+  CAR_KMS: 0.030,
+  JET_KMS: 0.25,
+  VOYAGER_KMS: 17,
+  NEW_HORIZONS_KMS: 16.26,
+  PARKER_PROBE_KMS: 192,
+  LIGHT_1PCT_KMS: 2998,
+  LIGHT_10PCT_KMS: 29979,
+  LIGHT_SPEED_KMS: 299792,
+};
+
+/** One light year in kilometers */
+const LIGHT_YEAR_KM = 9.461e12;
+
+/** Human lifetime in years */
+const HUMAN_LIFETIME_YEARS = 80;
+
+/** Seconds per year */
+const SECONDS_PER_YEAR = 31557600;
+
+/** Animation duration in milliseconds */
+const RACE_ANIMATION_DURATION = 2000;
+
+/** Speed reference data for display */
+interface SpeedReference {
+  key: string;
+  speedKms: number;
+  icon: string;
+  category: 'human' | 'spacecraft' | 'light';
+  color: string;
+}
+
+const SPEED_REFERENCES: SpeedReference[] = [
+  { key: 'walking', speedKms: TRAVEL_SPEEDS.WALKING_KMS, icon: '🚶', category: 'human', color: '#888888' },
+  { key: 'car', speedKms: TRAVEL_SPEEDS.CAR_KMS, icon: '🚗', category: 'human', color: '#aaaaaa' },
+  { key: 'jet', speedKms: TRAVEL_SPEEDS.JET_KMS, icon: '✈️', category: 'human', color: '#cccccc' },
+  { key: 'voyager', speedKms: TRAVEL_SPEEDS.VOYAGER_KMS, icon: '🛰️', category: 'spacecraft', color: '#ff6b6b' },
+  { key: 'newHorizons', speedKms: TRAVEL_SPEEDS.NEW_HORIZONS_KMS, icon: '🚀', category: 'spacecraft', color: '#ffa06b' },
+  { key: 'parkerProbe', speedKms: TRAVEL_SPEEDS.PARKER_PROBE_KMS, icon: '☀️', category: 'spacecraft', color: '#ffcc00' },
+  { key: 'onePercentC', speedKms: TRAVEL_SPEEDS.LIGHT_1PCT_KMS, icon: '⚡', category: 'light', color: '#00ccff' },
+  { key: 'tenPercentC', speedKms: TRAVEL_SPEEDS.LIGHT_10PCT_KMS, icon: '💫', category: 'light', color: '#00ffcc' },
+  { key: 'lightSpeed', speedKms: TRAVEL_SPEEDS.LIGHT_SPEED_KMS, icon: '🌟', category: 'light', color: '#00ff88' },
+];
+
+/**
+ * Calculates travel time in years for a given distance and speed
+ */
+function calculateTravelTimeYears(distanceLy: number, speedKms: number): number {
+  const distanceKm = distanceLy * LIGHT_YEAR_KM;
+  const travelTimeSeconds = distanceKm / speedKms;
+  return travelTimeSeconds / SECONDS_PER_YEAR;
+}
+
+/**
+ * Formats large numbers with appropriate suffixes
+ */
+function formatTravelTime(years: number): string {
+  if (years < 1) {
+    return `${(years * 365.25).toFixed(1)} days`;
+  }
+  if (years < 1000) {
+    return `${years.toFixed(0)} years`;
+  }
+  if (years < 1e6) {
+    return `${(years / 1000).toFixed(1)}k years`;
+  }
+  if (years < 1e9) {
+    return `${(years / 1e6).toFixed(1)}M years`;
+  }
+  if (years < 1e12) {
+    return `${(years / 1e9).toFixed(1)}B years`;
+  }
+  return `${(years / 1e12).toFixed(1)}T years`;
+}
+
+/**
+ * Speed Race Visualization Component
+ * Interactive animated bar race showing travel times at various speeds
+ */
+function TravelTimeCalculator({ distanceLy }: { distanceLy: number }) {
+  const { t } = useTranslation();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedSpeed, setSelectedSpeed] = useState<string | null>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  // Calculate all travel times
+  const speedData = useMemo(() => {
+    return SPEED_REFERENCES.map((speed) => {
+      const years = calculateTravelTimeYears(distanceLy, speed.speedKms);
+      const withinLifetime = years <= HUMAN_LIFETIME_YEARS;
+      return {
+        ...speed,
+        years,
+        withinLifetime,
+      };
+    });
+  }, [distanceLy]);
+
+  // Find fastest that arrives within lifetime
+  const fastestReachable = useMemo(() => {
+    return speedData.find((s) => s.withinLifetime)?.key || null;
+  }, [speedData]);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current || !distanceLy) return;
+
+    const width = containerRef.current.clientWidth;
+    const height = 400;
+    const margin = { top: 20, right: 120, bottom: 30, left: 140 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+    svg.attr('width', width).attr('height', height);
+
+    const g = svg
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Use log scale for speed (since range is enormous)
+    const maxSpeed = Math.max(...speedData.map((d) => d.speedKms));
+    const minSpeed = Math.min(...speedData.map((d) => d.speedKms));
+
+    const x = d3
+      .scaleLog()
+      .domain([minSpeed * 0.5, maxSpeed * 2])
+      .range([0, innerWidth]);
+
+    const y = d3
+      .scaleBand()
+      .domain(speedData.map((d) => d.key))
+      .range([0, innerHeight])
+      .padding(0.3);
+
+    // Background track for each bar
+    g.selectAll('.bar-track')
+      .data(speedData)
+      .join('rect')
+      .attr('class', 'bar-track')
+      .attr('x', 0)
+      .attr('y', (d) => y(d.key) || 0)
+      .attr('width', innerWidth)
+      .attr('height', y.bandwidth())
+      .attr('fill', 'rgba(255, 255, 255, 0.03)')
+      .attr('rx', 4);
+
+    // Speed bars with animation
+    const bars = g
+      .selectAll('.speed-bar')
+      .data(speedData)
+      .join('rect')
+      .attr('class', 'speed-bar')
+      .attr('x', 0)
+      .attr('y', (d) => y(d.key) || 0)
+      .attr('height', y.bandwidth())
+      .attr('fill', (d) => d.color)
+      .attr('rx', 4)
+      .attr('opacity', 0.8)
+      .attr('cursor', 'pointer')
+      .attr('width', 0);
+
+    // Animate bars growing
+    if (!hasAnimated) {
+      bars
+        .transition()
+        .duration(RACE_ANIMATION_DURATION)
+        .delay((_, i) => i * 100)
+        .ease(d3.easeCubicOut)
+        .attr('width', (d) => x(d.speedKms))
+        .on('end', () => setHasAnimated(true));
+    } else {
+      bars.attr('width', (d) => x(d.speedKms));
+    }
+
+    // Hover effects
+    bars
+      .on('mouseenter', function (_, d) {
+        d3.select(this).attr('opacity', 1);
+        setSelectedSpeed(d.key);
+      })
+      .on('mouseleave', function () {
+        d3.select(this).attr('opacity', 0.8);
+        setSelectedSpeed(null);
+      });
+
+    // Icons on the left
+    g.selectAll('.speed-icon')
+      .data(speedData)
+      .join('text')
+      .attr('class', 'speed-icon')
+      .attr('x', -35)
+      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '20px')
+      .text((d) => d.icon);
+
+    // Labels on the left
+    g.selectAll('.speed-label')
+      .data(speedData)
+      .join('text')
+      .attr('class', 'speed-label')
+      .attr('x', -45)
+      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'end')
+      .attr('fill', 'rgba(255, 255, 255, 0.7)')
+      .attr('font-size', '11px')
+      .text((d) => t(`pages.starSystem.systemOverview.travelTime.${d.key}`));
+
+    // Travel time labels on the right
+    const timeLabels = g
+      .selectAll('.time-label')
+      .data(speedData)
+      .join('text')
+      .attr('class', 'time-label')
+      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('fill', 'rgba(255, 255, 255, 0.9)')
+      .attr('font-size', '11px')
+      .attr('font-family', 'monospace')
+      .attr('opacity', 0);
+
+    // Animate time labels appearing
+    if (!hasAnimated) {
+      timeLabels
+        .transition()
+        .duration(300)
+        .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
+        .attr('x', (d) => x(d.speedKms) + 8)
+        .attr('opacity', 1)
+        .text((d) => formatTravelTime(d.years));
+    } else {
+      timeLabels
+        .attr('x', (d) => x(d.speedKms) + 8)
+        .attr('opacity', 1)
+        .text((d) => formatTravelTime(d.years));
+    }
+
+    // "Reachable in lifetime" indicator
+    const reachableData = speedData.filter((d) => d.withinLifetime);
+    if (reachableData.length > 0) {
+      const firstReachable = reachableData[reachableData.length - 1];
+      g.append('line')
+        .attr('x1', x(firstReachable.speedKms))
+        .attr('x2', x(firstReachable.speedKms))
+        .attr('y1', -10)
+        .attr('y2', innerHeight + 10)
+        .attr('stroke', '#00ff88')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '4,4')
+        .attr('opacity', 0.6);
+
+      g.append('text')
+        .attr('x', x(firstReachable.speedKms))
+        .attr('y', -15)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#00ff88')
+        .attr('font-size', '10px')
+        .text('← Reachable in your lifetime');
+    }
+
+  }, [distanceLy, speedData, t, hasAnimated]);
+
+  // Get selected speed details
+  const selectedData = selectedSpeed
+    ? speedData.find((s) => s.key === selectedSpeed)
+    : null;
+
+  if (!distanceLy || distanceLy <= 0) {
+    return (
+      <div className="speed-race-section">
+        <p className="travel-unreachable">
+          {t('pages.starSystem.systemOverview.travelTime.unreachable')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="speed-race-section">
+      {/* Distance header */}
+      <div className="speed-race-header">
+        <div className="speed-race-distance">
+          <span className="distance-value">{distanceLy.toFixed(1)}</span>
+          <span className="distance-label">light-years away</span>
+        </div>
+        {fastestReachable && (
+          <div className="speed-race-reachable">
+            <span className="reachable-icon">✓</span>
+            <span>Reachable at {t(`pages.starSystem.systemOverview.travelTime.${fastestReachable}`)} or faster</span>
+          </div>
+        )}
+      </div>
+
+      {/* SVG Race visualization */}
+      <div ref={containerRef} className="speed-race-chart">
+        <svg ref={svgRef} />
+      </div>
+
+      {/* Selected speed details */}
+      {selectedData && (
+        <div className="speed-race-details">
+          <div className="detail-icon">{selectedData.icon}</div>
+          <div className="detail-info">
+            <span className="detail-name">
+              {t(`pages.starSystem.systemOverview.travelTime.${selectedData.key}`)}
+            </span>
+            <span className="detail-time">{formatTravelTime(selectedData.years)}</span>
+          </div>
+          <div className="detail-stats">
+            <span className={`detail-badge ${selectedData.withinLifetime ? 'reachable' : ''}`}>
+              {selectedData.withinLifetime ? '✓ Within your lifetime' : `${Math.ceil(selectedData.years / HUMAN_LIFETIME_YEARS)} lifetimes`}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Replay button */}
+      <button
+        className="speed-race-replay"
+        onClick={() => setHasAnimated(false)}
+      >
+        🔄 Replay Race
+      </button>
+    </div>
+  );
+}
+
+// =============================================================================
+// STAR FEATURES SECTION
+// =============================================================================
+
+/** Feature definition for star characteristics */
+interface StarFeature {
+  key: string;
+  icon: string;
+  className: string;
+}
+
+/** All possible star features to check */
+const STAR_FEATURE_DEFINITIONS: StarFeature[] = [
+  { key: 'solarAnalog', icon: '☀️', className: 'solar' },
+  { key: 'sunLike', icon: '⭐', className: 'solar' },
+  { key: 'redDwarf', icon: '🔴', className: 'red-dwarf' },
+  { key: 'youngSystem', icon: '🌱', className: 'age' },
+  { key: 'matureSystem', icon: '🌳', className: 'age' },
+  { key: 'ancientSystem', icon: '🏛️', className: 'age' },
+  { key: 'metalRich', icon: '⚙️', className: 'metallicity' },
+  { key: 'metalPoor', icon: '💨', className: 'metallicity' },
+  { key: 'binarySystem', icon: '★★', className: 'binary' },
+  { key: 'circumbinary', icon: '🌀', className: 'binary' },
+];
+
+/**
+ * Detects which star features are present in the system
+ * @param star - Star data
+ * @param planets - Planets in the system (for feature flags)
+ * @returns Array of detected feature keys
+ */
+function detectStarFeatures(star: Star, planets: Exoplanet[]): string[] {
+  const features: string[] = [];
+  const firstPlanet = planets[0];
+
+  if (!firstPlanet) return features;
+
+  // Check star type features
+  if (firstPlanet.is_solar_analog) features.push('solarAnalog');
+  else if (firstPlanet.is_sun_like_star) features.push('sunLike');
+  
+  if (firstPlanet.is_red_dwarf_host) features.push('redDwarf');
+
+  // Check age features (mutually exclusive)
+  if (firstPlanet.is_young_system) features.push('youngSystem');
+  else if (firstPlanet.is_ancient_system) features.push('ancientSystem');
+  else if (firstPlanet.is_mature_system) features.push('matureSystem');
+
+  // Check metallicity features
+  if (firstPlanet.is_metal_rich_star) features.push('metalRich');
+  else if (firstPlanet.is_metal_poor_star) features.push('metalPoor');
+
+  // Check system architecture
+  if (star.sy_snum > 1) features.push('binarySystem');
+  if (star.cb_flag) features.push('circumbinary');
+
+  return features;
+}
+
+/**
+ * Star Features Section Component
+ * Displays notable stellar characteristics with descriptions
+ */
+function StarFeaturesSection({ star, planets }: { star: Star; planets: Exoplanet[] }) {
+  const { t } = useTranslation();
+
+  const detectedFeatures = useMemo(
+    () => detectStarFeatures(star, planets),
+    [star, planets]
+  );
+
+  if (detectedFeatures.length === 0) {
+    return (
+      <div className="star-features-empty">
+        {t('pages.starSystem.systemOverview.starFeatures.title')}
+      </div>
+    );
+  }
+
+  return (
+    <div className="star-features-grid">
+      {detectedFeatures.map((featureKey) => {
+        const featureDef = STAR_FEATURE_DEFINITIONS.find((f) => f.key === featureKey);
+        if (!featureDef) return null;
+
+        return (
+          <div
+            key={featureKey}
+            className={`star-feature-card ${featureDef.className}`}
+          >
+            <div className="star-feature-header">
+              <span className="star-feature-icon">{featureDef.icon}</span>
+              <span className="star-feature-name">
+                {t(`pages.starSystem.systemOverview.starFeatures.${featureKey}`)}
+              </span>
+            </div>
+            <p className="star-feature-description">
+              {t(`pages.starSystem.systemOverview.starFeatures.${featureKey}Desc`)}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// =============================================================================
+// SYSTEM HABITABILITY SECTION
+// =============================================================================
+
+/**
+ * System Habitability Section Component
+ * Shows habitability analysis using existing analytics functions
+ */
+function SystemHabitabilitySection({ planets }: { planets: Exoplanet[] }) {
+  const { t } = useTranslation();
+
+  const habitabilityData = useMemo(() => {
+    if (planets.length === 0) return null;
+
+    const stats = getHabitabilityStats(planets);
+    const breakdown = getHabitabilityBreakdown(planets);
+
+    return { stats, breakdown };
+  }, [planets]);
+
+  if (!habitabilityData || planets.length === 0) {
+    return (
+      <div className="habitability-no-data">
+        {t('pages.starSystem.systemOverview.habitability.noData')}
+      </div>
+    );
+  }
+
+  const { stats, breakdown } = habitabilityData;
+
+  // Filter breakdown to only show categories with count > 0
+  const relevantBreakdown = breakdown.filter((b) => b.count > 0);
+
+  return (
+    <div className="habitability-overview-container">
+      {/* Score Display */}
+      <div className="habitability-score-display">
+        <div className="habitability-avg-score">
+          <span className="habitability-score-value">
+            {stats.avgScore.toFixed(0)}
+          </span>
+          <span className="habitability-score-label">
+            {t('pages.starSystem.systemOverview.habitability.avgScore')}
+          </span>
+        </div>
+
+        {stats.topScorerName && (
+          <div className="habitability-best-candidate">
+            <span className="habitability-candidate-name">
+              {stats.topScorerName.split(' ').pop()}
+            </span>
+            <span className="habitability-candidate-score">
+              {t('pages.starSystem.systemOverview.habitability.score')}: {stats.topScore.toFixed(0)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Breakdown Bars */}
+      {relevantBreakdown.length > 0 && (
+        <div className="habitability-breakdown-container">
+          <span className="habitability-breakdown-title">
+            {t('pages.starSystem.systemOverview.habitability.breakdown')}
+          </span>
+          <div className="habitability-breakdown-bars">
+            {relevantBreakdown.map((item) => {
+              const maxPct = Math.max(...relevantBreakdown.map((b) => b.pct));
+              const barWidth = maxPct > 0 ? (item.pct / maxPct) * 100 : 0;
+              const colorClass = item.category.toLowerCase().replace(/[\s-]/g, '-');
+
+              return (
+                <div key={item.category} className="habitability-bar-row">
+                  <span className="habitability-bar-label">{item.category}</span>
+                  <div className="habitability-bar-track">
+                    <div
+                      className={`habitability-bar-fill ${colorClass}`}
+                      style={{ width: `${barWidth}%`, backgroundColor: item.color }}
+                    />
+                  </div>
+                  <span className="habitability-bar-count">{item.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Stats */}
+      <div className="habitability-quick-stats">
+        <div className="habitability-quick-stat">
+          <span className="habitability-quick-stat-value">{stats.habitableZone}</span>
+          <span className="habitability-quick-stat-label">
+            {t('pages.starSystem.systemOverview.habitability.habitableZone')}
+          </span>
+        </div>
+        <div className="habitability-quick-stat">
+          <span className="habitability-quick-stat-value">{stats.earthLike}</span>
+          <span className="habitability-quick-stat-label">
+            {t('pages.starSystem.systemOverview.habitability.earthLike')}
+          </span>
+        </div>
+        <div className="habitability-quick-stat">
+          <span className="habitability-quick-stat-value">{stats.total}</span>
+          <span className="habitability-quick-stat-label">
+            {t('pages.starSystem.info.planets')}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// ORBITAL TOP-DOWN VIEW CONSTANTS
+// =============================================================================
+
+/** Habitable zone boundaries for Sun-like star (AU) */
+const HZ_INNER_AU = 0.95;
+const HZ_OUTER_AU = 1.67;
+
+/**
+ * Calculates habitable zone boundaries scaled by stellar luminosity
+ * @param luminosity - Star luminosity in solar luminosities (L☉)
+ * @returns Inner and outer HZ boundaries in AU
+ */
+function calculateHabitableZone(luminosity: number | null): { inner: number; outer: number } {
+  const lum = luminosity ? Math.pow(10, luminosity) : 1; // Convert from log(L☉) to L☉
+  const sqrtLum = Math.sqrt(Math.max(lum, 0.001));
+  return {
+    inner: HZ_INNER_AU * sqrtLum,
+    outer: HZ_OUTER_AU * sqrtLum,
+  };
+}
+
+/**
+ * Orbital Top-Down View Component
+ * D3 visualization showing planetary orbits from above with habitable zone
+ */
+function OrbitalTopDownChart({ star, planets }: { star: Star; planets: Exoplanet[] }) {
+  const { t } = useTranslation();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current) return;
+
+    const containerWidth = containerRef.current.clientWidth;
+    const size = Math.min(containerWidth, 400);
+    const margin = 40;
+    const radius = (size - margin * 2) / 2;
+    const centerX = size / 2;
+    const centerY = size / 2;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+    svg.attr('width', size).attr('height', size);
+
+    // Get orbital data
+    const orbitalData = planets
+      .filter((p) => p.pl_orbsmax && p.pl_orbsmax > 0)
+      .map((p) => ({
+        name: p.pl_name.split(' ').pop() || p.pl_name,
+        semiMajorAxis: p.pl_orbsmax!,
+        eccentricity: p.pl_orbeccen || 0,
+        habitable: p.is_habitable_zone || false,
+      }))
+      .sort((a, b) => a.semiMajorAxis - b.semiMajorAxis);
+
+    if (orbitalData.length === 0) return;
+
+    // Calculate scale (max orbit fills the view)
+    const maxOrbit = Math.max(...orbitalData.map((d) => d.semiMajorAxis));
+    const hz = calculateHabitableZone(star.st_lum);
+    const maxDistance = Math.max(maxOrbit * 1.2, hz.outer * 1.1);
+    const scale = radius / maxDistance;
+
+    // Background
+    svg
+      .append('circle')
+      .attr('cx', centerX)
+      .attr('cy', centerY)
+      .attr('r', radius + margin / 2)
+      .attr('fill', 'rgba(0, 0, 0, 0.3)');
+
+    // Habitable zone band
+    const innerHzRadius = hz.inner * scale;
+    const outerHzRadius = hz.outer * scale;
+
+    if (outerHzRadius > 0 && outerHzRadius <= radius) {
+      // Outer HZ circle
+      svg
+        .append('circle')
+        .attr('cx', centerX)
+        .attr('cy', centerY)
+        .attr('r', outerHzRadius)
+        .attr('fill', 'rgba(0, 255, 136, 0.1)')
+        .attr('stroke', 'rgba(0, 255, 136, 0.3)')
+        .attr('stroke-width', 1);
+
+      // Inner HZ circle (cut out)
+      if (innerHzRadius > 0) {
+        svg
+          .append('circle')
+          .attr('cx', centerX)
+          .attr('cy', centerY)
+          .attr('r', innerHzRadius)
+          .attr('fill', 'rgba(0, 0, 0, 0.3)')
+          .attr('stroke', 'rgba(0, 255, 136, 0.3)')
+          .attr('stroke-width', 1)
+          .attr('stroke-dasharray', '4,4');
+      }
+    }
+
+    // Grid circles (AU markers)
+    const gridDistances = [0.1, 0.5, 1, 2, 5, 10, 20, 50].filter(
+      (d) => d * scale < radius && d < maxDistance
+    );
+
+    gridDistances.forEach((dist) => {
+      svg
+        .append('circle')
+        .attr('cx', centerX)
+        .attr('cy', centerY)
+        .attr('r', dist * scale)
+        .attr('fill', 'none')
+        .attr('stroke', 'rgba(255, 255, 255, 0.1)')
+        .attr('stroke-width', 0.5);
+
+      svg
+        .append('text')
+        .attr('x', centerX + dist * scale + 3)
+        .attr('y', centerY - 3)
+        .attr('fill', 'rgba(255, 255, 255, 0.3)')
+        .attr('font-size', '8px')
+        .text(`${dist} AU`);
+    });
+
+    // Star at center
+    svg
+      .append('circle')
+      .attr('cx', centerX)
+      .attr('cy', centerY)
+      .attr('r', 8)
+      .attr('fill', '#ffcc00')
+      .attr('filter', 'drop-shadow(0 0 10px rgba(255, 200, 0, 0.5))');
+
+    // Planet orbits and dots
+    orbitalData.forEach((planet, index) => {
+      const orbitRadius = planet.semiMajorAxis * scale;
+      const angle = (index / orbitalData.length) * Math.PI * 2 - Math.PI / 2;
+      const planetX = centerX + Math.cos(angle) * orbitRadius;
+      const planetY = centerY + Math.sin(angle) * orbitRadius;
+
+      // Orbit path
+      svg
+        .append('circle')
+        .attr('cx', centerX)
+        .attr('cy', centerY)
+        .attr('r', orbitRadius)
+        .attr('fill', 'none')
+        .attr('stroke', planet.habitable ? 'rgba(0, 255, 136, 0.4)' : 'rgba(0, 204, 255, 0.3)')
+        .attr('stroke-width', 1);
+
+      // Planet dot
+      svg
+        .append('circle')
+        .attr('cx', planetX)
+        .attr('cy', planetY)
+        .attr('r', 6)
+        .attr('fill', planet.habitable ? '#00ff88' : '#00ccff')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1);
+
+      // Planet label
+      svg
+        .append('text')
+        .attr('x', planetX)
+        .attr('y', planetY - 10)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255, 255, 255, 0.7)')
+        .attr('font-size', '9px')
+        .text(planet.name);
+    });
+  }, [star, planets]);
+
+  return (
+    <div className="orbital-topdown-container">
+      <div ref={containerRef} className="orbital-topdown-chart">
+        <svg ref={svgRef} />
+      </div>
+      <div className="orbital-legend">
+        <div className="orbital-legend-item">
+          <div className="orbital-legend-dot hz" />
+          <span>{t('pages.starSystem.systemOverview.orbitalView.habitableZone')}</span>
+        </div>
+        <div className="orbital-legend-item">
+          <div className="orbital-legend-dot planet" />
+          <span>{t('pages.starSystem.info.planet')}</span>
+        </div>
+        <div className="orbital-legend-item">
+          <div className="orbital-legend-dot habitable" />
+          <span>{t('pages.starSystem.systemOverview.habitability.habitableZone')}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// TEMPERATURE-SIZE BUBBLE CHART CONSTANTS
+// =============================================================================
+
+/** Temperature zone boundaries in Kelvin */
+const TEMP_ZONE_HOT = 320;
+const TEMP_ZONE_COLD = 200;
+
+/**
+ * Temperature-Size Bubble Chart Component
+ * D3 scatter plot showing equilibrium temperature vs planet radius
+ */
+function TempSizeBubbleChart({ planets }: { planets: Exoplanet[] }) {
+  const { t } = useTranslation();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current) return;
+
+    const width = containerRef.current.clientWidth;
+    const height = 280;
+    const margin = { top: 30, right: 30, bottom: 50, left: 60 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove();
+    svg.attr('width', width).attr('height', height);
+
+    // Filter planets with required data
+    const data = planets
+      .filter((p) => p.pl_eqt && p.pl_eqt > 0 && p.pl_rade && p.pl_rade > 0)
+      .map((p) => ({
+        name: p.pl_name.split(' ').pop() || p.pl_name,
+        temp: p.pl_eqt!,
+        radius: p.pl_rade!,
+        mass: p.pl_bmasse || 1,
+        score: p.habitability_score,
+        habitable: p.is_habitable_zone || false,
+      }));
+
+    if (data.length === 0) return;
+
+    const g = svg
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Scales
+    const xExtent = d3.extent(data, (d) => d.temp) as [number, number];
+    const yExtent = d3.extent(data, (d) => d.radius) as [number, number];
+
+    const x = d3
+      .scaleLog()
+      .domain([Math.min(xExtent[0] * 0.8, 100), Math.max(xExtent[1] * 1.2, 3000)])
+      .range([0, innerWidth]);
+
+    const y = d3
+      .scaleLog()
+      .domain([Math.min(yExtent[0] * 0.8, 0.3), Math.max(yExtent[1] * 1.2, 20)])
+      .range([innerHeight, 0]);
+
+    // Temperature zones (background)
+    // Too hot zone (right)
+    g.append('rect')
+      .attr('x', x(TEMP_ZONE_HOT))
+      .attr('y', 0)
+      .attr('width', innerWidth - x(TEMP_ZONE_HOT))
+      .attr('height', innerHeight)
+      .attr('fill', 'rgba(255, 100, 100, 0.1)');
+
+    // Habitable zone (middle)
+    g.append('rect')
+      .attr('x', x(TEMP_ZONE_COLD))
+      .attr('y', 0)
+      .attr('width', x(TEMP_ZONE_HOT) - x(TEMP_ZONE_COLD))
+      .attr('height', innerHeight)
+      .attr('fill', 'rgba(0, 255, 136, 0.1)');
+
+    // Too cold zone (left)
+    g.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', x(TEMP_ZONE_COLD))
+      .attr('height', innerHeight)
+      .attr('fill', 'rgba(100, 150, 255, 0.1)');
+
+    // Color scale for habitability score
+    const colorScale = d3
+      .scaleLinear<string>()
+      .domain([0, 50, 100])
+      .range(['#ff4444', '#ffaa00', '#00ff88']);
+
+    // Bubble size scale
+    const massExtent = d3.extent(data, (d) => d.mass) as [number, number];
+    const sizeScale = d3
+      .scaleSqrt()
+      .domain([Math.min(massExtent[0], 0.1), Math.max(massExtent[1], 100)])
+      .range([4, 15]);
+
+    // Planet bubbles
+    g.selectAll('.planet-bubble')
+      .data(data)
+      .join('circle')
+      .attr('cx', (d) => x(d.temp))
+      .attr('cy', (d) => y(d.radius))
+      .attr('r', (d) => sizeScale(d.mass))
+      .attr('fill', (d) => colorScale(d.score))
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.8);
+
+    // Planet labels (only if few planets)
+    if (data.length <= 8) {
+      g.selectAll('.planet-label')
+        .data(data)
+        .join('text')
+        .attr('x', (d) => x(d.temp))
+        .attr('y', (d) => y(d.radius) - sizeScale(d.mass) - 4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255, 255, 255, 0.7)')
+        .attr('font-size', '9px')
+        .text((d) => d.name);
+    }
+
+    // Earth reference marker
+    const earthTemp = 255;
+    const earthRadius = 1;
+    if (x(earthTemp) > 0 && x(earthTemp) < innerWidth && y(earthRadius) > 0 && y(earthRadius) < innerHeight) {
+      g.append('circle')
+        .attr('cx', x(earthTemp))
+        .attr('cy', y(earthRadius))
+        .attr('r', 4)
+        .attr('fill', 'none')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 2)
+        .attr('stroke-dasharray', '2,2');
+
+      g.append('text')
+        .attr('x', x(earthTemp) + 8)
+        .attr('y', y(earthRadius) + 3)
+        .attr('fill', 'rgba(255, 255, 255, 0.5)')
+        .attr('font-size', '9px')
+        .text('🌍');
+    }
+
+    // X Axis
+    g.append('g')
+      .attr('transform', `translate(0,${innerHeight})`)
+      .call(
+        d3.axisBottom(x)
+          .tickValues([100, 200, 300, 500, 1000, 2000])
+          .tickFormat(d3.format('d'))
+      )
+      .selectAll('text')
+      .attr('fill', '#888')
+      .attr('font-size', '10px');
+
+    g.selectAll('.domain, .tick line').attr('stroke', '#444');
+
+    // X axis label
+    g.append('text')
+      .attr('x', innerWidth / 2)
+      .attr('y', innerHeight + 40)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#666')
+      .attr('font-size', '11px')
+      .text(t('pages.starSystem.systemOverview.tempSizeChart.xAxis'));
+
+    // Y Axis
+    g.append('g')
+      .call(
+        d3.axisLeft(y)
+          .tickValues([0.5, 1, 2, 5, 10, 20])
+          .tickFormat(d3.format('.1f'))
+      )
+      .selectAll('text')
+      .attr('fill', '#888')
+      .attr('font-size', '10px');
+
+    // Y axis label
+    g.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', -45)
+      .attr('x', -innerHeight / 2)
+      .attr('text-anchor', 'middle')
+      .attr('fill', '#666')
+      .attr('font-size', '11px')
+      .text(t('pages.starSystem.systemOverview.tempSizeChart.yAxis'));
+  }, [planets, t]);
+
+  return (
+    <div className="temp-size-container">
+      <div ref={containerRef} className="temp-size-chart">
+        <svg ref={svgRef} />
+      </div>
+      <div className="temp-size-legend">
+        <div className="temp-size-legend-item">
+          <div className="temp-zone-indicator hot" />
+          <span>{t('pages.starSystem.systemOverview.tempSizeChart.tooHot')}</span>
+        </div>
+        <div className="temp-size-legend-item">
+          <div className="temp-zone-indicator habitable" />
+          <span>{t('pages.starSystem.systemOverview.tempSizeChart.habitable')}</span>
+        </div>
+        <div className="temp-size-legend-item">
+          <div className="temp-zone-indicator cold" />
+          <span>{t('pages.starSystem.systemOverview.tempSizeChart.tooCold')}</span>
+        </div>
+        <div className="temp-size-legend-item temp-size-earth-marker">
+          <div className="temp-size-earth-dot" />
+          <span>{t('pages.starSystem.systemOverview.tempSizeChart.earth')}</span>
+        </div>
+      </div>
     </div>
   );
 }

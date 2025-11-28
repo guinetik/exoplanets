@@ -3096,3 +3096,388 @@
 .property-value {
   @apply text-sm text-white font-mono;
 }
+
+/* =============================================================================
+   SPEED RACE VISUALIZATION
+   ============================================================================= */
+
+.speed-race-section {
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.speed-race-header {
+  @apply flex items-center justify-between mb-6 flex-wrap gap-4;
+}
+
+.speed-race-distance {
+  @apply flex items-baseline gap-2;
+}
+
+.speed-race-distance .distance-value {
+  @apply text-4xl font-light text-white;
+}
+
+.speed-race-distance .distance-label {
+  @apply text-sm text-white/50;
+}
+
+.speed-race-reachable {
+  @apply flex items-center gap-2 px-3 py-1.5 rounded-full;
+  @apply text-xs text-emerald-400;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.speed-race-reachable .reachable-icon {
+  @apply text-emerald-400;
+}
+
+.speed-race-chart {
+  @apply w-full overflow-hidden;
+}
+
+.speed-race-chart svg {
+  @apply w-full;
+}
+
+.speed-race-details {
+  @apply flex items-center gap-4 p-4 mt-4 rounded-xl;
+  @apply border border-white/[0.1];
+  background: rgba(255, 255, 255, 0.03);
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.speed-race-details .detail-icon {
+  @apply text-3xl;
+}
+
+.speed-race-details .detail-info {
+  @apply flex flex-col flex-1;
+}
+
+.speed-race-details .detail-name {
+  @apply text-sm font-medium text-white;
+}
+
+.speed-race-details .detail-time {
+  @apply text-lg font-mono text-cyan-400;
+}
+
+.speed-race-details .detail-stats {
+  @apply flex items-center gap-2;
+}
+
+.speed-race-details .detail-badge {
+  @apply px-3 py-1 rounded-full text-xs;
+  @apply bg-white/5 text-white/60;
+}
+
+.speed-race-details .detail-badge.reachable {
+  @apply text-emerald-400;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.speed-race-replay {
+  @apply mt-4 px-4 py-2 rounded-lg text-sm;
+  @apply bg-white/5 text-white/60 border border-white/10;
+  @apply hover:bg-white/10 hover:text-white/80;
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.speed-race-replay:hover {
+  @apply border-white/20;
+}
+
+.travel-unreachable {
+  @apply text-white/20 italic text-center py-8;
+}
+
+/* =============================================================================
+   STAR FEATURES SECTION
+   ============================================================================= */
+
+.star-features-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-3;
+}
+
+.star-feature-card {
+  @apply p-4 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  @apply transition-all duration-200;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.star-feature-card:hover {
+  @apply border-white/[0.15];
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.star-feature-header {
+  @apply flex items-center gap-3 mb-2;
+}
+
+.star-feature-icon {
+  @apply text-2xl;
+}
+
+.star-feature-name {
+  @apply text-sm font-medium text-white;
+}
+
+.star-feature-description {
+  @apply text-xs text-white/50 leading-relaxed;
+}
+
+/* Feature type colors */
+.star-feature-card.solar {
+  @apply border-l-2 border-l-yellow-400/50;
+}
+
+.star-feature-card.red-dwarf {
+  @apply border-l-2 border-l-red-400/50;
+}
+
+.star-feature-card.binary {
+  @apply border-l-2 border-l-amber-400/50;
+}
+
+.star-feature-card.age {
+  @apply border-l-2 border-l-blue-400/50;
+}
+
+.star-feature-card.metallicity {
+  @apply border-l-2 border-l-purple-400/50;
+}
+
+.star-features-empty {
+  @apply text-center py-8 text-white/30 text-sm;
+}
+
+/* =============================================================================
+   SYSTEM HABITABILITY SECTION
+   ============================================================================= */
+
+.habitability-overview-container {
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.habitability-score-display {
+  @apply flex items-center justify-between mb-6;
+}
+
+.habitability-avg-score {
+  @apply text-center;
+}
+
+.habitability-score-value {
+  @apply text-5xl font-light text-white;
+}
+
+.habitability-score-label {
+  @apply text-xs text-white/40 uppercase tracking-wide mt-1;
+}
+
+.habitability-best-candidate {
+  @apply text-right;
+}
+
+.habitability-candidate-name {
+  @apply text-lg font-medium text-emerald-400;
+}
+
+.habitability-candidate-score {
+  @apply text-sm text-white/50;
+}
+
+.habitability-breakdown-container {
+  @apply space-y-3;
+}
+
+.habitability-breakdown-title {
+  @apply text-xs text-white/40 uppercase tracking-wide;
+}
+
+.habitability-breakdown-bars {
+  @apply space-y-2;
+}
+
+.habitability-bar-row {
+  @apply flex items-center gap-3;
+}
+
+.habitability-bar-label {
+  @apply w-28 text-xs text-white/60 flex-shrink-0;
+}
+
+.habitability-bar-track {
+  @apply flex-1 h-2 rounded-full;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.habitability-bar-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}
+
+.habitability-bar-fill.top {
+  background: linear-gradient(90deg, #ffd700, #ffaa00);
+}
+
+.habitability-bar-fill.earth-like {
+  background: linear-gradient(90deg, #00ff88, #00cc66);
+}
+
+.habitability-bar-fill.conservative {
+  background: linear-gradient(90deg, #00ccff, #0099cc);
+}
+
+.habitability-bar-fill.optimistic {
+  background: linear-gradient(90deg, #ff8800, #ff6600);
+}
+
+.habitability-bar-fill.rocky {
+  background: linear-gradient(90deg, #aa88ff, #8866dd);
+}
+
+.habitability-bar-fill.other {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.habitability-bar-count {
+  @apply w-12 text-xs text-white/40 text-right;
+}
+
+.habitability-quick-stats {
+  @apply grid grid-cols-3 gap-4 mt-6 pt-4;
+  @apply border-t border-white/[0.06];
+}
+
+.habitability-quick-stat {
+  @apply text-center;
+}
+
+.habitability-quick-stat-value {
+  @apply text-xl font-light text-white;
+}
+
+.habitability-quick-stat-label {
+  @apply text-xs text-white/40;
+}
+
+.habitability-no-data {
+  @apply text-center py-8 text-white/30 text-sm;
+}
+
+/* =============================================================================
+   ORBITAL TOP-DOWN VIEW
+   ============================================================================= */
+
+.orbital-topdown-container {
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.orbital-topdown-chart {
+  @apply w-full aspect-square max-h-[400px];
+}
+
+.orbital-topdown-chart svg {
+  @apply w-full h-full;
+}
+
+.orbital-legend {
+  @apply flex flex-wrap justify-center gap-4 mt-4 pt-4;
+  @apply border-t border-white/[0.06];
+}
+
+.orbital-legend-item {
+  @apply flex items-center gap-2 text-xs text-white/50;
+}
+
+.orbital-legend-dot {
+  @apply w-3 h-3 rounded-full;
+}
+
+.orbital-legend-dot.hz {
+  background: rgba(0, 255, 136, 0.3);
+  border: 1px solid rgba(0, 255, 136, 0.5);
+}
+
+.orbital-legend-dot.planet {
+  @apply bg-cyan-400;
+}
+
+.orbital-legend-dot.habitable {
+  @apply bg-emerald-400;
+}
+
+.orbital-scale-indicator {
+  @apply text-xs text-white/30 text-center mt-2;
+}
+
+/* =============================================================================
+   TEMPERATURE-SIZE BUBBLE CHART
+   ============================================================================= */
+
+.temp-size-container {
+  @apply p-6 rounded-xl;
+  @apply border border-white/[0.08] backdrop-blur-md;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.temp-size-chart {
+  @apply w-full h-64 md:h-80;
+}
+
+.temp-size-chart svg {
+  @apply w-full h-full;
+}
+
+.temp-size-legend {
+  @apply flex flex-wrap justify-center gap-4 mt-4 pt-4;
+  @apply border-t border-white/[0.06];
+}
+
+.temp-size-legend-item {
+  @apply flex items-center gap-2 text-xs text-white/50;
+}
+
+.temp-zone-indicator {
+  @apply w-4 h-3 rounded;
+}
+
+.temp-zone-indicator.hot {
+  background: rgba(255, 100, 100, 0.3);
+}
+
+.temp-zone-indicator.habitable {
+  background: rgba(0, 255, 136, 0.3);
+}
+
+.temp-zone-indicator.cold {
+  background: rgba(100, 150, 255, 0.3);
+}
+
+.temp-size-earth-marker {
+  @apply flex items-center gap-1;
+}
+
+.temp-size-earth-dot {
+  @apply w-2 h-2 rounded-full bg-white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
