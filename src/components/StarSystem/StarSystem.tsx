@@ -13,6 +13,7 @@ import type { Star, Exoplanet } from '../../types';
 import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
+import { NebulaBackground } from './NebulaBackground';
 
 /** Context for sharing body positions between components */
 interface BodyPositionsContextType {
@@ -324,6 +325,13 @@ export function StarSystem({
 
             {/* Space background with static stars */}
             <BackgroundStars count={3000} />
+
+            {/* Procedural nebula background */}
+            <NebulaBackground
+              systemName={star.hostname}
+              density={0.7}
+              radius={480}
+            />
 
             {/* Render all celestial bodies */}
             {bodies.map((body) => (

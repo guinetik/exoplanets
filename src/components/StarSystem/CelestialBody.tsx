@@ -16,6 +16,7 @@ import {
   getPlanetVertexShader,
   getStarSurfaceShaders,
   getStarCoronaShaders,
+  getStarRaysShaders,
   generateSeed,
   getStarActivityLevel,
   getRingShaders,
@@ -78,6 +79,20 @@ export function CelestialBody({
     [body.color, body.emissiveIntensity, starSeed, activityLevel]
   );
 
+  // Star rays shader uniforms
+  const raysMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const raysUniforms = useMemo(
+    () => ({
+      uStarColor: { value: new THREE.Color(body.color) },
+      uTime: { value: 0 },
+      uTemperature: { value: body.temperature ?? 5778 },
+      uSeed: { value: starSeed },
+      uActivityLevel: { value: activityLevel },
+      uStarRadius: { value: 0.125 }, // Star takes up 12.5% of billboard width (radius) - billboard is 4x diameter
+    }),
+    [body.color, body.temperature, starSeed, activityLevel]
+  );
+
   // Planet shader uniforms using the factory (detailed mode for full visual quality)
   const planetUniforms = useMemo(() => {
     if (body.planetData) {
@@ -124,6 +139,7 @@ export function CelestialBody({
   // Get V2 star shaders
   const starShaders = useMemo(() => getStarSurfaceShaders('v2'), []);
   const coronaShaders = useMemo(() => getStarCoronaShaders('v2'), []);
+  const raysShaders = useMemo(() => getStarRaysShaders(), []);
 
   // Get ring shaders for gas giants
   const ringShaders = useMemo(() => getRingShaders(), []);
@@ -294,6 +310,9 @@ export function CelestialBody({
       if (coronaMaterialRef.current) {
         coronaMaterialRef.current.uniforms.uTime.value = time;
       }
+      if (raysMaterialRef.current) {
+        raysMaterialRef.current.uniforms.uTime.value = time;
+      }
     } else if (body.type === 'planet') {
       if (planetMaterialRef.current) {
         planetMaterialRef.current.uniforms.uTime.value = time;
@@ -393,6 +412,22 @@ export function CelestialBody({
           starSeed={starSeed}
           activityLevel={activityLevel}
         />
+
+        {/* Star rays - radiating light effect using 4D noise */}
+        <Billboard>
+          <mesh>
+            <planeGeometry args={[body.diameter * 4, body.diameter * 4]} />
+            <shaderMaterial
+              ref={raysMaterialRef}
+              vertexShader={shaderService.get(raysShaders.vert)}
+              fragmentShader={shaderService.get(raysShaders.frag)}
+              uniforms={raysUniforms}
+              transparent
+              depthWrite={false}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+        </Billboard>
       </>
     );
 

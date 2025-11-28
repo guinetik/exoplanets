@@ -523,6 +523,15 @@ export function getStarCoronaShaders(version: ShaderVersion = 'v1'): { vert: str
 }
 
 /**
+ * Get the star rays shader names for a given version
+ * @param version - Shader version to use
+ * @returns Object with vert and frag shader names (V2 only)
+ */
+export function getStarRaysShaders(): { vert: string; frag: string } {
+  return { vert: 'v2StarRaysVert', frag: 'v2StarRaysFrag' };
+}
+
+/**
  * Get solar flare shader names (V2 only)
  * @returns Object with vert and frag shader names
  */

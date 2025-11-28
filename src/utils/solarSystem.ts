@@ -653,9 +653,22 @@ export function generateSolarSystem(
     const massRatioA = starB.mass / totalMass; // Star A orbits closer if heavier
     const massRatioB = starA.mass / totalMass;
 
+    // Calculate minimum safe separation so stars don't overlap
+    // Each star orbits at distance proportional to inverse mass ratio
+    // For stars not to touch: orbitA + orbitB >= (diamA + diamB) / 2 + buffer
+    // Since orbitA = sep * ratioA and orbitB = sep * ratioB, and ratioA + ratioB = 1:
+    // sep >= (diamA + diamB) / 2 + buffer
+    // But we also need each individual orbit to clear its own star:
+    // orbitA >= diamA/2 + buffer => sep >= (diamA/2 + buffer) / ratioA
+    // orbitB >= diamB/2 + buffer => sep >= (diamB/2 + buffer) / ratioB
+    const buffer = 2; // Visual buffer between stars
+    const minSepForA = (starADiameter / 2 + buffer) / Math.max(massRatioA, 0.1);
+    const minSepForB = (starBDiameter / 2 + buffer) / Math.max(massRatioB, 0.1);
+    const minSeparation = Math.max(minSepForA, minSepForB, starADiameter + starBDiameter + buffer * 2);
+
     const binaryVisualSeparation = auToVisualOrbit(
       orbit.semiMajorAxis,
-      starADiameter + starBDiameter + 2
+      minSeparation
     );
 
     // Animation period - scale real period to reasonable animation speed
@@ -726,7 +739,9 @@ export function generateSolarSystem(
 
     // For binary systems without data, estimate companion at 70% size
     const companionDiameter = starDiameter * 0.7;
-    const binaryOrbitRadius = isMultiStarSystem ? starDiameter * 1.5 + 2 : 0;
+    // Ensure orbit radius is large enough that stars don't overlap
+    // Each star orbits ~half the total separation, so total sep needs to be > sum of diameters
+    const binaryOrbitRadius = isMultiStarSystem ? (starDiameter + companionDiameter) * 1.2 + 4 : 0;
 
     // Add the primary star
     bodies.push({
