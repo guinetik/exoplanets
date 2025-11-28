@@ -6,12 +6,12 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Line, Text } from '@react-three/drei';
-
-// Distance rings in light-years, scaled to scene units
-// 1 parsec ≈ 3.26 light-years, our SCALE_FACTOR is 0.75
-const LIGHT_YEAR_TO_SCENE = 0.75 / 3.26;
-
-const RING_DISTANCES = [10, 50, 100, 500, 1000]; // in light-years
+import {
+  SPATIAL_SCALING,
+  DISTANCE_RINGS,
+  GRID_VISUALIZATION,
+  AXIS_INDICATORS,
+} from '../../../utils/habitabilityVisuals';
 
 interface RingProps {
   distance: number;
@@ -21,13 +21,12 @@ interface RingProps {
 }
 
 function Ring({ distance, color, opacity, showPrefix = false }: RingProps) {
-  const radius = distance * LIGHT_YEAR_TO_SCENE;
-  const segments = 64;
+  const radius = distance * SPATIAL_SCALING.LIGHT_YEAR_TO_SCENE;
 
   const points = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
+    for (let i = 0; i <= DISTANCE_RINGS.SEGMENTS; i++) {
+      const angle = (i / DISTANCE_RINGS.SEGMENTS) * Math.PI * 2;
       pts.push(new THREE.Vector3(
         Math.cos(angle) * radius,
         0,
@@ -42,14 +41,14 @@ function Ring({ distance, color, opacity, showPrefix = false }: RingProps) {
       <Line
         points={points}
         color={color}
-        lineWidth={1}
+        lineWidth={DISTANCE_RINGS.LINE_WIDTH}
         opacity={opacity}
         transparent
       />
       {/* Label */}
       <Text
-        position={[radius, 0, 5]}
-        fontSize={3}
+        position={[radius, 0, DISTANCE_RINGS.LABEL_OFFSET]}
+        fontSize={DISTANCE_RINGS.LABEL_FONT_SIZE}
         color={color}
         anchorX="center"
         anchorY="middle"
@@ -63,42 +62,42 @@ function Ring({ distance, color, opacity, showPrefix = false }: RingProps) {
 export default function DistanceRings() {
   return (
     <group rotation={[0, 0, 0]}>
-      {RING_DISTANCES.map((dist, i) => (
+      {DISTANCE_RINGS.RING_DISTANCES.map((dist, i) => (
         <Ring
           key={dist}
           distance={dist}
-          color="#ffffff"
-          opacity={0.15 - i * 0.02}
+          color={DISTANCE_RINGS.COLOR}
+          opacity={DISTANCE_RINGS.INITIAL_OPACITY - i * DISTANCE_RINGS.OPACITY_STEP}
           showPrefix={i === 0}
         />
       ))}
 
       {/* Grid lines on XZ plane */}
       <gridHelper
-        args={[1000, 20, '#333333', '#222222']}
-        position={[0, -0.1, 0]}
+        args={[GRID_VISUALIZATION.GRID_SIZE, GRID_VISUALIZATION.GRID_DIVISIONS, GRID_VISUALIZATION.GRID_COLOR, GRID_VISUALIZATION.GRID_SECONDARY_COLOR]}
+        position={[0, GRID_VISUALIZATION.GRID_Y_OFFSET, 0]}
       />
 
       {/* Axis indicators */}
       <Line
-        points={[[0, 0, 0], [50, 0, 0]]}
-        color="#ff4444"
-        lineWidth={2}
-        opacity={0.5}
+        points={[[0, 0, 0], [AXIS_INDICATORS.LENGTH, 0, 0]]}
+        color={AXIS_INDICATORS.X_AXIS_COLOR}
+        lineWidth={AXIS_INDICATORS.LINE_WIDTH}
+        opacity={AXIS_INDICATORS.OPACITY}
         transparent
       />
       <Line
-        points={[[0, 0, 0], [0, 50, 0]]}
-        color="#44ff44"
-        lineWidth={2}
-        opacity={0.5}
+        points={[[0, 0, 0], [0, AXIS_INDICATORS.LENGTH, 0]]}
+        color={AXIS_INDICATORS.Y_AXIS_COLOR}
+        lineWidth={AXIS_INDICATORS.LINE_WIDTH}
+        opacity={AXIS_INDICATORS.OPACITY}
         transparent
       />
       <Line
-        points={[[0, 0, 0], [0, 0, 50]]}
-        color="#4444ff"
-        lineWidth={2}
-        opacity={0.5}
+        points={[[0, 0, 0], [0, 0, AXIS_INDICATORS.LENGTH]]}
+        color={AXIS_INDICATORS.Z_AXIS_COLOR}
+        lineWidth={AXIS_INDICATORS.LINE_WIDTH}
+        opacity={AXIS_INDICATORS.OPACITY}
         transparent
       />
     </group>

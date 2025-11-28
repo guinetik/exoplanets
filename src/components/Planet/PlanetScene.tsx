@@ -17,42 +17,9 @@ import {
   getPlanetVertexShader,
 } from '../../utils/planetUniforms';
 import { estimateRotationSpeed, estimateAxialTilt, shouldHaveRings } from '../../utils/solarSystem';
-
-// Background stars for depth
-function BackgroundStars({ count = 2000 }: { count?: number }) {
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = 200;
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = r * Math.cos(phi);
-    }
-    return pos;
-  }, [count]);
-
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={1.2}
-        color={0xffffff}
-        transparent
-        opacity={0.5}
-        sizeAttenuation={false}
-      />
-    </points>
-  );
-}
+import { normalize, getEffectiveTemperature } from '../../utils/math';
+import { createRingColorFromTemperature } from '../../utils/ringVisuals';
+import BackgroundStars from './BackgroundStars';
 
 interface PlanetMeshProps {
   planet: Exoplanet;
@@ -67,14 +34,6 @@ function generateSeed(name: string): number {
     hash = hash & hash;
   }
   return Math.abs(hash % 1000) / 1000;
-}
-
-// Normalize a value to 0-1 range
-function normalize(value: number | null, min: number, max: number, fallback: number = 0.5): number {
-  if (value === null || value === undefined || isNaN(value)) {
-    return fallback;
-  }
-  return Math.max(0, Math.min(1, (value - min) / (max - min)));
 }
 
 function PlanetMesh({ planet }: PlanetMeshProps) {
@@ -106,55 +65,12 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
     const density = normalize(planet.pl_dens, 0.3, 13.0, 0.5);
     const insolation = normalize(planet.pl_insol, 0.01, 10000, 0.5);
 
-    // Get planet temperature - use equilibrium temp or estimate from insolation
-    const temp = planet.pl_eqt
-      ?? (planet.pl_insol ? Math.sqrt(planet.pl_insol) * 255 : 150);
+    // Get planet temperature using centralized resolution (NASA → calculated → insolation → default)
+    const tempResult = getEffectiveTemperature(planet);
+    const temp = tempResult.temperatureK;
 
-    // Seed-based variation within the temperature category
-    const variation = (seed * 0.3) - 0.15;
-
-    let ringColor: THREE.Color;
-
-    if (temp < 120) {
-      // Very cold: Pure ice rings - bright white/blue
-      ringColor = new THREE.Color().setHSL(
-        0.55 + variation * 0.1,
-        0.25 + seed * 0.15,
-        0.8 + seed * 0.1
-      );
-    } else if (temp < 200) {
-      // Cold: Mixed ice/rock - pale blue-gray
-      ringColor = new THREE.Color().setHSL(
-        0.58 + variation * 0.08,
-        0.15 + seed * 0.1,
-        0.7 + seed * 0.1
-      );
-    } else if (temp < 350) {
-      // Cool: Rocky/dusty - tans, browns, grays
-      const subType = Math.floor(seed * 3);
-      if (subType === 0) {
-        ringColor = new THREE.Color().setHSL(0.08 + variation, 0.35, 0.6);
-      } else if (subType === 1) {
-        ringColor = new THREE.Color().setHSL(0.6, 0.08 + seed * 0.1, 0.55);
-      } else {
-        ringColor = new THREE.Color().setHSL(0.06 + variation, 0.4, 0.5);
-      }
-    } else if (temp < 600) {
-      // Warm: Dark rocky/metallic
-      const subType = Math.floor(seed * 2);
-      if (subType === 0) {
-        ringColor = new THREE.Color().setHSL(0.0, 0.05, 0.4 + seed * 0.15);
-      } else {
-        ringColor = new THREE.Color().setHSL(0.05 + variation * 0.5, 0.45, 0.45);
-      }
-    } else {
-      // Hot: Silicate/volcanic debris
-      ringColor = new THREE.Color().setHSL(
-        0.03 + variation * 0.3,
-        0.5 + seed * 0.2,
-        0.35 + seed * 0.15
-      );
-    }
+    // Get ring color from centralized system (no scattered HSL magic numbers)
+    const ringColor = createRingColorFromTemperature(temp, seed);
 
     // Ring geometry dimensions (must match ringGeometry args below)
     const innerRadius = 2.5;

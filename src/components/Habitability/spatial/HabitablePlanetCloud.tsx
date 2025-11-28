@@ -7,14 +7,15 @@ import { useRef, useMemo, useEffect, useCallback, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { SpatialPoint } from '../../../utils/habitabilityAnalytics';
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-const SCALE_FACTOR = 0.75; // Scale parsecs to scene units
-const BASE_SIZE = 2;
-const MAX_SIZE = 8;
+import {
+  SPATIAL_SCALING,
+  PLANET_CLOUD,
+  PLANET_COLORS,
+  TEXTURE_GENERATION,
+  PLANET_CLOUD_INTERACTION,
+  calculatePlanetBrightness,
+  getPlanetSize,
+} from '../../../utils/habitabilityVisuals';
 
 // =============================================================================
 // COLOR FUNCTIONS
@@ -26,29 +27,23 @@ function getPlanetColor(
 ): THREE.Color {
   // Top candidates: Gold
   if (topScores.has(planet.id)) {
-    return new THREE.Color('#ffd700');
+    return new THREE.Color(PLANET_COLORS.TOP_CANDIDATE);
   }
   // Habitable + Earth-like: Bright green
   if (planet.isHabitable && planet.isEarthLike) {
-    return new THREE.Color('#00ff88');
+    return new THREE.Color(PLANET_COLORS.HABITABLE_EARTHLIKE);
   }
   // Habitable zone: Cyan
   if (planet.isHabitable) {
-    return new THREE.Color('#00ccff');
+    return new THREE.Color(PLANET_COLORS.HABITABLE);
   }
   // High score (60+): Orange
-  if (planet.score >= 60) {
-    return new THREE.Color('#ff8800');
+  if (planet.score >= PLANET_COLORS.HIGH_SCORE_THRESHOLD) {
+    return new THREE.Color(PLANET_COLORS.HIGH_SCORE);
   }
   // Default: Gray (dimmer for low scores)
-  const brightness = 0.2 + (planet.score / 100) * 0.3;
+  const brightness = calculatePlanetBrightness(planet.score);
   return new THREE.Color(brightness, brightness, brightness);
-}
-
-function getPlanetSize(score: number): number {
-  // Size based on habitability score
-  const normalized = score / 100;
-  return BASE_SIZE + normalized * (MAX_SIZE - BASE_SIZE);
 }
 
 // =============================================================================
@@ -56,7 +51,7 @@ function getPlanetSize(score: number): number {
 // =============================================================================
 
 function createPlanetTexture(): THREE.Texture {
-  const size = 128;
+  const size = TEXTURE_GENERATION.TEXTURE_SIZE;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -71,8 +66,8 @@ function createPlanetTexture(): THREE.Texture {
   const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
   gradient.addColorStop(0.1, 'rgba(255, 255, 255, 0.8)');
-  gradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)');
-  gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
+  gradient.addColorStop(TEXTURE_GENERATION.GRADIENT_STOPS[0], 'rgba(255, 255, 255, 0.3)');
+  gradient.addColorStop(TEXTURE_GENERATION.GRADIENT_STOPS[1], 'rgba(255, 255, 255, 0.1)');
   gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
   ctx.fillStyle = gradient;
@@ -87,14 +82,14 @@ function createPlanetTexture(): THREE.Texture {
 
     const spikeGradient = ctx.createLinearGradient(0, 0, 0, -center);
     spikeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
-    spikeGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.3)');
+    spikeGradient.addColorStop(TEXTURE_GENERATION.SPIKE_STOPS[0], 'rgba(255, 255, 255, 0.3)');
     spikeGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
     ctx.fillStyle = spikeGradient;
     ctx.beginPath();
-    ctx.moveTo(-2, 0);
-    ctx.lineTo(0, -center * 0.9);
-    ctx.lineTo(2, 0);
+    ctx.moveTo(-TEXTURE_GENERATION.SPIKE_WIDTH, 0);
+    ctx.lineTo(0, -center * TEXTURE_GENERATION.SPIKE_LENGTH_MULTIPLIER);
+    ctx.lineTo(TEXTURE_GENERATION.SPIKE_WIDTH, 0);
     ctx.closePath();
     ctx.fill();
   }
@@ -102,7 +97,7 @@ function createPlanetTexture(): THREE.Texture {
   ctx.restore();
 
   // Bright center core
-  const coreGradient = ctx.createRadialGradient(center, center, 0, center, center, size * 0.15);
+  const coreGradient = ctx.createRadialGradient(center, center, 0, center, center, size * TEXTURE_GENERATION.CORE_RADIUS_MULTIPLIER);
   coreGradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
   coreGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.8)');
   coreGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -132,8 +127,8 @@ const vertexShader = `
     gl_Position = projectionMatrix * mvPosition;
 
     // Size attenuation
-    gl_PointSize = planetSize * (300.0 / -mvPosition.z);
-    gl_PointSize = clamp(gl_PointSize, 1.0, 30.0);
+    gl_PointSize = planetSize * (${PLANET_CLOUD.SIZE_ATTENUATION.toFixed(1)} / -mvPosition.z);
+    gl_PointSize = clamp(gl_PointSize, ${PLANET_CLOUD.SIZE_MIN_CLAMP.toFixed(1)}, ${PLANET_CLOUD.SIZE_MAX_CLAMP.toFixed(1)});
   }
 `;
 
@@ -144,7 +139,7 @@ const fragmentShader = `
 
   void main() {
     vec4 texColor = texture2D(uTexture, gl_PointCoord);
-    gl_FragColor = vec4(vColor * texColor.rgb, texColor.a * 0.9);
+    gl_FragColor = vec4(vColor * texColor.rgb, texColor.a * ${PLANET_CLOUD.ALPHA_MULTIPLIER.toFixed(1)});
   }
 `;
 
@@ -174,15 +169,14 @@ export default function HabitablePlanetCloud({
 
   // Track mouse down position to distinguish clicks from drags
   const mouseDownPos = useRef<{ x: number; y: number } | null>(null);
-  const DRAG_THRESHOLD = 5; // pixels
 
   // Create texture once
   const texture = useMemo(() => createPlanetTexture(), []);
 
-  // Get top 20 for gold highlighting
+  // Get top candidates for gold highlighting
   const topScores = useMemo(() => {
     const sorted = [...planets].sort((a, b) => b.score - a.score);
-    return new Set(sorted.slice(0, 20).map((p) => p.id));
+    return new Set(sorted.slice(0, SPATIAL_SCALING.TOP_CANDIDATES_COUNT).map((p) => p.id));
   }, [planets]);
 
   // Create buffer data
@@ -195,9 +189,9 @@ export default function HabitablePlanetCloud({
 
     planets.forEach((planet, i) => {
       // Position (scaled from parsecs)
-      positions[i * 3] = planet.x * SCALE_FACTOR;
-      positions[i * 3 + 1] = planet.y * SCALE_FACTOR;
-      positions[i * 3 + 2] = planet.z * SCALE_FACTOR;
+      positions[i * 3] = planet.x * SPATIAL_SCALING.SCALE_FACTOR;
+      positions[i * 3 + 1] = planet.y * SPATIAL_SCALING.SCALE_FACTOR;
+      positions[i * 3 + 2] = planet.z * SPATIAL_SCALING.SCALE_FACTOR;
 
       // Color
       const color = getPlanetColor(planet, topScores);
@@ -243,16 +237,15 @@ export default function HabitablePlanetCloud({
 
       let closestIndex = -1;
       let closestDistance = Infinity;
-      const threshold = 20;
 
       for (let i = 0; i < planets.length; i++) {
         const planet = planets[i];
 
         // Project to screen
         const pos = new THREE.Vector3(
-          planet.x * SCALE_FACTOR,
-          planet.y * SCALE_FACTOR,
-          planet.z * SCALE_FACTOR
+          planet.x * SPATIAL_SCALING.SCALE_FACTOR,
+          planet.y * SPATIAL_SCALING.SCALE_FACTOR,
+          planet.z * SPATIAL_SCALING.SCALE_FACTOR
         );
         const projected = pos.project(camera);
 
@@ -265,7 +258,7 @@ export default function HabitablePlanetCloud({
         const dy = mouseY - screenY;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        if (dist < threshold && dist < closestDistance) {
+        if (dist < PLANET_CLOUD_INTERACTION.HIT_THRESHOLD && dist < closestDistance) {
           closestIndex = i;
           closestDistance = dist;
         }
@@ -275,13 +268,13 @@ export default function HabitablePlanetCloud({
         setHoveredIndex(closestIndex);
 
         if (closestIndex >= 0) {
-          gl.domElement.style.cursor = 'pointer';
+          gl.domElement.style.cursor = PLANET_CLOUD_INTERACTION.POINTER_CURSOR;
           onPlanetHover?.(planets[closestIndex], {
             x: event.clientX,
             y: event.clientY,
           });
         } else {
-          gl.domElement.style.cursor = 'grab';
+          gl.domElement.style.cursor = PLANET_CLOUD_INTERACTION.DEFAULT_CURSOR;
           onPlanetHover?.(null);
         }
       } else if (closestIndex >= 0) {
@@ -306,7 +299,7 @@ export default function HabitablePlanetCloud({
         const dy = event.clientY - mouseDownPos.current.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > DRAG_THRESHOLD) {
+        if (distance > PLANET_CLOUD_INTERACTION.DRAG_THRESHOLD) {
           // This was a drag, not a click
           return;
         }
@@ -321,7 +314,7 @@ export default function HabitablePlanetCloud({
 
   const handlePointerLeave = useCallback(() => {
     setHoveredIndex(-1);
-    gl.domElement.style.cursor = 'grab';
+    gl.domElement.style.cursor = PLANET_CLOUD_INTERACTION.DEFAULT_CURSOR;
     onPlanetHover?.(null);
   }, [gl, onPlanetHover]);
 

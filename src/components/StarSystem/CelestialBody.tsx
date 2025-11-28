@@ -23,9 +23,16 @@ import {
   getRingShaders,
 } from '../../utils/planetUniforms';
 import { SolarFlares } from './SolarFlares';
-
-// Speed multiplier for orbital animation (lower = slower, 1.0 = original speed)
-const ORBIT_SPEED = 0.15;
+import {
+  ORBIT_SPEED,
+  STAR_RENDERING,
+  RING_GEOMETRY,
+  ORBITAL_MECHANICS,
+  generateRingColor,
+  normalizeDensity,
+  normalizeInsolation,
+  calculateZoomLevel,
+} from '../../utils/celestialBodyVisuals';
 
 interface CelestialBodyProps {
   body: StellarBody;
@@ -92,7 +99,7 @@ export function CelestialBody({
       uTemperature: { value: body.temperature ?? 5778 },
       uSeed: { value: starSeed },
       uActivityLevel: { value: activityLevel },
-      uStarRadius: { value: 0.125 }, // Star takes up 12.5% of billboard width (radius) - billboard is 4x diameter
+      uStarRadius: { value: STAR_RENDERING.RAY_STAR_RADIUS },
     }),
     [body.color, body.temperature, starSeed, activityLevel]
   );
@@ -160,71 +167,20 @@ export function CelestialBody({
   // Ring uniforms - color based on planet temperature (icy vs rocky)
   const ringUniforms = useMemo(() => {
     const seed = body.id ? generateSeed(body.id) : Math.random();
-    const density = body.planetData?.pl_bmasse
-      ? Math.min(body.planetData.pl_bmasse / 300, 1.0)
-      : 0.5;
-    const insolation = body.planetData?.pl_insol
-      ? Math.min(body.planetData.pl_insol / 2, 1.0)
-      : 0.5;
+    const density = normalizeDensity(body.planetData?.pl_bmasse);
+    const insolation = normalizeInsolation(body.planetData?.pl_insol);
 
     // Get planet temperature - use equilibrium temp or estimate from insolation
     const temp = body.planetData?.pl_eqt
       ?? (body.planetData?.pl_insol ? Math.sqrt(body.planetData.pl_insol) * 255 : 150);
 
-    // Seed-based variation within the temperature category
-    const variation = (seed * 0.3) - 0.15; // -0.15 to +0.15
+    // Generate ring color with temperature-based variation
+    const ringColorData = generateRingColor(temp, seed, density, insolation);
+    const ringColor = ringColorData.base;
 
-    let ringColor: THREE.Color;
-
-    if (temp < 120) {
-      // Very cold: Pure ice rings - bright white/blue
-      ringColor = new THREE.Color().setHSL(
-        0.55 + variation * 0.1,  // Blue-ish hue
-        0.25 + seed * 0.15,      // Low-medium saturation
-        0.8 + seed * 0.1         // Bright
-      );
-    } else if (temp < 200) {
-      // Cold: Mixed ice/rock - pale blue-gray
-      ringColor = new THREE.Color().setHSL(
-        0.58 + variation * 0.08, // Slightly blue
-        0.15 + seed * 0.1,       // Low saturation
-        0.7 + seed * 0.1         // Fairly bright
-      );
-    } else if (temp < 350) {
-      // Cool: Rocky/dusty - tans, browns, grays
-      const subType = Math.floor(seed * 3);
-      if (subType === 0) {
-        // Tan/beige rocky
-        ringColor = new THREE.Color().setHSL(0.08 + variation, 0.35, 0.6);
-      } else if (subType === 1) {
-        // Gray rocky
-        ringColor = new THREE.Color().setHSL(0.6, 0.08 + seed * 0.1, 0.55);
-      } else {
-        // Brown dusty
-        ringColor = new THREE.Color().setHSL(0.06 + variation, 0.4, 0.5);
-      }
-    } else if (temp < 600) {
-      // Warm: Dark rocky/metallic
-      const subType = Math.floor(seed * 2);
-      if (subType === 0) {
-        // Dark gray metallic
-        ringColor = new THREE.Color().setHSL(0.0, 0.05, 0.4 + seed * 0.15);
-      } else {
-        // Rusty/oxidized
-        ringColor = new THREE.Color().setHSL(0.05 + variation * 0.5, 0.45, 0.45);
-      }
-    } else {
-      // Hot: Silicate/volcanic debris - dark with orange/red hints
-      ringColor = new THREE.Color().setHSL(
-        0.03 + variation * 0.3,  // Orange-red hue
-        0.5 + seed * 0.2,        // Medium-high saturation
-        0.35 + seed * 0.15       // Darker
-      );
-    }
-
-    // Ring geometry dimensions (must match ringGeometry args)
-    const innerRadius = body.diameter * 0.6;
-    const outerRadius = body.diameter * 1.3;
+    // Ring geometry dimensions using centralized constants
+    const innerRadius = body.diameter * RING_GEOMETRY.INNER_RADIUS_MULTIPLIER;
+    const outerRadius = body.diameter * RING_GEOMETRY.OUTER_RADIUS_MULTIPLIER;
 
     return {
       uBaseColor: { value: ringColor },
@@ -264,7 +220,7 @@ export function CelestialBody({
 
     // Update planet position - elliptical orbit with star at focus
     if (body.type === 'planet' && groupRef.current) {
-      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), 0.99);
+      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), ORBITAL_MECHANICS.MAX_ECCENTRICITY);
       const a = body.orbitRadius; // Semi-major axis
       const b = a * Math.sqrt(1 - e * e); // Semi-minor axis
       const focusOffset = a * e; // Distance from center to focus
@@ -280,7 +236,7 @@ export function CelestialBody({
     // Update star positions in binary systems
     // Primary star orbits one side, companion orbits opposite side (PI offset)
     if (body.type === 'star' && body.orbitRadius > 0 && groupRef.current) {
-      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), 0.99);
+      const e = Math.min(Math.max(body.orbitEccentricity || 0, 0), ORBITAL_MECHANICS.MAX_ECCENTRICITY);
       const a = body.orbitRadius;
       const b = a * Math.sqrt(1 - e * e);
 
@@ -340,12 +296,7 @@ export function CelestialBody({
             Math.pow(bodyPos.y - camDist * 0.4, 2) + // Account for camera Y offset
             Math.pow(bodyPos.z - camDist, 2)
           );
-          // Zoom level: 1.0 when very close (4x diameter), 0.0 when far (20x+ diameter)
-          const closeThreshold = body.diameter * 4;
-          const farThreshold = body.diameter * 20;
-          const zoomLevel = 1.0 - Math.min(1.0, Math.max(0.0,
-            (distToBody - closeThreshold) / (farThreshold - closeThreshold)
-          ));
+          const zoomLevel = calculateZoomLevel(distToBody, body.diameter);
           planetMaterialRef.current.uniforms.uZoomLevel.value = zoomLevel;
         }
       }
@@ -369,14 +320,14 @@ export function CelestialBody({
         <pointLight
           position={[0, 0, 0]}
           color={body.color}
-          intensity={body.isCompanionStar ? 1.5 : 2}
-          distance={body.isCompanionStar ? 40 : 50}
+          intensity={body.isCompanionStar ? STAR_RENDERING.COMPANION_LIGHT_INTENSITY : STAR_RENDERING.PRIMARY_LIGHT_INTENSITY}
+          distance={body.isCompanionStar ? STAR_RENDERING.COMPANION_LIGHT_DISTANCE : STAR_RENDERING.PRIMARY_LIGHT_DISTANCE}
         />
 
         {/* Outer glow - billboard always faces camera */}
         <Billboard>
           <mesh>
-            <planeGeometry args={[body.diameter * 1.8, body.diameter * 1.8]} />
+            <planeGeometry args={[body.diameter * STAR_RENDERING.GLOW_SIZE_MULTIPLIER, body.diameter * STAR_RENDERING.GLOW_SIZE_MULTIPLIER]} />
             <shaderMaterial
               transparent
               depthWrite={false}
@@ -424,7 +375,7 @@ export function CelestialBody({
 
         {/* Corona layer - V2 fiery flames extending outward */}
         <mesh>
-          <sphereGeometry args={[starRadius * 1.5, 64, 64]} />
+          <sphereGeometry args={[starRadius * STAR_RENDERING.CORONA_SCALE_MULTIPLIER, 64, 64]} />
           <shaderMaterial
             ref={coronaMaterialRef}
             vertexShader={shaderService.get(coronaShaders.vert)}
@@ -448,7 +399,7 @@ export function CelestialBody({
         {/* Star rays - radiating light effect using 4D noise */}
         <Billboard>
           <mesh>
-            <planeGeometry args={[body.diameter * 4, body.diameter * 4]} />
+            <planeGeometry args={[body.diameter * STAR_RENDERING.RAYS_SIZE_MULTIPLIER, body.diameter * STAR_RENDERING.RAYS_SIZE_MULTIPLIER]} />
             <shaderMaterial
               ref={raysMaterialRef}
               vertexShader={shaderService.get(raysShaders.vert)}
@@ -528,8 +479,8 @@ export function CelestialBody({
 
       {/* Rings for gas giants - with varied internal bands */}
       {body.hasRings && (
-        <mesh rotation={[Math.PI / 2 + body.axialTilt, 0, 0]}>
-          <ringGeometry args={[body.diameter * 0.6, body.diameter * 1.3, 64]} />
+        <mesh rotation={[RING_GEOMETRY.BASE_ROTATION_X + body.axialTilt, 0, 0]}>
+          <ringGeometry args={[body.diameter * RING_GEOMETRY.INNER_RADIUS_MULTIPLIER, body.diameter * RING_GEOMETRY.OUTER_RADIUS_MULTIPLIER, 64]} />
           <shaderMaterial
             ref={ringMaterialRef}
             vertexShader={shaderService.get(ringShaders.vert)}

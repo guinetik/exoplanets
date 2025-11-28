@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import type { Exoplanet } from '../types';
+import { getEffectiveTemperature } from './math/planet';
 
 // =============================================================================
 // TYPES
@@ -376,24 +377,52 @@ export function getPlanetShaderType(
 export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
   const subtype = planet.planet_subtype;
   const type = planet.planet_type;
-  const temp = planet.pl_eqt ?? 300;
 
-  // Subtype-based selection (most accurate)
+  // Use centralized temperature resolution (single source of truth)
+  const tempResult = getEffectiveTemperature(planet);
+  const temp = tempResult.temperatureK;
+
+  // DEBUG: Log shader selection info
+  console.log(`🪐 SHADER DEBUG: ${planet.pl_name}`, {
+    type,
+    subtype,
+    temp,
+    density: planet.pl_dens,
+    pl_eqt: planet.pl_eqt,
+  });
+
+  // Subtype-based selection (with temperature override for extreme cases)
   if (subtype) {
     switch (subtype) {
       case 'Hot Jupiter':
+        console.log(`  → Selected shader: hotJupiter (subtype)`);
         return 'hotJupiter';
       case 'Jovian':
       case 'Brown Dwarf Candidate':
+        // COLD gas giants should use iceGiant shader (frozen atmosphere)
+        if (temp < TEMP_FROZEN) {
+          console.log(`  → Selected shader: iceGiant (cold Jovian, temp ${temp}K < ${TEMP_FROZEN}K)`);
+          return 'iceGiant';
+        }
+        console.log(`  → Selected shader: gasGiant (subtype)`);
         return 'gasGiant';
       case 'Ice Giant':
+        console.log(`  → Selected shader: iceGiant (subtype)`);
         return 'iceGiant';
       case 'Mini-Neptune':
       case 'Hot Neptune':
+        // Cold mini-Neptunes should also use iceGiant
+        if (temp < TEMP_FROZEN) {
+          console.log(`  → Selected shader: iceGiant (cold Neptune, temp ${temp}K < ${TEMP_FROZEN}K)`);
+          return 'iceGiant';
+        }
+        console.log(`  → Selected shader: subNeptune (subtype)`);
         return 'subNeptune';
       case 'Lava World':
+        console.log(`  → Selected shader: lavaWorld (subtype)`);
         return 'lavaWorld';
       case 'Ice World':
+        console.log(`  → Selected shader: icyWorld (subtype)`);
         return 'icyWorld';
     }
   }
@@ -402,13 +431,29 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
   switch (type) {
     case 'Gas Giant':
       // Check if hot Jupiter based on temperature
-      if (temp > 1000) return 'hotJupiter';
+      if (temp > 1000) {
+        console.log(`  → Selected shader: hotJupiter (hot gas giant)`);
+        return 'hotJupiter';
+      }
+      // Cold gas giants look icy
+      if (temp < TEMP_FROZEN) {
+        console.log(`  → Selected shader: iceGiant (cold gas giant, temp ${temp}K)`);
+        return 'iceGiant';
+      }
+      console.log(`  → Selected shader: gasGiant (type)`);
       return 'gasGiant';
 
     case 'Neptune-like':
+      console.log(`  → Selected shader: iceGiant (Neptune-like type)`);
       return 'iceGiant';
 
     case 'Sub-Neptune':
+      // Cold sub-Neptunes look icy
+      if (temp < TEMP_FROZEN) {
+        console.log(`  → Selected shader: iceGiant (cold sub-Neptune, temp ${temp}K)`);
+        return 'iceGiant';
+      }
+      console.log(`  → Selected shader: subNeptune (type)`);
       return 'subNeptune';
 
     default:
@@ -420,12 +465,14 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
 
       // Lava world (very hot) - highest priority
       if (temp > TEMP_LAVA) {
+        console.log(`  → Selected shader: lavaWorld (temp > ${TEMP_LAVA}K)`);
         return 'lavaWorld';
       }
 
       // Ice world (very cold) - takes priority over tidal locking
       // A frozen tidally locked world still looks frozen
       if (temp < TEMP_FROZEN) {
+        console.log(`  → Selected shader: icyWorld (temp < ${TEMP_FROZEN}K)`);
         return 'icyWorld';
       }
 
@@ -433,6 +480,7 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
       // Only use tidallyLocked shader when temperature is in the
       // habitable/temperate range where day/night contrast matters
       if (isTidallyLocked(planet)) {
+        console.log(`  → Selected shader: tidallyLocked`);
         return 'tidallyLocked';
       }
 
@@ -440,15 +488,18 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
 
       // Ocean world (temperate with low density)
       if (isOceanWorld(planet)) {
+        console.log(`  → Selected shader: oceanWorld`);
         return 'oceanWorld';
       }
 
       // Desert world (hot and rocky)
       if (isDesertWorld(planet)) {
+        console.log(`  → Selected shader: desertWorld`);
         return 'desertWorld';
       }
 
       // Default rocky
+      console.log(`  → Selected shader: rocky (default)`);
       return 'rocky';
   }
 }

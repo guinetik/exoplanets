@@ -14,9 +14,18 @@ import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
 import { NebulaBackground } from './NebulaBackground';
-
-/** Fade-in animation duration for background stars (seconds) */
-const STARS_FADE_DURATION = 2.0;
+import {
+  BACKGROUND_STARS,
+  SCENE_LIGHTING,
+  CAMERA_BASELINE,
+  CAMERA_RESPONSIVENESS,
+  CAMERA_FOCUS_ANIMATION,
+  CAMERA_RETURN_ANIMATION,
+  AUTO_ROTATION,
+  CAMERA_DISTANCE,
+  NEBULA_BACKGROUND,
+  SCENE_CANVAS,
+} from '../../utils/starSystemVisuals';
 
 /** Context for sharing body positions between components */
 interface BodyPositionsContextType {
@@ -54,7 +63,7 @@ interface StarSystemProps {
  * Static background stars with fade-in animation
  * Stars are distributed on a sphere and fade in gracefully on mount
  */
-function BackgroundStars({ count = 3000 }: { count?: number }) {
+function BackgroundStars({ count = BACKGROUND_STARS.COUNT }: { count?: number }) {
   const materialRef = useRef<THREE.PointsMaterial>(null);
   const fadeStartTime = useRef<number | null>(null);
   const [isFullyVisible, setIsFullyVisible] = useState(false);
@@ -65,7 +74,7 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
       // Distribute on a sphere
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 500;
+      const r = BACKGROUND_STARS.SPHERE_RADIUS;
 
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -87,8 +96,8 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
     if (!isFullyVisible) {
       const elapsed = state.clock.elapsedTime - fadeStartTime.current;
       // Ease-out cubic for smooth deceleration
-      const t = Math.min(elapsed / STARS_FADE_DURATION, 1);
-      const opacity = (1 - Math.pow(1 - t, 3)) * 0.6; // Target opacity is 0.6
+      const t = Math.min(elapsed / BACKGROUND_STARS.FADE_DURATION, 1);
+      const opacity = (1 - Math.pow(1 - t, BACKGROUND_STARS.FADE_EASING_POWER)) * BACKGROUND_STARS.TARGET_OPACITY;
 
       materialRef.current.opacity = opacity;
 
@@ -110,18 +119,15 @@ function BackgroundStars({ count = 3000 }: { count?: number }) {
       </bufferGeometry>
       <pointsMaterial
         ref={materialRef}
-        size={1.5}
-        color={0xffffff}
+        size={BACKGROUND_STARS.POINT_SIZE}
+        color={BACKGROUND_STARS.COLOR}
         transparent
-        opacity={0} // Start invisible for fade-in
+        opacity={BACKGROUND_STARS.INITIAL_OPACITY}
         sizeAttenuation={false}
       />
     </points>
   );
 }
-
-/** Baseline aspect ratio - the "reference" viewport for camera distance calculations */
-const BASELINE_ASPECT = 1.5;
 
 /**
  * Calculates responsive multiplier based on viewport aspect ratio.
@@ -130,7 +136,7 @@ const BASELINE_ASPECT = 1.5;
  * @returns Multiplier for camera distance (>1 = zoom out, <1 = zoom in)
  */
 function getResponsiveMultiplier(aspect: number): number {
-  return BASELINE_ASPECT / aspect;
+  return CAMERA_BASELINE.ASPECT_RATIO / aspect;
 }
 
 /**
@@ -180,86 +186,84 @@ function CameraControls({
     
     // Detect if the viewport aspect ratio changed significantly (resize event)
     const multiplierDelta = Math.abs(responsiveMultiplier - lastMultiplier.current);
-    if (multiplierDelta > 0.01) {
+    if (multiplierDelta > CAMERA_RESPONSIVENESS.MULTIPLIER_DELTA_THRESHOLD) {
       isResizeAdjusting.current = true;
     }
-    
+
     // Calculate the responsive camera distance and default position
     const responsiveDistance = baseCameraDistance * responsiveMultiplier;
     const defaultPosition = new THREE.Vector3(
       0,
-      responsiveDistance * 0.5,
+      responsiveDistance * CAMERA_BASELINE.INITIAL_Y_MULTIPLIER,
       responsiveDistance
     );
-    
+
     // Smoothly transition multiplier for fluid resize behavior
     lastMultiplier.current = THREE.MathUtils.lerp(
       lastMultiplier.current,
       responsiveMultiplier,
-      0.1
+      CAMERA_RESPONSIVENESS.RESPONSIVE_LERP
     );
-    
+
     // Stop resize adjustment once we've caught up
-    if (multiplierDelta < 0.001) {
+    if (multiplierDelta < CAMERA_RESPONSIVENESS.ADJUSTMENT_STOP_THRESHOLD) {
       isResizeAdjusting.current = false;
     }
 
     if (focusedBody && positionsContext) {
       // Get the current position of the focused body
       const bodyPosition = positionsContext.positions.current.get(focusedBody.id);
-      
+
       if (bodyPosition) {
         isAnimating.current = true;
         // Ramp up animation progress quickly (controls how tightly we follow)
-        animationProgress.current = Math.min(animationProgress.current + delta * 3, 1);
-        
+        animationProgress.current = Math.min(animationProgress.current + delta * CAMERA_FOCUS_ANIMATION.PROGRESS_RAMP_UP, 1);
+
         // Calculate camera offset based on body size
-        const offsetDistance = focusedBody.diameter * 4;
-        
+        const offsetDistance = focusedBody.diameter * CAMERA_FOCUS_ANIMATION.OFFSET_DISTANCE_MULTIPLIER;
+
         // Position camera behind and above the body, looking at it
         // The offset is relative to the body's position, so camera follows
         const targetCameraPos = new THREE.Vector3(
           bodyPosition.x,
-          bodyPosition.y + offsetDistance * 0.4,
+          bodyPosition.y + offsetDistance * CAMERA_FOCUS_ANIMATION.Y_OFFSET_MULTIPLIER,
           bodyPosition.z + offsetDistance
         );
-        
+
         // Start with faster chase, then tighten follow once arrived
         // This lets the camera catch up to the moving planet smoothly
-        const baseLerp = 0.06;
-        const followLerp = 0.12;
-        const lerpFactor = baseLerp + animationProgress.current * (followLerp - baseLerp);
-        
+        const lerpFactor = CAMERA_FOCUS_ANIMATION.BASE_LERP + animationProgress.current * (CAMERA_FOCUS_ANIMATION.FOLLOW_LERP - CAMERA_FOCUS_ANIMATION.BASE_LERP);
+
         // Smoothly chase the camera position to follow the body
         camera.position.lerp(targetCameraPos, lerpFactor);
-        
+
         // Keep controls target locked on the body (slightly faster for smooth look-at)
-        controlsRef.current.target.lerp(bodyPosition, lerpFactor * 1.5);
+        controlsRef.current.target.lerp(bodyPosition, lerpFactor * CAMERA_FOCUS_ANIMATION.TARGET_LERP_MULTIPLIER);
         controlsRef.current.update();
       }
     } else {
       // Return to default view (or adjust for responsive changes)
       if (isAnimating.current || animationProgress.current > 0) {
-        animationProgress.current = Math.max(animationProgress.current - delta * 2, 0);
-        
+        animationProgress.current = Math.max(animationProgress.current - delta * CAMERA_RETURN_ANIMATION.PROGRESS_RAMP_DOWN, 0);
+
         // Lerp back to responsive default position
-        camera.position.lerp(defaultPosition, 0.03);
-        controlsRef.current.target.lerp(defaultTarget.current, 0.03);
+        camera.position.lerp(defaultPosition, CAMERA_RETURN_ANIMATION.CAMERA_RETURN_LERP);
+        controlsRef.current.target.lerp(defaultTarget.current, CAMERA_RETURN_ANIMATION.TARGET_RETURN_LERP);
         controlsRef.current.update();
-        
+
         if (animationProgress.current <= 0) {
           isAnimating.current = false;
         }
       } else if (isResizeAdjusting.current) {
         // Only adjust camera when viewport aspect ratio is actively changing
         // This preserves user's manual camera position during normal interaction
-        camera.position.lerp(defaultPosition, 0.02);
-        controlsRef.current.target.lerp(defaultTarget.current, 0.02);
+        camera.position.lerp(defaultPosition, CAMERA_RETURN_ANIMATION.RESIZE_ADJUST_LERP);
+        controlsRef.current.target.lerp(defaultTarget.current, CAMERA_RETURN_ANIMATION.RESIZE_TARGET_LERP);
         controlsRef.current.update();
       } else if (shouldAutoRotate) {
         // Normal auto-rotation when not animating or resizing
         controlsRef.current.setAzimuthalAngle(
-          controlsRef.current.getAzimuthalAngle() + delta * 0.1
+          controlsRef.current.getAzimuthalAngle() + delta * AUTO_ROTATION.SPEED
         );
         controlsRef.current.update();
       }
@@ -272,7 +276,7 @@ function CameraControls({
       enablePan={true}
       enableZoom={true}
       enableRotate={true}
-      minDistance={2}
+      minDistance={CAMERA_BASELINE.MIN_DISTANCE}
       maxDistance={maxDistance}
       autoRotate={false}
     />
@@ -330,8 +334,8 @@ export function StarSystem({
 
     // Ensure camera is far enough to see the star + some orbits
     // For big stars, we need more distance
-    const minDistanceForStar = starDiameter * 4;
-    const distanceForOrbits = maxOrbit * 2.5;
+    const minDistanceForStar = starDiameter * CAMERA_DISTANCE.STAR_SIZE_MULTIPLIER;
+    const distanceForOrbits = maxOrbit * CAMERA_DISTANCE.ORBITS_MULTIPLIER;
 
     return Math.max(minDistanceForStar, distanceForOrbits);
   }, [bodies]);
@@ -340,9 +344,9 @@ export function StarSystem({
   // Use a conservative multiplier for initial render to avoid flash on mobile
   const initialCameraDistance = useMemo(() => {
     // Check if we're on a narrow screen initially
-    const aspect = typeof window !== 'undefined' 
-      ? window.innerWidth / window.innerHeight 
-      : BASELINE_ASPECT;
+    const aspect = typeof window !== 'undefined'
+      ? window.innerWidth / window.innerHeight
+      : CAMERA_BASELINE.ASPECT_RATIO;
     const multiplier = getResponsiveMultiplier(aspect);
     return baseCameraDistance * multiplier;
   }, [baseCameraDistance]);
@@ -365,29 +369,29 @@ export function StarSystem({
     <div className="starsystem-container">
       <Canvas
         camera={{
-          position: [0, initialCameraDistance * 0.5, initialCameraDistance],
-          fov: 50,
+          position: [0, initialCameraDistance * CAMERA_BASELINE.INITIAL_Y_MULTIPLIER, initialCameraDistance],
+          fov: CAMERA_BASELINE.FOV,
         }}
-        style={{ background: 'black' }}
+        style={{ background: SCENE_CANVAS.BACKGROUND_COLOR }}
         onPointerMissed={() => onBackgroundClick?.()}
       >
         <CameraContext.Provider value={cameraContextValue}>
           <BodyPositionsContext.Provider value={positionsContextValue}>
             <Suspense fallback={null}>
             {/* Ambient light for base visibility */}
-            <ambientLight intensity={0.6} />
+            <ambientLight intensity={SCENE_LIGHTING.AMBIENT_INTENSITY} />
 
             {/* Hemisphere light for better planet illumination */}
-            <hemisphereLight args={['#ffffff', '#444444', 0.5]} />
+            <hemisphereLight args={[SCENE_LIGHTING.HEMISPHERE_SKY_COLOR, SCENE_LIGHTING.HEMISPHERE_GROUND_COLOR, SCENE_LIGHTING.HEMISPHERE_INTENSITY]} />
 
             {/* Space background with static stars */}
-            <BackgroundStars count={3000} />
+            <BackgroundStars count={BACKGROUND_STARS.COUNT} />
 
             {/* Procedural nebula background */}
             <NebulaBackground
               systemName={star.hostname}
-              density={0.7}
-              radius={480}
+              density={NEBULA_BACKGROUND.DENSITY}
+              radius={NEBULA_BACKGROUND.RADIUS}
             />
 
             {/* Render all celestial bodies */}
@@ -430,7 +434,7 @@ export function StarSystem({
             {/* Camera controls with focus animation and responsive adjustment */}
             <CameraControls
               shouldAutoRotate={!hoveredBody && !focusedBody}
-              maxDistance={baseCameraDistance * 3}
+              maxDistance={baseCameraDistance * CAMERA_DISTANCE.MAX_DISTANCE_MULTIPLIER}
               focusedBody={focusedBody}
               baseCameraDistance={baseCameraDistance}
             />

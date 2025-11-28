@@ -156,6 +156,80 @@ logFilter.disableAll();        // Silence all (errors still show)
 logFilter.enableAll();         // Enable all components
 ```
 
+### Math Module Architecture
+
+This is a math project with strict architectural principles for all calculations.
+
+**CRITICAL RULE: Pure Numbers → `src/utils/math/` | Domain Logic → Utilities | Components → Just Consume**
+
+#### Separation of Concerns
+
+1. **`src/utils/math/constants.ts`** - Pure numerical constants ONLY
+   - Physical constants (G, AU conversions, Earth references)
+   - Temperature thresholds
+   - Visualization sizing constraints
+   - Orbital mechanics parameters
+   - **RULE**: No types, no interfaces, no logic—only numbers with comments
+
+2. **`src/utils/math/*.ts`** (planet.ts, conversions.ts, utilities.ts) - Pure mathematical functions
+   - Physics calculations (`calculateEquilibriumTemp`, `calculateSurfaceGravity`, etc)
+   - Unit conversions
+   - General utilities (`normalize`, `clamp`, `lerp`, `smoothstep`)
+   - **RULE**: No domain logic, no visualization code
+
+3. **`src/utils/*.ts`** (ringVisuals.ts, planetComparison.ts, etc) - Domain-specific utilities
+   - Uses math module primitives
+   - Introduces types and interfaces for domain concepts
+   - Composes math functions with business logic
+   - **RULE**: Import from math module, not the other way around
+
+4. **Components** - Consume, don't implement
+   - Import functions from utilities and math module
+   - Zero magic numbers, zero duplicate logic
+   - **RULE**: No hardcoded thresholds, no recalculations
+
+#### Example: Temperature Resolution
+
+**WRONG** - Scattered imperative code:
+```typescript
+// PlanetScene.tsx
+let temp = planet.pl_eqt;
+if (!temp && planet.pl_insol) {
+  temp = Math.sqrt(planet.pl_insol) * 255; // Magic number!
+} else if (!temp) {
+  temp = 150; // Different component, different default!
+}
+
+// planetUniforms.ts
+const temp = planet.pl_eqt ?? 300; // Different default again!
+```
+
+**RIGHT** - Centralized and consistent:
+```typescript
+// math/constants.ts
+TEMPERATURE_DEFAULT_FALLBACK: 150,
+
+// math/planet.ts
+export function getEffectiveTemperature(planet): {
+  temperatureK: number;
+  isApproximate: boolean;
+  method: 'observed' | 'calculated' | 'insolation' | 'fallback';
+} {
+  // Uses MATH_CONSTANTS, implements priority logic
+}
+
+// Any component
+const tempResult = getEffectiveTemperature(planet);
+const temp = tempResult.temperatureK;
+```
+
+**Benefits:**
+- ✅ Single source of truth for all numeric values
+- ✅ No scattered magic numbers
+- ✅ Consistent defaults across all components
+- ✅ Transparent calculation methods
+- ✅ Easy to test and modify
+
 ### Magic Numbers
 
 This is a math project so. **All magic numbers must be extracted to named constants.** This applies to both TypeScript/React and GLSL shaders.
@@ -315,6 +389,166 @@ To add a new route:
 npm test           # Run all tests
 npm run test:watch # Watch mode
 ```
+
+## Common Tasks
+
+### Add a new mathematical constant
+
+All physical and visualization constants belong in `src/utils/math/constants.ts`.
+
+**Steps:**
+
+1. Determine if it's a pure numeric value (no types/logic attached)
+2. Add to the `MATH_CONSTANTS` object with a descriptive name and comment explaining the unit/purpose
+3. Import and use in your calculation or utility function
+4. Update this documentation if the constant affects multiple components
+
+**Example:**
+
+```typescript
+// math/constants.ts
+export const MATH_CONSTANTS = {
+  // ... existing constants
+
+  // Ring appearance thresholds (Kelvin)
+  RING_COLOR_THRESHOLD_VERY_COLD: 120,  // Ultra-cold: pure ice rings
+  RING_COLOR_THRESHOLD_COLD: 200,       // Cold: mixed ice/rock
+} as const;
+
+// utils/ringVisuals.ts
+import { MATH_CONSTANTS } from './math/constants';
+
+export function getRingColorProperties(temperature: number) {
+  if (temperature < MATH_CONSTANTS.RING_COLOR_THRESHOLD_VERY_COLD) {
+    return { hue: 200, saturation: 0.8 }; // Blue ice
+  }
+  // ... more logic using constants
+}
+
+// components/Planet/PlanetScene.tsx
+import { createRingColorFromTemperature } from '../../utils/ringVisuals';
+
+const ringColor = createRingColorFromTemperature(temp, seed);
+```
+
+### Add a new physics calculation
+
+Follow the math module architecture: pure math primitives → domain utilities → components.
+
+**Steps:**
+
+1. If it's a fundamental calculation (equilibrium temp, density, gravity), add to `src/utils/math/planet.ts`
+2. Use `MATH_CONSTANTS` for all numeric values
+3. Include JSDoc with formula and parameter descriptions
+4. Return rich objects with metadata (`isApproximate`, `method`, etc) for transparency
+5. Create a domain utility in `src/utils/*.ts` that composes the math function with business logic if needed
+6. Components import from utilities, not directly from the math module
+
+**Example:**
+
+```typescript
+// math/planet.ts - Pure calculation
+export function calculateEquilibriumTemp(
+  starTempK: number,
+  starRadiusSolar: number,
+  orbitDistanceAU: number
+): { temperatureK: number; isCalculated: true; albedo: number } {
+  // T_eq = T_star × √(R_star_AU / (2 × a))
+  // where R_star_AU = starRadiusSolar × SOLAR_RADIUS_AU
+  const rStarAU = starRadiusSolar * MATH_CONSTANTS.SOLAR_RADIUS_AU;
+  const denominator = 2 * orbitDistanceAU;
+  const tempK = starTempK * Math.sqrt(rStarAU / denominator);
+
+  return {
+    temperatureK: tempK,
+    isCalculated: true,
+    albedo: MATH_CONSTANTS.EQUILIBRIUM_TEMP_ALBEDO,
+  };
+}
+
+// utils/math/planet.ts - Domain resolution with priority logic
+export function getEffectiveTemperature(planet: Exoplanet) {
+  // Try NASA data first
+  if (planet.pl_eqt) {
+    return {
+      temperatureK: planet.pl_eqt,
+      isApproximate: false,
+      method: 'observed' as const,
+    };
+  }
+
+  // Try Stefan-Boltzmann calculation
+  if (planet.st_teff && planet.st_rad && planet.pl_orbsmax) {
+    const result = calculateEquilibriumTemp(
+      planet.st_teff,
+      planet.st_rad,
+      planet.pl_orbsmax
+    );
+    return {
+      temperatureK: result.temperatureK,
+      isApproximate: true,
+      method: 'calculated' as const,
+    };
+  }
+
+  // ... more fallback logic
+}
+
+// components/Planet/PlanetScene.tsx - Components just consume
+const tempResult = getEffectiveTemperature(planet);
+const temp = tempResult.temperatureK;
+const ringColor = createRingColorFromTemperature(temp, seed);
+```
+
+### Add a new route
+
+Routes are defined in `src/routes/index.ts` and automatically appear in the navbar if `showInNav: true`.
+
+**Steps:**
+
+1. Create the page component in `src/routes/NewPage.tsx`
+2. Add the route config to `src/routes/index.ts`:
+   ```typescript
+   import NewPage from './NewPage';
+
+   { path: '/new-page', element: <NewPage />, showInNav: true }
+   ```
+3. Add translation keys to both `src/i18n/en.json` and `src/i18n/pt.json`
+
+### Add a new shader
+
+Shaders are registered in `public/shaders/manifest.json` and accessed via `shaderService.get()`.
+
+**Steps:**
+
+1. Create `.vert` and/or `.frag` files in `public/shaders/` (organized by type)
+2. Register in `public/shaders/manifest.json`:
+   ```json
+   { "name": "planetMyShaderFrag", "path": "planet/myShader.frag" }
+   ```
+3. Use in components via:
+   ```typescript
+   import { shaderService } from '../../services/shaderService';
+
+   const shader = shaderService.get('planetMyShaderFrag');
+   ```
+
+**Important**: Extract all magic numbers to a constants section at the top of the shader file using SCREAMING_SNAKE_CASE.
+
+### Add new exoplanet data fields
+
+When adding new columns to the data pipeline:
+
+**Steps:**
+
+1. Update `data/process_exoplanets.py` to include the new field
+2. Add the property to the `Exoplanet` interface in `src/types/index.ts`
+3. Re-run the data pipeline:
+   ```bash
+   cd data
+   python process_exoplanets.py
+   ```
+4. The output automatically copies to `public/data/exoplanets.csv`
 
 ## Design Constraints
 

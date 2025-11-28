@@ -55,9 +55,12 @@ const float DAYSIDE_GLOW_POWER = 2.0;     // How concentrated dayside heat is
 // --- Thermal Emission ---
 const float THERMAL_BASE_TEMP = 1000.0;   // Temperature where thermal emission starts
 const float THERMAL_FULL_TEMP = 2500.0;   // Temperature at full glow
+const float THERMAL_MAX_TEMP = 4000.0;    // Cap for extreme temperatures
 const float THERMAL_INTENSITY = 0.8;      // Maximum thermal glow intensity
-const vec3 THERMAL_COLOR_LOW = vec3(0.8, 0.2, 0.0);   // Cooler thermal color
-const vec3 THERMAL_COLOR_HIGH = vec3(1.0, 0.9, 0.6);  // Hotter thermal color
+const vec3 THERMAL_COLOR_LOW = vec3(0.8, 0.2, 0.0);   // Cooler thermal color (1000K)
+const vec3 THERMAL_COLOR_MID = vec3(1.0, 0.7, 0.3);   // Medium thermal color (2000K)
+const vec3 THERMAL_COLOR_HIGH = vec3(1.0, 0.9, 0.6);  // Hotter thermal color (2500K)
+const vec3 THERMAL_COLOR_EXTREME = vec3(1.0, 0.95, 0.9); // Extreme white-hot (3000K+)
 
 // --- Heat Transport ---
 const float HEAT_FLOW_SCALE = 5.0;        // Scale of heat transport patterns
@@ -144,8 +147,22 @@ void main() {
     float hotspotFactor = pow(1.0 - min(hotspotDist * 2.0, 1.0), DAYSIDE_GLOW_POWER);
     
     // === THERMAL EMISSION ===
-    float thermalFactor = smoothstep(THERMAL_BASE_TEMP, THERMAL_FULL_TEMP, uTemperature);
-    vec3 thermalColor = mix(THERMAL_COLOR_LOW, THERMAL_COLOR_HIGH, thermalFactor);
+    // Cap temperature to prevent shader issues at extreme values
+    float cappedTemp = min(uTemperature, THERMAL_MAX_TEMP);
+    
+    // Multi-stage thermal factor for better color gradients
+    float thermalFactor = smoothstep(THERMAL_BASE_TEMP, THERMAL_FULL_TEMP, cappedTemp);
+    float extremeFactor = smoothstep(THERMAL_FULL_TEMP, 3500.0, cappedTemp);
+    
+    // 4-stage color gradient: low -> mid -> high -> extreme (white-hot)
+    vec3 thermalColor;
+    if (cappedTemp < 1500.0) {
+        thermalColor = mix(THERMAL_COLOR_LOW, THERMAL_COLOR_MID, (cappedTemp - 1000.0) / 500.0);
+    } else if (cappedTemp < 2500.0) {
+        thermalColor = mix(THERMAL_COLOR_MID, THERMAL_COLOR_HIGH, (cappedTemp - 1500.0) / 1000.0);
+    } else {
+        thermalColor = mix(THERMAL_COLOR_HIGH, THERMAL_COLOR_EXTREME, extremeFactor);
+    }
     
     // Dayside thermal emission
     float daysideThermal = dayFactor * hotspotFactor * thermalFactor * THERMAL_INTENSITY;
@@ -214,15 +231,16 @@ void main() {
     surfaceColor += thermalColor * limbGlow;
     
     // === ATMOSPHERIC ESCAPE (extreme cases) ===
-    if (uTemperature > ESCAPE_THRESHOLD) {
-        float escapeFactor = smoothstep(ESCAPE_THRESHOLD, 3000.0, uTemperature);
+    if (cappedTemp > ESCAPE_THRESHOLD) {
+        float escapeFactor = smoothstep(ESCAPE_THRESHOLD, 3500.0, cappedTemp);
         vec3 escapeCoord = p * 4.0 + vec3(wrappedTime * 0.1, 0.0, wrappedTime * 0.05);
         float escapePattern = snoise3D(escapeCoord);
         escapePattern = max(0.0, escapePattern);
         
-        // Visible gas escaping on dayside edge
+        // Visible gas escaping on dayside edge - more intense at extreme temps
         float escapeZone = edgeFactor * dayFactor * escapeFactor;
-        surfaceColor += vec3(1.0, 0.8, 0.5) * escapePattern * escapeZone * ESCAPE_INTENSITY;
+        vec3 escapeColor = mix(vec3(1.0, 0.8, 0.5), vec3(1.0, 0.95, 0.85), extremeFactor);
+        surfaceColor += escapeColor * escapePattern * escapeZone * ESCAPE_INTENSITY * (1.0 + extremeFactor * 0.5);
     }
     
     // === STAR TINT ===

@@ -14,14 +14,11 @@ import {
   getStarColorHex,
   magnitudeToSize,
 } from '../../utils/astronomy';
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-const STAR_DISTANCE = 500; // Distance from camera to stars
-const BASE_SCALE = 20; // Base scale multiplier for star size
-const HOVER_SCALE = 40; // Fixed scale when hovered
+import {
+  STARS_RENDERING,
+  STAR_TWINKLE,
+  STAR_INTERACTION,
+} from '../../utils/starfieldVisuals';
 
 // =============================================================================
 // TYPES
@@ -158,8 +155,8 @@ const vertexShader = `
     vOpacity = baseOpacity;
 
     // Calculate final size - interpolate between base and hover scale
-    float baseScale = starSize * ${BASE_SCALE.toFixed(1)};
-    float hoverScale = ${HOVER_SCALE.toFixed(1)};
+    float baseScale = starSize * 20.0;
+    float hoverScale = 40.0;
     float targetScale = mix(baseScale, hoverScale, isHovered);
     float finalSize = targetScale * twinkleScale;
 
@@ -213,7 +210,7 @@ export function Stars({
     for (const star of stars) {
       if (star.ra === null || star.dec === null) continue;
 
-      const pos = starTo3D(star.ra, star.dec, observer, date, STAR_DISTANCE);
+      const pos = starTo3D(star.ra, star.dec, observer, date, STARS_RENDERING.STAR_DISTANCE);
       if (!pos.visible) continue;
 
       const hash = hashString(star.hostname);
@@ -223,9 +220,9 @@ export function Stars({
         position: new THREE.Vector3(pos.x, pos.y, pos.z),
         color: new THREE.Color(getStarColorHex(star.star_class)),
         size: magnitudeToSize(star.sy_vmag),
-        twinkleSpeed: 0.5 + (hash % 100) / 50,
+        twinkleSpeed: STAR_TWINKLE.MIN_SPEED + (hash % STAR_TWINKLE.SPEED_MODULO) / STAR_TWINKLE.SPEED_DIVISOR,
         twinklePhase: ((hash % 1000) / 1000) * Math.PI * 2,
-        twinkleIntensity: 0.15 + (hash % 50) / 200,
+        twinkleIntensity: STAR_TWINKLE.MIN_INTENSITY + (hash % STAR_TWINKLE.INTENSITY_MODULO) / STAR_TWINKLE.INTENSITY_DIVISOR,
       });
     }
 
@@ -319,7 +316,7 @@ export function Stars({
         const diff = target - arr[i];
 
         if (Math.abs(diff) > 0.001) {
-          arr[i] += diff * 0.15;
+          arr[i] += diff * STAR_INTERACTION.HOVER_LERP;
           needsUpdate = true;
         }
       }
@@ -341,7 +338,6 @@ export function Stars({
     // Find closest star to mouse in screen space
     let closestIndex = -1;
     let closestDistance = Infinity;
-    const baseThreshold = 15; // Base screen-space threshold in pixels
 
     for (let i = 0; i < visibleStars.length; i++) {
       const star = visibleStars[i];
@@ -361,7 +357,7 @@ export function Stars({
       const screenDist = Math.sqrt(dx * dx + dy * dy);
 
       // Scale threshold by star size for larger stars to be easier to hit
-      const adjustedThreshold = baseThreshold + star.size * BASE_SCALE * 0.3;
+      const adjustedThreshold = STAR_INTERACTION.BASE_HIT_THRESHOLD + star.size * STARS_RENDERING.BASE_SCALE * STAR_INTERACTION.SIZE_SCALE_MULTIPLIER;
 
       if (screenDist < adjustedThreshold && screenDist < closestDistance) {
         closestIndex = i;
@@ -373,13 +369,13 @@ export function Stars({
       setHoveredIndex(closestIndex);
 
       if (closestIndex >= 0) {
-        gl.domElement.style.cursor = 'pointer';
+        gl.domElement.style.cursor = STAR_INTERACTION.POINTER_CURSOR;
         onStarHover?.(visibleStars[closestIndex].star, {
           x: event.clientX,
           y: event.clientY
         });
       } else {
-        gl.domElement.style.cursor = 'grab';
+        gl.domElement.style.cursor = STAR_INTERACTION.DEFAULT_CURSOR;
         onStarHover?.(null);
       }
     } else if (closestIndex >= 0) {
@@ -402,7 +398,7 @@ export function Stars({
       const dy = event.clientY - pointerDownPos.current.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
-      if (distance > 5) {
+      if (distance > STAR_INTERACTION.CLICK_DISTANCE_THRESHOLD) {
         // This was a drag, not a click
         return;
       }
@@ -415,7 +411,7 @@ export function Stars({
 
   const handlePointerLeave = useCallback(() => {
     setHoveredIndex(-1);
-    gl.domElement.style.cursor = 'grab';
+    gl.domElement.style.cursor = STAR_INTERACTION.DEFAULT_CURSOR;
     onStarHover?.(null);
   }, [gl, onStarHover]);
 

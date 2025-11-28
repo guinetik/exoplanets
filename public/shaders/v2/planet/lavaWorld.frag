@@ -1,16 +1,17 @@
 /**
  * Lava World Fragment Shader V2
  *
- * Creates volcanic hellscapes with:
- * - Molten lava flows and lakes
- * - Glowing fractures and cracks
- * - Dark solidified crust
- * - Heat distortion effects
- * - Volcanic highlands
+ * Creates realistic volcanic hellscapes with:
+ * - Tectonic plate-like cooling crust
+ * - Convection cells in molten lava
+ * - Dramatic glowing fractures
+ * - Temperature-accurate color gradients
+ * - Volcanic hotspots
  *
- * Physics: Extremely hot rocky worlds with active volcanism
- * Examples: CoRoT-7 b, Kepler-10 b
- * Based on Morgan McGuire's "Vulcan" Shadertoy
+ * Based on real volcanic and lava physics
+ * 
+ * @author guinetik
+ * @see https://github.com/guinetik
  */
 
 // Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
@@ -37,68 +38,13 @@ uniform float uDensity;
 uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
-uniform float uZoomLevel;      // 0 = far, 1 = close - controls surface detail visibility
-uniform float uBodyDiameter;   // Body diameter for scale reference
+uniform float uZoomLevel;
+uniform float uBodyDiameter;
 
-// Physical color factors for data-driven variety
 uniform float uColorTempFactor;
 uniform float uColorCompositionFactor;
 uniform float uColorIrradiationFactor;
 uniform float uColorMetallicityFactor;
-
-// =============================================================================
-// LAVA WORLD CONSTANTS
-// =============================================================================
-
-// --- Terrain/Crust ---
-const float CRUST_SCALE = 5.0;
-const float CRUST_ROUGHNESS = 0.7;
-const int CRUST_OCTAVES = 5;
-const vec3 CRUST_COLOR_DARK = vec3(0.08, 0.05, 0.03);
-const vec3 CRUST_COLOR_LIGHT = vec3(0.25, 0.18, 0.12);
-
-// --- Lava/Magma ---
-const float LAVA_THRESHOLD = 0.4;                   // Height below which is lava
-const float LAVA_FLOW_SCALE = 8.0;                  // Scale of lava flow    
-const float LAVA_FLOW_SPEED = 0.02;                 // Speed of lava flow
-const float LAVA_PULSE_SPEED = 0.5;                 // Pulsing glow speed
-const float LAVA_PULSE_STRENGTH = 0.2;              // Strength of pulsing glow
-const vec3 LAVA_COLOR_HOT = vec3(1.0, 0.9, 0.5);    // White-hot center
-const vec3 LAVA_COLOR_WARM = vec3(1.0, 0.5, 0.1);   // Orange
-const vec3 LAVA_COLOR_COOL = vec3(0.8, 0.2, 0.0);   // Dark red edges
-
-// --- Cracks/Fissures ---
-const float CRACK_SCALE = 12.0;
-const float CRACK_THRESHOLD = 0.7;                  // How common cracks are
-const float CRACK_WIDTH = 0.15;                     // Visual width of cracks
-const float CRACK_GLOW_INTENSITY = 1.5;             // Brightness of glowing cracks
-const float CRACK_GLOW_FALLOFF = 3.0;               // How quickly glow fades
-
-// --- Heat Glow ---
-const float HEAT_GLOW_POWER = 2.0;                  // Edge glow concentration
-const float HEAT_GLOW_INTENSITY = 0.6;              // Overall thermal glow
-
-// --- Temperature Effects ---
-const float TEMP_LAVA_MIN = 800.0;                  // Minimum temp for visible lava
-const float TEMP_LAVA_FULL = 1500.0;                // Temperature for maximum activity
-const float TEMP_WHITE_HOT = 2500.0;                // White-hot lava
-
-// --- Volcanic Features ---
-const float VOLCANO_SCALE = 2.0;                    // Scale of volcanic features
-const float VOLCANO_HEIGHT = 0.3;                   // How tall volcanoes are
-const int VOLCANO_COUNT = 3;                        // Number of volcanic hotspots
-
-// --- Emission ---
-const float EMISSION_STRENGTH = 2.0;                // Self-illumination intensity
-const float AMBIENT_GLOW = 0.15;                    // Minimum glow from heat
-
-// --- Limb Effects ---
-const float LIMB_GLOW_POWER = 3.0;                  // Power of limb glow
-const float LIMB_GLOW_COLOR_SHIFT = 0.3;            // Shift towards orange at edges
-
-// --- Zoom Detail ---
-const float COOLING_CRACK_SCALE = 45.0;            // Fine cooling crack scale
-const float LAVA_CELL_SCALE = 30.0;                // Convection cell scale
 
 // =============================================================================
 // VARYINGS
@@ -109,87 +55,181 @@ varying vec2 vUv;
 varying vec3 vPosition;
 
 // =============================================================================
-// ZOOM DETAIL FUNCTION
+// CHROME-SAFE HASH FUNCTIONS
+// Using integer-based hashing to avoid sin() precision issues in ANGLE
 // =============================================================================
 
-/**
- * Add fine volcanic details when zoomed in - cooling cracks, convection cells
- */
-vec3 lavaZoomDetail(vec3 p, vec3 surfaceColor, float zoomLevel, float isLava, float seed, float time) {
-    if (zoomLevel < 0.15) {
-        return surfaceColor;
-    }
+vec3 hash33_lava(vec3 p) {
+    p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yxz + 33.33);
+    return fract((p.xxy + p.yxx) * p.zyx);
+}
 
-    float detailFade = smoothstep(0.15, 0.5, zoomLevel);
-
-    // Fine cooling cracks in solidified crust
-    if (isLava < 0.5) {
-        float crackNoise = abs(snoise3D(p * COOLING_CRACK_SCALE + vec3(seed * 10.0)));
-        float cracks = 1.0 - smoothstep(0.0, 0.06, crackNoise);
-
-        // Cracks glow faintly from heat below
-        vec3 glowColor = mix(LAVA_COLOR_COOL, LAVA_COLOR_WARM, 0.3);
-        surfaceColor = mix(surfaceColor, glowColor, cracks * 0.5 * detailFade);
-    }
-
-    // Convection cells in active lava
-    if (isLava > 0.3 && zoomLevel > 0.3) {
-        float cellFade = smoothstep(0.3, 0.6, zoomLevel);
-        float cellNoise = vnoise3D(p * LAVA_CELL_SCALE + vec3(time * 0.01, seed * 5.0, time * 0.008));
-        float cells = smoothstep(0.4, 0.6, cellNoise);
-
-        // Cell boundaries are brighter (hot upwelling)
-        float boundary = smoothstep(0.45, 0.5, cellNoise) * smoothstep(0.55, 0.5, cellNoise);
-        surfaceColor = mix(surfaceColor, LAVA_COLOR_HOT, boundary * 0.4 * cellFade * isLava);
-    }
-
-    // Fine rock texture at maximum zoom
-    if (zoomLevel > 0.6 && isLava < 0.5) {
-        float grainFade = smoothstep(0.6, 0.9, zoomLevel);
-        float grain = vnoise3D(p * 100.0 + vec3(seed * 3.0)) * 0.5 + 0.5;
-        surfaceColor *= 0.92 + grain * 0.16 * grainFade;
-    }
-
-    return surfaceColor;
+float hash11_lava(float p) {
+    p = fract(p * 0.1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
 }
 
 // =============================================================================
-// LAVA PATTERN FUNCTION
+// REALISTIC LAVA COLORS (temperature-based)
+// =============================================================================
+
+// Real lava color temperatures (in Kelvin approximations)
+const vec3 LAVA_BLACK = vec3(0.05, 0.02, 0.01);       // Cooled crust ~700K
+const vec3 LAVA_DARK_RED = vec3(0.3, 0.05, 0.0);      // ~900K
+const vec3 LAVA_RED = vec3(0.6, 0.1, 0.0);            // ~1000K
+const vec3 LAVA_ORANGE = vec3(0.95, 0.4, 0.05);       // ~1200K
+const vec3 LAVA_YELLOW = vec3(1.0, 0.75, 0.2);        // ~1400K
+const vec3 LAVA_WHITE = vec3(1.0, 0.95, 0.8);         // ~1600K+
+
+// Crust colors (cooled basalt)
+const vec3 CRUST_DARK = vec3(0.06, 0.04, 0.03);
+const vec3 CRUST_MID = vec3(0.12, 0.08, 0.06);
+const vec3 CRUST_LIGHT = vec3(0.2, 0.14, 0.1);
+
+// =============================================================================
+// TECTONIC PLATES (Voronoi-based)
 // =============================================================================
 
 /**
- * Generate flowing lava pattern
+ * Creates tectonic plate pattern with cracks between plates
  */
-float lavaPattern(vec3 pos, float time, float seed) {
-    vec3 flowCoord = pos * LAVA_FLOW_SCALE;
-    flowCoord += vec3(time * LAVA_FLOW_SPEED, 0.0, time * LAVA_FLOW_SPEED * 0.7);
-    flowCoord = seedOffset3D(flowCoord, seed);
+float tectonicPlates(vec3 p, float scale, out float plateId, out float crackDist) {
+    vec3 pos = p * scale;
+    vec3 cell = floor(pos);
+    vec3 local = fract(pos);
     
-    float flow = fbmWarped3D(flowCoord, 4, 0.5);
+    float minDist = 10.0;
+    float secondDist = 10.0;
+    vec3 nearestCell = cell;
     
-    // Add pulsing
-    float pulse = sin(time * LAVA_PULSE_SPEED + seed * 10.0) * LAVA_PULSE_STRENGTH;
-    flow += pulse;
+    // Find nearest and second nearest cell centers
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                vec3 neighbor = vec3(float(x), float(y), float(z));
+                vec3 cellPos = cell + neighbor;
+                
+                // Random point within cell - using Chrome-safe hash
+                vec3 h = hash33_lava(cellPos);
+                vec3 point = h * 0.6 + 0.2;
+                
+                vec3 diff = neighbor + point - local;
+                float d = length(diff);
+                
+                if (d < minDist) {
+                    secondDist = minDist;
+                    minDist = d;
+                    nearestCell = cellPos;
+                } else if (d < secondDist) {
+                    secondDist = d;
+                }
+            }
+        }
+    }
     
-    return flow * 0.5 + 0.5;
+    // Plate ID for color variation - using Chrome-safe hash
+    plateId = hash33_lava(nearestCell).x;
+    
+    // Distance to crack (boundary between plates)
+    crackDist = secondDist - minDist;
+    
+    return minDist;
 }
 
+// =============================================================================
+// CONVECTION CELLS
+// =============================================================================
+
 /**
- * Generate crack pattern
+ * Simulates convection in molten lava
+ * Hot material rises (bright), cool material sinks (darker)
  */
-float crackPattern(vec3 pos, float seed) {
-    vec3 crackCoord = pos * CRACK_SCALE;
-    crackCoord = seedOffset3D(crackCoord, seed);
+float convectionCells(vec3 p, float time, float seed) {
+    // Large convection cells
+    float cells = 0.0;
     
-    // Use absolute value of noise for vein-like cracks
-    float cracks = abs(snoise3D(crackCoord));
-    cracks = 1.0 - smoothstep(0.0, CRACK_WIDTH, cracks);
+    // Animated position for convection motion
+    vec3 pos = p + vec3(0.0, time * 0.02, 0.0);
     
-    // Add smaller secondary cracks
-    float smallCracks = abs(snoise3D(crackCoord * 2.5));
-    smallCracks = 1.0 - smoothstep(0.0, CRACK_WIDTH * 0.7, smallCracks);
+    // Primary cells
+    float n1 = snoise3D(pos * 4.0 + seed);
+    float cell1 = n1 * 0.5 + 0.5;
     
-    return max(cracks, smallCracks * 0.6);
+    // Rising plumes (bright spots)
+    float plumes = smoothstep(0.6, 0.9, cell1);
+    
+    // Sinking regions (darker)
+    float sinks = smoothstep(0.4, 0.1, cell1);
+    
+    // Secondary turbulence
+    float turb = snoise3D(pos * 12.0 + seed * 2.0) * 0.3;
+    
+    cells = cell1 + plumes * 0.3 - sinks * 0.2 + turb;
+    
+    return clamp(cells, 0.0, 1.0);
+}
+
+// =============================================================================
+// VOLCANIC HOTSPOTS
+// =============================================================================
+
+/**
+ * Creates volcanic hotspot regions - extra active areas
+ */
+float volcanicHotspots(vec3 p, float seed, float time) {
+    float hotspots = 0.0;
+    
+    // Create several hotspot centers
+    for (int i = 0; i < 4; i++) {
+        float fi = float(i);
+        
+        // Random hotspot position - using Chrome-safe hash
+        vec3 h = hash33_lava(vec3(seed, fi * 0.1, seed * 0.5 + fi));
+        vec3 center = normalize(h * 2.0 - 1.0);
+        
+        // Distance to hotspot
+        float d = length(p - center);
+        
+        // Hotspot intensity with pulsing (time is already wrapped)
+        float pulsePhase = hash11_lava(seed + fi) * 6.28318;
+        float pulse = sin(time * 0.5 + pulsePhase) * 0.3 + 0.7;
+        float intensity = (1.0 - smoothstep(0.0, 0.4, d)) * pulse;
+        
+        hotspots = max(hotspots, intensity);
+    }
+    
+    return hotspots;
+}
+
+// =============================================================================
+// LAVA TEMPERATURE TO COLOR
+// =============================================================================
+
+/**
+ * Maps lava temperature/intensity to realistic color
+ */
+vec3 lavaColor(float temp) {
+    // temp: 0 = cool crust, 1 = white hot
+    
+    if (temp < 0.15) {
+        // Cooled crust - black
+        return mix(LAVA_BLACK, LAVA_DARK_RED, temp / 0.15);
+    } else if (temp < 0.3) {
+        // Dark red glow
+        return mix(LAVA_DARK_RED, LAVA_RED, (temp - 0.15) / 0.15);
+    } else if (temp < 0.5) {
+        // Bright red to orange
+        return mix(LAVA_RED, LAVA_ORANGE, (temp - 0.3) / 0.2);
+    } else if (temp < 0.75) {
+        // Orange to yellow
+        return mix(LAVA_ORANGE, LAVA_YELLOW, (temp - 0.5) / 0.25);
+    } else {
+        // Yellow to white hot
+        return mix(LAVA_YELLOW, LAVA_WHITE, (temp - 0.75) / 0.25);
+    }
 }
 
 // =============================================================================
@@ -198,144 +238,152 @@ float crackPattern(vec3 pos, float seed) {
 
 void main() {
     vec3 spherePos = normalize(vPosition);
-    
-    // Wrap time to prevent precision loss in Chrome/ANGLE
-    float wrappedTime = wrapTime(uTime);
+    float time = wrapTime(uTime);
     
     // === SEED VARIATION ===
-    float phaseOffset = seedPhase(uSeed);
-    vec3 scales = seedScales(uSeed);
-    float hueShift = seedHueShift(uSeed) * 0.3;  // Subtle color variation
-    
-    // === TEMPERATURE FACTOR ===
-    float tempFactor = smoothstep(TEMP_LAVA_MIN, TEMP_LAVA_FULL, uTemperature);
-    float whiteHotFactor = smoothstep(TEMP_LAVA_FULL, TEMP_WHITE_HOT, uTemperature);
-    
-    // === TERRAIN/CRUST ===
-    vec3 crustCoord = spherePos * CRUST_SCALE * scales.x;
-    crustCoord = seedOffset3D(crustCoord, uSeed);
-    
-    int octaves = uDetailLevel > 0.5 ? CRUST_OCTAVES : 3;
-    float terrain = fbm3D(crustCoord, octaves);
-    terrain = terrain * 0.5 + 0.5;
-    
-    // Add volcanic features using 3D position
+    float seed = seedHash(uSeed) * 100.0;
     vec3 p = rotateVectorBySeed(spherePos, uSeed);
-    float longitude = atan(p.x, p.z) / TAU + 0.5;
-    float latitude = p.y * 0.5 + 0.5;
     
-    for (int i = 0; i < VOLCANO_COUNT; i++) {
-        if (!seedHasCommonFeature(uSeed, float(i))) continue;
-        
-        vec2 volcanoPos = seedStormPosition(uSeed, float(i));
-        vec2 coordForVolcano = vec2(longitude, latitude);
-        vec2 delta = coordForVolcano - volcanoPos;
-        if (delta.x > 0.5) delta.x -= 1.0;
-        if (delta.x < -0.5) delta.x += 1.0;
-        
-        float volcDist = length(delta);
-        float volcHeight = (1.0 - smoothstep(0.0, 0.15, volcDist)) * VOLCANO_HEIGHT;
-        terrain += volcHeight;
-    }
+    // === PLANET HEAT LEVEL ===
+    // How hot is this lava world? (affects how much molten vs crust)
+    float planetHeat = smoothstep(800.0, 2000.0, uTemperature);
+    float extremeHeat = smoothstep(1500.0, 3000.0, uTemperature);
     
-    terrain = clamp(terrain, 0.0, 1.0);
+    // === TECTONIC PLATES ===
+    // Plate size varies by seed: some worlds have few large plates, others many small
+    float plateSizeVar = hash11_lava(seed * 7.89);  // 0-1, Chrome-safe
+    float plateScale = 0.8 + plateSizeVar * 2.0;  // Range: 0.8 (huge plates) to 2.8 (smaller plates)
+    float fineScale = plateScale * 2.5 + 1.0;     // Secondary cracks scale with main plates
     
-    // === LAVA LAKES ===
-    float lavaLevel = LAVA_THRESHOLD + (1.0 - tempFactor) * 0.2;  // More lava when hotter
-    bool isLava = terrain < lavaLevel;
-    float lavaDepth = isLava ? 1.0 - (terrain / lavaLevel) : 0.0;
+    float plateId, crackDist;
+    float plateNoise = tectonicPlates(p, plateScale, plateId, crackDist);
     
-    // Lava flow animation
-    float lavaFlow = lavaPattern(spherePos, wrappedTime, uSeed);
+    // Cracks between plates - this is where lava shows through
+    // Wider cracks on worlds with larger plates
+    float crackWidth = 0.1 + (1.0 - plateSizeVar) * 0.1;
+    float crackIntensity = 1.0 - smoothstep(0.0, crackWidth, crackDist);
     
-    // === CRACKS IN CRUST ===
-    float cracks = 0.0;
-    if (uDetailLevel > 0.5) {
-        cracks = crackPattern(spherePos, uSeed);
-        cracks *= (1.0 - lavaDepth);  // No cracks in lava lakes
-        cracks *= tempFactor;  // More visible when hotter
-    }
+    // Finer cracks within plates (secondary fractures)
+    float fineId, fineCrackDist;
+    tectonicPlates(p, fineScale, fineId, fineCrackDist);
+    float fineCracks = 1.0 - smoothstep(0.0, 0.08, fineCrackDist);
     
-    // === COLOR CALCULATION ===
+    // === CONVECTION IN LAVA ===
+    float convection = convectionCells(p, time, seed);
+    
+    // === VOLCANIC HOTSPOTS ===
+    float hotspots = volcanicHotspots(p, seed, time);
+    
+    // === DETERMINE SURFACE TYPE ===
+    // More cracks and less crust when hotter
+    float crustThreshold = 0.15 - planetHeat * 0.1;
+    
+    // Is this point crust or exposed lava?
+    float isCrust = step(crustThreshold, crackDist);
+    float lavaExposure = 1.0 - isCrust;
+    
+    // Add fine cracks that glow
+    lavaExposure = max(lavaExposure, fineCracks * 0.7);
+    
+    // Hotspots break through crust
+    lavaExposure = max(lavaExposure, hotspots * 0.8);
+    
+    // === LAVA TEMPERATURE ===
+    // Base temperature from convection
+    float lavaTemp = convection * 0.6 + 0.2;
+    
+    // Cracks are hotter (fresh lava)
+    lavaTemp = mix(lavaTemp, 0.8, crackIntensity * 0.5);
+    
+    // Hotspots are hottest
+    lavaTemp = mix(lavaTemp, 0.95, hotspots);
+    
+    // Fine cracks are cooler (less exposed)
+    float fineCrackTemp = lavaTemp * 0.6;
+    
+    // Planet heat affects overall temperature
+    lavaTemp *= 0.6 + planetHeat * 0.4;
+    lavaTemp += extremeHeat * 0.2;  // Boost for very hot planets
+    
+    // === CRUST APPEARANCE ===
+    // Cooled lava crust with slight color variation per plate
+    vec3 crustColor = mix(CRUST_DARK, CRUST_MID, plateId * 0.5);
+    
+    // Add texture variation
+    float crustTex = fbm3D(p * 15.0 + seed, 3) * 0.5 + 0.5;
+    crustColor = mix(crustColor, CRUST_LIGHT, crustTex * 0.3);
+    
+    // Crust near cracks is warmer colored
+    float edgeWarmth = 1.0 - smoothstep(0.0, 0.25, crackDist);
+    crustColor = mix(crustColor, LAVA_DARK_RED * 0.5, edgeWarmth * 0.4);
+    
+    // === COMBINE CRUST AND LAVA ===
+    vec3 lavaCol = lavaColor(lavaTemp);
+    vec3 fineCrackCol = lavaColor(fineCrackTemp);
+    
     vec3 surfaceColor;
     
-    if (isLava) {
-        // Lava color gradient based on depth and flow
-        float lavaTemp = lavaDepth * 0.7 + lavaFlow * 0.3;
-        lavaTemp = clamp(lavaTemp, 0.0, 1.0);
-        
-        // Three-way gradient: cool edge -> warm -> hot center
-        vec3 lavaColor;
-        if (lavaTemp < 0.5) {
-            lavaColor = mix(LAVA_COLOR_COOL, LAVA_COLOR_WARM, lavaTemp * 2.0);
-        } else {
-            lavaColor = mix(LAVA_COLOR_WARM, LAVA_COLOR_HOT, (lavaTemp - 0.5) * 2.0);
-        }
-        
-        // White-hot effect
-        lavaColor = mix(lavaColor, vec3(1.0, 1.0, 0.9), whiteHotFactor * lavaTemp);
-        
-        surfaceColor = lavaColor;
-    } else {
-        // Crust color varies with height
-        float crustHeight = (terrain - lavaLevel) / (1.0 - lavaLevel);
-        surfaceColor = mix(CRUST_COLOR_LIGHT, CRUST_COLOR_DARK, crustHeight);
-        
-        // Add height-based detail
-        float crustDetail = vnoise3D(spherePos * 20.0 + vec3(phaseOffset));
-        surfaceColor *= 0.9 + crustDetail * 0.2;
-    }
+    // Main surface is crust
+    surfaceColor = crustColor;
     
-    // === GLOWING CRACKS ===
-    if (cracks > 0.0) {
-        // Crack glow color
-        vec3 crackGlow = mix(LAVA_COLOR_WARM, LAVA_COLOR_HOT, cracks);
-        crackGlow *= CRACK_GLOW_INTENSITY;
-        
-        // Blend cracks into surface
-        float crackBlend = cracks * pow(tempFactor, 0.5);
-        surfaceColor = mix(surfaceColor, crackGlow, crackBlend);
-    }
+    // Add glowing fine cracks
+    surfaceColor = mix(surfaceColor, fineCrackCol, fineCracks * 0.8);
     
-    // Apply base color influence
-    vec3 baseHSV = rgb2hsv(uBaseColor);
-    vec3 surfaceHSV = rgb2hsv(surfaceColor);
-    surfaceHSV.x = fract(surfaceHSV.x + hueShift);
-    surfaceColor = hsv2rgb(surfaceHSV);
-
-    // === ZOOM-BASED DETAIL ===
-    // Add cooling cracks, convection cells, and fine texture when zoomed in
-    float lavaFactor = isLava ? lavaDepth : 0.0;
-    surfaceColor = lavaZoomDetail(p, surfaceColor, uZoomLevel, lavaFactor, uSeed, wrappedTime);
-
+    // Major cracks and exposed lava
+    surfaceColor = mix(surfaceColor, lavaCol, crackIntensity);
+    
+    // Hotspot glow
+    surfaceColor = mix(surfaceColor, lavaCol, hotspots * 0.6);
+    
+    // === EMISSION (SELF-ILLUMINATION) ===
+    float emission = 0.0;
+    
+    // Lava emits light
+    emission += lavaExposure * lavaTemp * 1.5;
+    
+    // Fine cracks glow
+    emission += fineCracks * fineCrackTemp * 0.8;
+    
+    // Hotspots are very bright
+    emission += hotspots * 1.2;
+    
+    // Crust edges glow faintly
+    emission += edgeWarmth * 0.2;
+    
+    // Scale by planet heat
+    emission *= 0.5 + planetHeat * 0.5;
+    
     // === LIGHTING ===
     vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
-    float diff = diffuseLambert(vNormal, lightDir);
+    vec3 viewDir = vec3(0.0, 0.0, 1.0);
     
-    // Self-illumination for lava
-    float emission = 0.0;
-    if (isLava) {
-        emission = lavaDepth * EMISSION_STRENGTH * tempFactor;
-    }
-    emission += cracks * CRACK_GLOW_INTENSITY * tempFactor;
-    emission += AMBIENT_GLOW * tempFactor;  // Overall heat glow
+    // Diffuse for crust only (lava is self-lit)
+    float diff = max(dot(vNormal, lightDir), 0.0);
+    diff = mix(diff, 0.5, lavaExposure);  // Lava doesn't need external light
     
-    // Combine reflected and emitted light
-    vec3 litColor = surfaceColor * (diff * 0.3 + 0.1);  // Dim reflected
+    // Apply lighting
+    vec3 litColor = surfaceColor * (diff * 0.2 + 0.1);  // Dim ambient/diffuse
     litColor += surfaceColor * emission;  // Strong emission
     
-    // === EDGE HEAT GLOW ===
-    float edgeFactor = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
-    float edgeGlow = pow(edgeFactor, LIMB_GLOW_POWER) * HEAT_GLOW_INTENSITY * tempFactor;
+    // === LIMB GLOW (heat escaping at edges) ===
+    float edge = 1.0 - abs(dot(vNormal, viewDir));
+    float limbGlow = pow(edge, 2.5) * 0.5 * planetHeat;
+    vec3 limbColor = mix(LAVA_ORANGE, LAVA_RED, 0.5);
+    litColor += limbColor * limbGlow;
     
-    vec3 edgeColor = mix(LAVA_COLOR_WARM, LAVA_COLOR_COOL, LIMB_GLOW_COLOR_SHIFT);
-    litColor += edgeColor * edgeGlow;
+    // === ATMOSPHERIC HAZE (if present) ===
+    if (uHasAtmosphere > 0.0) {
+        float haze = pow(edge, 2.0) * 0.3 * uHasAtmosphere;
+        vec3 hazeColor = mix(LAVA_ORANGE, vec3(0.5, 0.3, 0.2), 0.5);
+        litColor += hazeColor * haze;
+    }
     
-    // === STAR TINT ===
-    // Less star tint for self-luminous lava worlds
+    // === STAR TINT (minimal for self-luminous world) ===
     vec3 starTint = starLightTint(uStarTemp);
-    litColor *= mix(vec3(1.0), starTint, 0.3);
+    litColor *= mix(vec3(1.0), starTint, 0.2);
+    
+    // === HDR BOOST for hot areas ===
+    litColor *= 1.0 + emission * 0.3;
     
     gl_FragColor = vec4(litColor, 1.0);
 }
-

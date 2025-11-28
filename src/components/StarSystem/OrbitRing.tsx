@@ -7,9 +7,12 @@
 import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-
-/** Fade-in animation duration for orbit rings (seconds) */
-const ORBIT_FADE_DURATION = 2.2;
+import { ORBITAL_MECHANICS } from '../../utils/celestialBodyVisuals';
+import {
+  ORBIT_ANIMATION,
+  ORBIT_GEOMETRY,
+  getOrbitStyle,
+} from '../../utils/orbitVisuals';
 
 interface OrbitRingProps {
   radius: number; // Semi-major axis (a)
@@ -28,8 +31,8 @@ export function OrbitRing({
   const fadeStartTime = useRef<number | null>(null);
   const [isFullyVisible, setIsFullyVisible] = useState(false);
 
-  // Clamp eccentricity to valid range [0, 0.99] to prevent degenerate ellipses
-  const e = Math.min(Math.max(eccentricity, 0), 0.99);
+  // Clamp eccentricity to valid range [0, max] to prevent degenerate ellipses
+  const e = Math.min(Math.max(eccentricity, 0), ORBITAL_MECHANICS.MAX_ECCENTRICITY);
 
   // Calculate ellipse parameters
   // Semi-major axis (a) = radius
@@ -40,15 +43,15 @@ export function OrbitRing({
   const focusOffset = isBinaryOrbit ? 0 : a * e; // Binary orbits are centered on barycenter
 
   // Determine visual style based on orbit type and eccentricity
-  const isEccentric = e > 0.1;
+  const isEccentric = e > ORBIT_GEOMETRY.ECCENTRICITY_THRESHOLD;
 
   // Create the Line object with geometry and material
   const line = useMemo(() => {
-    const segments = 128;
+    const segments = ORBIT_GEOMETRY.SEGMENTS;
     const points: THREE.Vector3[] = [];
 
     for (let i = 0; i <= segments; i++) {
-      const theta = (i / segments) * Math.PI * 2;
+      const theta = (i / segments) * ORBIT_GEOMETRY.FULL_CIRCLE;
       // Parametric ellipse: x = a*cos(θ), z = b*sin(θ)
       // Shift by focus offset so star (at origin) is at one focus
       const x = a * Math.cos(theta) - focusOffset;
@@ -80,36 +83,19 @@ export function OrbitRing({
     if (!isFullyVisible) {
       const elapsed = state.clock.elapsedTime - fadeStartTime.current;
       // Ease-out cubic for smooth deceleration
-      const t = Math.min(elapsed / ORBIT_FADE_DURATION, 1);
-      fadeMultiplier = 1 - Math.pow(1 - t, 3);
+      const t = Math.min(elapsed / ORBIT_ANIMATION.FADE_DURATION, 1);
+      fadeMultiplier = 1 - Math.pow(1 - t, ORBIT_ANIMATION.FADE_EASING_POWER);
 
       if (t >= 1) {
         setIsFullyVisible(true);
       }
     }
 
-    // Binary orbits: golden/orange to represent the stellar dance
-    // Eccentric planet orbits: blue-ish tint
-    // Normal planet orbits: gray
-    let baseColor: string;
-    let targetOpacity: number;
+    // Get visual style based on orbit type and state
+    const style = getOrbitStyle(isHighlighted, isBinaryOrbit, isEccentric);
 
-    if (isHighlighted) {
-      baseColor = '#ffffff';
-      targetOpacity = 0.8;
-    } else if (isBinaryOrbit) {
-      baseColor = '#ffaa44'; // Golden orange for binary star orbit
-      targetOpacity = 0.5;
-    } else if (isEccentric) {
-      baseColor = '#aaaaff'; // Blue-ish for eccentric planet orbits
-      targetOpacity = 0.45;
-    } else {
-      baseColor = '#888888'; // Gray for circular orbits
-      targetOpacity = 0.3;
-    }
-
-    material.color.set(baseColor);
-    material.opacity = targetOpacity * fadeMultiplier;
+    material.color.set(style.color);
+    material.opacity = style.opacity * fadeMultiplier;
   });
 
   return <primitive ref={lineRef} object={line} />;

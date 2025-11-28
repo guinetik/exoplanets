@@ -515,10 +515,13 @@ def add_derived_fields(df):
     df["is_very_nearby"] = df["sy_dist"] < 20
 
     # Transiting: can observe atmosphere during transit
-    df["is_transiting"] = df["tran_flag"] == 1
+    # Check both the flag AND actual transit data (depth + period)
+    df["is_transiting"] = (df["tran_flag"] == 1) | (
+        (df["pl_trandep"].notna()) & (df["pl_orbper"].notna())
+    )
 
-    # Has radial velocity data
-    df["has_rv_data"] = df["rv_flag"] == 1
+    # Has radial velocity data - check both flag AND actual RV amplitude value
+    df["has_rv_data"] = (df["rv_flag"] == 1) & (df["pl_rvamp"].notna())
 
     # Has transit timing variations (indicates gravitational interactions)
     df["has_ttv"] = df["ttv_flag"] == 1

@@ -17,6 +17,7 @@ import {
   OrbitalPositionChart,
   SiblingPlanets,
   RadialVelocitySection,
+  TransitSection,
 } from '../components/Planet';
 import { TravelTimeCalculator } from '../components/shared';
 import { nameToSlug } from '../utils/urlSlug';
@@ -209,13 +210,22 @@ export default function Planet() {
           <PlanetEarthComparison planet={planet} />
         </PlanetSection>
 
-        {/* Radial Velocity Analysis - Flagship Educational Feature */}
-        <PlanetSection
-          title={t('pages.planet.sections.radialVelocity')}
-          className="section-rv"
-        >
-          <RadialVelocitySection planet={planet} siblings={siblings} />
-        </PlanetSection>
+        {/* Detection Method Visualization - RV or Transit */}
+        {planet.has_rv_data ? (
+          <PlanetSection
+            title={t('pages.planet.sections.radialVelocity')}
+            className="section-rv"
+          >
+            <RadialVelocitySection planet={planet} siblings={siblings} />
+          </PlanetSection>
+        ) : (planet.is_transiting || (planet.pl_trandep !== null && planet.pl_orbper !== null)) ? (
+          <PlanetSection
+            title={t('pages.planet.sections.transitDetection')}
+            className="section-transit"
+          >
+            <TransitSection planet={planet} siblings={siblings} />
+          </PlanetSection>
+        ) : null}
 
         {/* Habitability & Temperature Row */}
         <div className="planet-section-row">

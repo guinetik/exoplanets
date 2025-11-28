@@ -1,18 +1,17 @@
 /**
  * Ice Giant Fragment Shader V2
  *
- * Creates Neptune/Uranus-like ice giants with:
- * - Subtle atmospheric banding
- * - Methane-blue coloring (varies with seed)
- * - High-altitude haze layers
- * - Occasional storm features
- * - Deep atmospheric structure hints
+ * Creates frozen ice worlds with:
+ * - Actual blue/cyan ice colors (NOT grey!)
+ * - Jagged ice fracture patterns
+ * - Snow/frost patches
+ * - Crystalline sparkle
+ * - Frozen atmosphere haze
  *
- * Physics: Smaller than gas giants, water/ammonia/methane mantles
- * Examples: Neptune, Uranus, many "mini-Neptunes"
+ * @author guinetik
+ * @see https://github.com/guinetik
  */
 
-// Precision qualifiers MUST be before includes for Chrome/ANGLE compatibility
 #ifdef GL_ES
 precision highp float;
 precision highp int;
@@ -37,61 +36,10 @@ uniform float uInsolation;
 uniform float uStarTemp;
 uniform float uDetailLevel;
 
-// Physical color factors for data-driven variety
 uniform float uColorTempFactor;
 uniform float uColorCompositionFactor;
 uniform float uColorIrradiationFactor;
 uniform float uColorMetallicityFactor;
-
-// =============================================================================
-// ICE GIANT CONSTANTS
-// =============================================================================
-
-// --- Atmospheric Banding ---
-const float BAND_COUNT_BASE = 5.0;        // Fewer, subtler bands than gas giants
-const float BAND_COUNT_VARIATION = 3.0;
-const float BAND_VISIBILITY = 0.12;       // Subtle banding
-const float BAND_WOBBLE_STRENGTH = 0.015; // Less wobble than gas giants
-
-// --- Color Palettes ---
-// Different ice giant compositions lead to different colors
-const vec3 COLOR_NEPTUNE_BLUE = vec3(0.4, 0.6, 0.95);    // Deep blue (methane-rich)
-const vec3 COLOR_URANUS_CYAN = vec3(0.6, 0.9, 0.95);     // Cyan-green (methane + haze)
-const vec3 COLOR_WARM_PURPLE = vec3(0.7, 0.55, 0.9);     // Purple (warm ice giant)
-const vec3 COLOR_GREY_GREEN = vec3(0.65, 0.8, 0.7);      // Grey-green (different composition)
-const vec3 COLOR_PALE_BLUE = vec3(0.75, 0.85, 0.98);     // Pale blue (hazy)
-const vec3 COLOR_TEAL = vec3(0.45, 0.8, 0.8);            // Teal (ammonia-rich)
-
-// --- Haze Layers ---
-const float HAZE_LAYER_COUNT = 3.0;       // Multiple haze layers
-const float HAZE_LAYER_STRENGTH = 0.15;   // Visibility of layers
-const float HAZE_EDGE_POWER = 2.5;        // Edge haze concentration
-const float HAZE_EDGE_STRENGTH = 0.35;    // Edge haze brightness
-const vec3 HAZE_COLOR = vec3(0.7, 0.85, 1.0);  // Bluish haze
-
-// --- Cloud Features ---
-const float CLOUD_SCALE = 8.0;            // Cloud pattern scale
-const float CLOUD_SPEED = 0.008;          // Slow-moving clouds
-const float CLOUD_BRIGHTNESS = 0.2;       // Cloud brightness boost
-const int CLOUD_OCTAVES = 4;
-
-// --- Storm Systems ---
-const float STORM_PROBABILITY = 0.4;      // Less common than gas giants
-const float STORM_SIZE = 0.04;            // Smaller storms
-const float STORM_BRIGHTNESS = 1.3;       // Bright storm features
-
-// --- Deep Atmosphere ---
-const float DEEP_ATMO_TINT = 0.15;        // Hint of deeper layers
-const vec3 DEEP_ATMO_COLOR = vec3(0.3, 0.4, 0.6);  // Darker blue-grey
-
-// --- Axial Tilt Effect ---
-// Uranus has extreme axial tilt affecting appearance
-const float TILT_EFFECT_STRENGTH = 0.1;   // How much tilt affects bands
-
-// --- Limb Darkening ---
-const float LIMB_EDGE_LOW = -0.15;
-const float LIMB_EDGE_HIGH = 0.75;
-const float LIMB_MIN_BRIGHTNESS = 0.45;
 
 // =============================================================================
 // VARYINGS
@@ -102,145 +50,224 @@ varying vec2 vUv;
 varying vec3 vPosition;
 
 // =============================================================================
+// ICE COLORS - FORCED BLUE, NOT GREY
+// =============================================================================
+
+// These are the ACTUAL colors we want - frozen blue ice
+const vec3 ICE_SURFACE = vec3(0.65, 0.82, 0.95);    // Light frozen blue
+const vec3 ICE_DEEP = vec3(0.25, 0.45, 0.75);       // Deep glacier blue  
+const vec3 ICE_CRACK = vec3(0.15, 0.35, 0.65);      // Dark blue in cracks
+const vec3 SNOW_WHITE = vec3(0.92, 0.95, 0.98);     // Bright snow
+const vec3 FROST_BLUE = vec3(0.75, 0.88, 1.0);      // Frosty blue-white
+
+// =============================================================================
+// HASH FUNCTION
+// =============================================================================
+
+vec3 hash33(vec3 p) {
+    p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yxz + 33.33);
+    return fract((p.xxy + p.yxx) * p.zyx);
+}
+
+// =============================================================================
+// JAGGED ICE CRACKS (not smooth marble veins)
+// =============================================================================
+
+float iceCracks(vec3 p, float scale, float seed) {
+    vec3 pos = p * scale;
+    
+    // Multiple layers of cracks at different scales
+    float cracks = 0.0;
+    
+    // Large primary fractures
+    float n1 = snoise3D(pos * 1.0 + seed);
+    float crack1 = abs(n1);
+    crack1 = 1.0 - smoothstep(0.0, 0.08, crack1);  // Sharp edges
+    
+    // Medium secondary cracks
+    float n2 = snoise3D(pos * 2.5 + seed * 2.0);
+    float crack2 = abs(n2);
+    crack2 = 1.0 - smoothstep(0.0, 0.06, crack2);
+    
+    // Fine hairline cracks
+    float n3 = snoise3D(pos * 6.0 + seed * 3.0);
+    float crack3 = abs(n3);
+    crack3 = 1.0 - smoothstep(0.0, 0.04, crack3);
+    
+    cracks = crack1 * 0.6 + crack2 * 0.3 + crack3 * 0.2;
+    
+    return cracks;
+}
+
+// =============================================================================
+// SNOW/FROST PATCHES
+// =============================================================================
+
+float snowPatches(vec3 p, float time) {
+    // Large snow accumulation areas
+    float snow = fbm3D(p * 3.0 + vec3(0.0, time * 0.002, 0.0), 4);
+    snow = snow * 0.5 + 0.5;
+    
+    // Boost high areas (snow accumulates on "top")
+    float heightBias = p.y * 0.3 + 0.5;
+    snow = snow * heightBias;
+    
+    // Make it patchy
+    snow = smoothstep(0.35, 0.7, snow);
+    
+    return snow;
+}
+
+// =============================================================================
+// CRYSTALLINE TEXTURE
+// =============================================================================
+
+float crystalTexture(vec3 p, float scale) {
+    float crystals = 0.0;
+    
+    // Voronoi-like crystal cells
+    vec3 pos = p * scale;
+    vec3 cell = floor(pos);
+    vec3 local = fract(pos);
+    
+    float minDist = 1.0;
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int z = -1; z <= 1; z++) {
+                vec3 neighbor = vec3(float(x), float(y), float(z));
+                vec3 point = hash33(cell + neighbor);
+                float d = length(neighbor + point - local);
+                minDist = min(minDist, d);
+            }
+        }
+    }
+    
+    crystals = minDist;
+    return crystals;
+}
+
+// =============================================================================
+// SPARKLE EFFECT
+// =============================================================================
+
+float iceSparkle(vec3 p, float time, float seed) {
+    vec3 sparkleCell = floor(p * 300.0);
+    float h = hash33(sparkleCell + vec3(seed)).x;
+    
+    if (h > 0.985) {
+        float twinkle = sin(time * 4.0 + h * 50.0) * 0.5 + 0.5;
+        twinkle *= sin(time * 9.0 + h * 100.0) * 0.5 + 0.5;
+        return twinkle * 0.9;
+    }
+    return 0.0;
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 
 void main() {
     vec3 spherePos = normalize(vPosition);
-    
-    // Wrap time to prevent precision loss in Chrome/ANGLE
-    float wrappedTime = wrapTime(uTime);
+    float time = wrapTime(uTime);
     
     // === SEED VARIATION ===
-    float bandCount = BAND_COUNT_BASE + seedHash(uSeed) * BAND_COUNT_VARIATION;
-    float phaseOffset = seedPhase(uSeed);
-    float hueShift = seedHueShift(uSeed);  // Full hue shift range
-    vec3 scales = seedScales(uSeed);
-    
-    // === COLOR PALETTE SELECTION (seed-based) ===
-    // Pick a base color palette from 6 different options
-    float colorSelector = seedHash(uSeed + 0.5);
-    float saturationVar = 0.7 + seedHash(uSeed + 0.6) * 0.6;  // 0.7 to 1.3
-    float brightnessVar = 0.8 + seedHash(uSeed + 0.7) * 0.4;  // 0.8 to 1.2
-    
-    // === 3D POSITION SETUP (avoids UV seams/polar artifacts) ===
+    float seed = seedHash(uSeed) * 100.0;
     vec3 p = rotateVectorBySeed(spherePos, uSeed);
-    float latitude = p.y * 0.5 + 0.5;
-    float longitude = atan(p.x, p.z) / TAU + 0.5;
     
-    // === AXIAL TILT EFFECT ===
-    // Some ice giants (like Uranus) have extreme tilts
-    float tiltFactor = seedHash(uSeed + 0.3) * TILT_EFFECT_STRENGTH;
-    float tiltedLat = latitude + sin(longitude * TAU) * tiltFactor;
+    // === HOW FROZEN IS IT? ===
+    // Colder = more intense blue, more frost, more sparkle
+    float frozen = smoothstep(400.0, 50.0, uTemperature);  // 1.0 at 50K
+    float extremeFrozen = smoothstep(150.0, 20.0, uTemperature);  // Extra boost below 150K
     
-    // === ATMOSPHERIC BANDING ===
-    float bandWobble = snoise3D(vec3(p.x * 6.0 + phaseOffset, latitude * 2.0, p.z * 6.0)) * BAND_WOBBLE_STRENGTH;
-    float bandPattern = sin((tiltedLat + bandWobble) * 3.14159 * bandCount);
-    bandPattern = bandPattern * 0.5 + 0.5;
-    bandPattern *= BAND_VISIBILITY;
+    // === ICE CRACKS ===
+    float cracks = iceCracks(p, 4.0, seed);
     
-    // === CLOUD STRUCTURES ===
-    vec3 cloudCoord = p * CLOUD_SCALE * scales.x + vec3(wrappedTime * CLOUD_SPEED, 0.0, wrappedTime * CLOUD_SPEED * 0.5) + vec3(phaseOffset);
-    float clouds = fbm3D(cloudCoord, CLOUD_OCTAVES);
-    clouds = clouds * 0.5 + 0.5;
+    // === SNOW PATCHES ===
+    float snow = snowPatches(p, time);
+    // More snow on colder planets
+    snow *= 0.5 + frozen * 0.7;
     
-    // High-altitude bright clouds
-    float brightClouds = smoothstep(0.55, 0.75, clouds) * CLOUD_BRIGHTNESS;
+    // === CRYSTAL TEXTURE ===
+    float crystals = crystalTexture(p, 8.0);
     
-    // === HAZE LAYERS ===
-    float hazePattern = 0.0;
-    for (float i = 0.0; i < HAZE_LAYER_COUNT; i++) {
-        float layerLat = (i + 0.5) / HAZE_LAYER_COUNT;
-        float layerDist = abs(latitude - layerLat);
-        float layer = smoothstep(0.1, 0.0, layerDist) * HAZE_LAYER_STRENGTH;
-        hazePattern += layer;
-    }
+    // === DEEP ICE STRUCTURE ===
+    float deepIce = fbm3D(p * 2.0 + vec3(seed * 0.1), 3);
+    deepIce = deepIce * 0.5 + 0.5;
     
-    // === STORM FEATURES ===
-    float stormMask = 0.0;
-    if (seedHasUncommonFeature(uSeed, 0.0)) {
-        vec2 stormPos = seedStormPosition(uSeed, 0.0);
-        // Use longitude/latitude derived from 3D position
-        vec2 coordForStorm = vec2(longitude, latitude);
-        vec2 delta = coordForStorm - stormPos;
-        if (delta.x > 0.5) delta.x -= 1.0;
-        if (delta.x < -0.5) delta.x += 1.0;
-        float stormDist = length(delta) / STORM_SIZE;
-        stormMask = 1.0 - smoothstep(0.0, 1.0, stormDist);
-        stormMask *= stormMask;
-    }
+    // ==========================================================
+    // COLOR - FORCE BLUE ICE COLORS
+    // ==========================================================
     
-    // === DEEP ATMOSPHERE HINTS ===
-    float depthNoise = fbm3D(spherePos * 3.0 + vec3(phaseOffset), 3);
-    depthNoise = depthNoise * 0.5 + 0.5;
-    float depthHint = depthNoise * DEEP_ATMO_TINT * (1.0 - clouds * 0.5);
+    // Start with frozen blue surface
+    vec3 surfaceColor = ICE_SURFACE;
     
-    // === COLOR CALCULATION ===
-    // Select base palette based on seed - creates distinct looks
-    vec3 paletteColor;
-    if (colorSelector < 0.17) {
-        paletteColor = COLOR_NEPTUNE_BLUE;
-    } else if (colorSelector < 0.33) {
-        paletteColor = COLOR_URANUS_CYAN;
-    } else if (colorSelector < 0.5) {
-        paletteColor = COLOR_WARM_PURPLE;
-    } else if (colorSelector < 0.67) {
-        paletteColor = COLOR_GREY_GREEN;
-    } else if (colorSelector < 0.83) {
-        paletteColor = COLOR_PALE_BLUE;
-    } else {
-        paletteColor = COLOR_TEAL;
-    }
+    // Vary blue hue slightly based on seed (but STAY BLUE)
+    float hueVar = (seedHash(uSeed + 0.5) - 0.5) * 0.08;  // Small variation
+    vec3 hsv = rgb2hsv(surfaceColor);
+    hsv.x = fract(hsv.x + hueVar);  // Shift hue slightly
+    hsv.y *= 0.85 + frozen * 0.3;   // More saturated when colder
+    surfaceColor = hsv2rgb(hsv);
     
-    // Mix with temperature - warmer ice giants get more purple/grey tones
-    float warmFactor = smoothstep(100.0, 400.0, uTemperature);
-    paletteColor = mix(paletteColor, COLOR_WARM_PURPLE, warmFactor * 0.4);
+    // Blend with deep ice based on structure
+    vec3 color = mix(ICE_DEEP, surfaceColor, deepIce * 0.5 + 0.5);
     
-    // Apply hue shift for additional variety
-    vec3 paletteHSV = rgb2hsv(paletteColor);
-    paletteHSV.x = fract(paletteHSV.x + hueShift);
-    paletteHSV.y *= saturationVar;
-    paletteHSV.z *= brightnessVar;
-    vec3 variedPalette = hsv2rgb(paletteHSV);
+    // Add crystal variation (subtle brightness changes)
+    color *= 0.9 + crystals * 0.2;
     
-    // Blend with base color from data (allows system-specific tinting)
-    vec3 atmosphereColor = mix(variedPalette, variedPalette * uBaseColor * 1.5, 0.25);
+    // CRACKS are darker, deeper blue
+    color = mix(color, ICE_CRACK, cracks * 0.7);
     
-    // Banding affects color subtly
-    vec3 bandColorWarm = atmosphereColor * 1.05;
-    vec3 bandColorCool = atmosphereColor * 0.95;
-    atmosphereColor = mix(bandColorCool, bandColorWarm, bandPattern);
+    // SNOW patches are bright white-blue
+    vec3 snowColor = mix(FROST_BLUE, SNOW_WHITE, 0.6 + frozen * 0.3);
+    color = mix(color, snowColor, snow * 0.6);
     
-    // Add cloud brightness
-    atmosphereColor += vec3(brightClouds) * variedPalette;
+    // Frozen boost - colder = more vibrant blue
+    color = mix(color, color * vec3(0.85, 0.95, 1.15), frozen * 0.4);
     
-    // Add haze layers
-    atmosphereColor = mix(atmosphereColor, HAZE_COLOR, hazePattern * 0.5);
+    // === SPARKLE ===
+    float sparkle = iceSparkle(spherePos, time, uSeed);
+    sparkle *= 1.0 + extremeFrozen * 2.0;  // More sparkles when very cold
+    color += vec3(sparkle) * vec3(0.95, 0.98, 1.0);
     
-    // Add storm brightness
-    atmosphereColor = mix(atmosphereColor, atmosphereColor * STORM_BRIGHTNESS, stormMask);
-    
-    // Add deep atmosphere hint
-    atmosphereColor = mix(atmosphereColor, DEEP_ATMO_COLOR, depthHint);
+    // === SUBSURFACE SCATTERING ===
+    vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
+    float backlight = max(dot(-vNormal, lightDir), 0.0);
+    float sss = pow(backlight, 2.5) * 0.2 * (1.0 + frozen * 0.5);
+    color += ICE_SURFACE * sss * 1.5;
     
     // === LIGHTING ===
-    vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
-    float diff = diffuseHalfLambert(vNormal, lightDir);
+    float diff = max(dot(vNormal, lightDir), 0.0) * 0.5 + 0.5;  // Half-lambert
     
-    // Limb darkening
-    float limb = limbDarkeningStylized(vNormal, LIMB_EDGE_LOW, LIMB_EDGE_HIGH, LIMB_MIN_BRIGHTNESS);
+    // Specular (ice is shiny)
+    vec3 viewDir = vec3(0.0, 0.0, 1.0);
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(vNormal, halfDir), 0.0), 48.0);
     
-    vec3 litColor = atmosphereColor * diff * limb;
+    // Apply lighting
+    vec3 litColor = color * diff;
+    litColor += vec3(1.0, 0.98, 0.95) * spec * 0.4;  // White specular
     
-    // === EDGE HAZE ===
-    float edgeFactor = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
-    float edgeHaze = pow(edgeFactor, HAZE_EDGE_POWER) * HAZE_EDGE_STRENGTH;
-    litColor += HAZE_COLOR * edgeHaze;
+    // === LIMB DARKENING ===
+    float limb = max(dot(vNormal, viewDir), 0.0);
+    limb = 0.5 + limb * 0.5;
+    litColor *= limb;
     
-    // === STAR TINT ===
+    // === ATMOSPHERIC HAZE ===
+    float edge = 1.0 - abs(dot(vNormal, viewDir));
+    float haze = pow(edge, 2.0) * 0.35;
+    vec3 hazeColor = mix(vec3(0.7, 0.85, 1.0), vec3(0.85, 0.92, 1.0), frozen);
+    litColor += hazeColor * haze;
+    
+    // === MINIMAL STAR TINT ===
+    // Don't let star color wash out our ice colors too much
     vec3 starTint = starLightTint(uStarTemp);
+    // Reduce star influence on cold ice planets
+    starTint = mix(vec3(1.0), starTint, 0.3);
     litColor *= starTint;
+    
+    // === FINAL BRIGHTNESS BOOST FOR FROZEN PLANETS ===
+    litColor *= 1.0 + frozen * 0.15;
     
     gl_FragColor = vec4(litColor, 1.0);
 }
-

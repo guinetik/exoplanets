@@ -6,54 +6,15 @@
 
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../../types';
+import { calculateSurfaceGravity } from '../../utils/math/planet';
+import {
+  getPlanetColor,
+  calculateComparisonSizes,
+  createSphereGradient,
+  EARTH_REFERENCE,
+  EARTH_GRADIENT,
+} from '../../utils/planetComparison';
 
-// Earth reference values
-const EARTH = {
-  radius: 1.0, // R⊕
-  mass: 1.0, // M⊕
-  density: 5.51, // g/cm³
-  temperature: 255, // K (equilibrium)
-  gravity: 9.8, // m/s²
-};
-
-/**
- * Gets a color based on planet type
- * @param planetType - The planet classification
- * @returns CSS color string
- */
-function getPlanetColor(planetType: string | null): string {
-  switch (planetType) {
-    case 'Sub-Earth':
-      return '#a0a0a0';
-    case 'Earth-sized':
-      return '#4a90d9';
-    case 'Super-Earth':
-      return '#6bb86b';
-    case 'Sub-Neptune':
-      return '#7ec8e3';
-    case 'Neptune-like':
-      return '#4169e1';
-    case 'Gas Giant':
-      return '#d4a574';
-    default:
-      return '#888888';
-  }
-}
-
-/**
- * Calculates surface gravity relative to Earth
- * g = G * M / R² → g_rel = (M_rel) / (R_rel)²
- * @param massEarth - Mass in Earth masses
- * @param radiusEarth - Radius in Earth radii
- * @returns Surface gravity relative to Earth
- */
-function calculateSurfaceGravity(
-  massEarth: number | null,
-  radiusEarth: number | null
-): number | null {
-  if (!massEarth || !radiusEarth || radiusEarth === 0) return null;
-  return massEarth / (radiusEarth * radiusEarth);
-}
 
 interface PlanetEarthComparisonProps {
   /** Planet data to compare with Earth */
@@ -73,44 +34,38 @@ export function PlanetEarthComparison({ planet }: PlanetEarthComparisonProps) {
   const planetDensity = planet.pl_dens || null;
   const planetTemp = planet.pl_eqt || null;
 
-  // Calculate visual sizes (max 120px for the larger one)
-  const maxSize = 120;
-  const earthSize = planetRadius >= 1 ? maxSize / Math.min(planetRadius, 15) : maxSize;
-  const planetSize = planetRadius >= 1 ? maxSize : maxSize * planetRadius;
+  // Calculate visual sizes using centralized formula
+  const { earthDisplaySize, planetDisplaySize } = calculateComparisonSizes(planetRadius);
 
-  // Cap minimum size for visibility
-  const minSize = 12;
-  const earthDisplaySize = Math.max(earthSize, minSize);
-  const planetDisplaySize = Math.max(planetSize, minSize);
+  // Calculate surface gravity using centralized function
+  const gravityResult = calculateSurfaceGravity(planetMass, planetRadius);
+  const surfaceGravity = gravityResult?.gravityEarth ?? null;
 
-  // Calculate surface gravity
-  const surfaceGravity = calculateSurfaceGravity(planetMass, planetRadius);
-
-  // Get planet color
+  // Get planet color using centralized mapping
   const planetColor = getPlanetColor(planet.planet_type);
 
-  // Comparison metrics
+  // Comparison metrics using centralized EARTH_REFERENCE
   const metrics = [
     {
       key: 'radius',
       label: t('pages.planet.comparison.radius'),
-      earthValue: `${EARTH.radius.toFixed(1)} R⊕`,
+      earthValue: `${EARTH_REFERENCE.radius.toFixed(1)} R⊕`,
       planetValue: planet.pl_rade ? `${planet.pl_rade.toFixed(2)} R⊕` : '—',
-      ratio: planet.pl_rade ? planet.pl_rade / EARTH.radius : null,
+      ratio: planet.pl_rade ? planet.pl_rade / EARTH_REFERENCE.radius : null,
     },
     {
       key: 'mass',
       label: t('pages.planet.comparison.mass'),
-      earthValue: `${EARTH.mass.toFixed(1)} M⊕`,
+      earthValue: `${EARTH_REFERENCE.mass.toFixed(1)} M⊕`,
       planetValue: planetMass ? `${planetMass.toFixed(2)} M⊕` : '—',
-      ratio: planetMass ? planetMass / EARTH.mass : null,
+      ratio: planetMass ? planetMass / EARTH_REFERENCE.mass : null,
     },
     {
       key: 'density',
       label: t('pages.planet.comparison.density'),
-      earthValue: `${EARTH.density.toFixed(2)} g/cm³`,
+      earthValue: `${EARTH_REFERENCE.density.toFixed(2)} g/cm³`,
       planetValue: planetDensity ? `${planetDensity.toFixed(2)} g/cm³` : '—',
-      ratio: planetDensity ? planetDensity / EARTH.density : null,
+      ratio: planetDensity ? planetDensity / EARTH_REFERENCE.density : null,
     },
     {
       key: 'gravity',
@@ -122,9 +77,9 @@ export function PlanetEarthComparison({ planet }: PlanetEarthComparisonProps) {
     {
       key: 'temperature',
       label: t('pages.planet.comparison.temperature'),
-      earthValue: `${EARTH.temperature} K`,
+      earthValue: `${EARTH_REFERENCE.temperature} K`,
       planetValue: planetTemp ? `${planetTemp.toFixed(0)} K` : '—',
-      ratio: planetTemp ? planetTemp / EARTH.temperature : null,
+      ratio: planetTemp ? planetTemp / EARTH_REFERENCE.temperature : null,
     },
   ];
 
@@ -152,7 +107,7 @@ export function PlanetEarthComparison({ planet }: PlanetEarthComparisonProps) {
             style={{
               width: earthDisplaySize,
               height: earthDisplaySize,
-              background: `radial-gradient(circle at 30% 30%, #87ceeb, #4a90d9, #1e4d7b)`,
+              background: EARTH_GRADIENT,
             }}
           >
             <div className="sphere-highlight" />
@@ -173,7 +128,7 @@ export function PlanetEarthComparison({ planet }: PlanetEarthComparisonProps) {
             style={{
               width: planetDisplaySize,
               height: planetDisplaySize,
-              background: `radial-gradient(circle at 30% 30%, #fff, ${planetColor}, ${planetColor}dd)`,
+              background: createSphereGradient(planetColor),
             }}
           >
             <div className="sphere-highlight" />

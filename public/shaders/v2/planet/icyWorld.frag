@@ -52,10 +52,11 @@ uniform float uColorMetallicityFactor;
 // --- Ice Surface ---
 const float ICE_SCALE = 4.0;                         // Scale of ice surface
 const int ICE_OCTAVES = 4;                           // Number of octaves for ice surface
-const vec3 ICE_COLOR_WHITE = vec3(0.92, 0.94, 0.96); // White ice color
-const vec3 ICE_COLOR_BLUE = vec3(0.75, 0.85, 0.95);  // Blue ice color
-const vec3 ICE_COLOR_GREY = vec3(0.65, 0.68, 0.72);  // Grey ice color
-const vec3 ICE_COLOR_BROWN = vec3(0.55, 0.48, 0.42); // Brown ice color (dirty ice/organics)
+const vec3 ICE_COLOR_WHITE = vec3(0.88, 0.93, 0.98); // White-blue ice (not grey!)
+const vec3 ICE_COLOR_BLUE = vec3(0.6, 0.78, 0.95);   // Strong blue ice
+const vec3 ICE_COLOR_DEEP = vec3(0.35, 0.55, 0.85);  // Deep glacier blue
+const vec3 ICE_COLOR_GREY = vec3(0.7, 0.75, 0.82);   // Blue-grey (not pure grey!)
+const vec3 ICE_COLOR_BROWN = vec3(0.5, 0.45, 0.4);   // Brown ice color (dirty ice/organics)
 
 // --- Fractures (Lineae) ---
 const float FRACTURE_SCALE = 8.0;                    // Scale of fractures
@@ -152,34 +153,108 @@ vec3 iceZoomDetail(vec3 p, vec3 iceColor, float zoomLevel, float seed) {
 }
 
 // =============================================================================
-// FRACTURE FUNCTION
+// HASH FUNCTION (for sparkle effect)
+// =============================================================================
+
+vec3 hash33(vec3 p) {
+    p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+    p += dot(p, p.yxz + 33.33);
+    return fract((p.xxy + p.yxx) * p.zyx);
+}
+
+// =============================================================================
+// STYLIZED ICE TEXTURE FUNCTIONS
 // =============================================================================
 
 /**
- * Generate Europa-like fracture pattern
+ * Dramatic branching cracks - like veins or lightning across the surface
+ * Creates that stylized Europa look with organic flowing fractures
  */
-float fracturePattern(vec3 pos, float seed) {
-    vec3 fractureCoord = pos * FRACTURE_SCALE;
-    fractureCoord = seedOffset3D(fractureCoord, seed);
+float branchingCracks(vec3 pos, float seed) {
+    float cracks = 0.0;
     
-    // Voronoi-like fracture edges
-    float fractures = 0.0;
+    // === MAJOR VEINS - thick dramatic cracks ===
+    // Use domain warping for organic flow
+    vec3 warp1 = vec3(
+        snoise3D(pos * 2.0 + seed),
+        snoise3D(pos * 2.0 + seed + 100.0),
+        snoise3D(pos * 2.0 + seed + 200.0)
+    ) * 0.3;
     
-    // Main fractures
-    float f1 = abs(snoise3D(fractureCoord));
-    f1 = 1.0 - smoothstep(0.0, FRACTURE_THRESHOLD, f1);
+    float vein1 = abs(snoise3D((pos + warp1) * 3.0 + seed));
+    vein1 = 1.0 - smoothstep(0.0, 0.08, vein1);
     
-    // Secondary fractures (smaller, more numerous)
-    float f2 = abs(snoise3D(fractureCoord * 2.3 + vec3(seed * 10.0)));
-    f2 = 1.0 - smoothstep(0.0, FRACTURE_THRESHOLD * 0.7, f2);
+    // Second major vein system at different angle
+    vec3 warp2 = vec3(
+        snoise3D(pos * 1.5 + seed + 50.0),
+        snoise3D(pos * 1.5 + seed + 150.0),
+        snoise3D(pos * 1.5 + seed + 250.0)
+    ) * 0.4;
     
-    // Cross-cutting fractures
-    float f3 = abs(snoise3D(fractureCoord.zxy * 1.7));
-    f3 = 1.0 - smoothstep(0.0, FRACTURE_THRESHOLD * 0.8, f3);
+    float vein2 = abs(snoise3D((pos.zxy + warp2) * 2.5 + seed * 2.0));
+    vein2 = 1.0 - smoothstep(0.0, 0.07, vein2);
     
-    fractures = max(f1, max(f2 * 0.6, f3 * 0.4));
+    // === MEDIUM BRANCHES - spreading from major veins ===
+    vec3 warp3 = vec3(
+        snoise3D(pos * 4.0 + seed + 300.0),
+        snoise3D(pos * 4.0 + seed + 400.0),
+        snoise3D(pos * 4.0 + seed + 500.0)
+    ) * 0.2;
     
-    return fractures;
+    float branch1 = abs(snoise3D((pos + warp3) * 6.0 + seed));
+    branch1 = 1.0 - smoothstep(0.0, 0.05, branch1);
+    
+    float branch2 = abs(snoise3D((pos.yzx + warp3) * 7.0 + seed * 1.5));
+    branch2 = 1.0 - smoothstep(0.0, 0.04, branch2);
+    
+    // === FINE CAPILLARIES - thin spreading cracks ===
+    float fine1 = abs(snoise3D(pos * 12.0 + seed * 3.0));
+    fine1 = 1.0 - smoothstep(0.0, 0.03, fine1);
+    
+    float fine2 = abs(snoise3D(pos * 18.0 + seed * 4.0));
+    fine2 = 1.0 - smoothstep(0.0, 0.025, fine2);
+    
+    // Combine with hierarchy - major veins most prominent
+    cracks = vein1 * 0.9 + vein2 * 0.7;
+    cracks = max(cracks, branch1 * 0.5 + branch2 * 0.4);
+    cracks = max(cracks, fine1 * 0.25 + fine2 * 0.15);
+    
+    return clamp(cracks, 0.0, 1.0);
+}
+
+/**
+ * Ice surface variation - lighter and darker patches
+ */
+float iceVariation(vec3 pos, float seed) {
+    // Large scale variation
+    float large = fbm3D(pos * 2.0 + vec3(seed), 3) * 0.5 + 0.5;
+    
+    // Medium detail
+    float medium = snoise3D(pos * 5.0 + seed * 2.0) * 0.5 + 0.5;
+    
+    return large * 0.7 + medium * 0.3;
+}
+
+/**
+ * Bright frost patches
+ */
+float frostPatches(vec3 pos, float seed) {
+    float frost = fbm3D(pos * 3.5 + vec3(seed * 10.0), 3) * 0.5 + 0.5;
+    frost = smoothstep(0.5, 0.75, frost);
+    return frost;
+}
+
+/**
+ * Ice sparkle effect
+ */
+float iceSparkle(vec3 pos, float time, float seed) {
+    vec3 cell = floor(pos * 150.0);
+    float h = hash33(cell + vec3(seed)).x;
+    if (h > 0.985) {
+        float twinkle = sin(time * 6.0 + h * 60.0) * 0.5 + 0.5;
+        return twinkle * 0.6;
+    }
+    return 0.0;
 }
 
 // =============================================================================
@@ -216,12 +291,11 @@ void main() {
     // Smooth out terrain for ice plains
     terrain = mix(terrain, 0.5, PLAIN_SMOOTHNESS * (1.0 - europaFactor * 0.5));
     
-    // === FRACTURE PATTERN ===
-    float fractures = 0.0;
-    if (uDetailLevel > 0.5) {
-        fractures = fracturePattern(p, uSeed);
-        fractures *= europaFactor;  // More fractures on Europa-like moons
-    }
+    // === STYLIZED BRANCHING CRACKS ===
+    // Dramatic veins spreading across the surface like the reference image
+    float fractures = branchingCracks(p, uSeed);
+    // Modulate by Europa factor but always have some cracks
+    fractures *= 0.4 + europaFactor * 0.6;
     
     // === CHAOS TERRAIN ===
     float chaos = 0.0;
@@ -262,57 +336,65 @@ void main() {
     }
     
     // === COLOR CALCULATION ===
-    // Generate physical base color for data-driven variety
-    vec3 physColor = physicalPlanetColor(
-        uColorTempFactor,
-        uColorCompositionFactor,
-        uColorIrradiationFactor,
-        uColorMetallicityFactor,
-        uSeed
-    );
+    // HOW FROZEN: colder = more intense blue ice
+    float frozen = smoothstep(300.0, 50.0, uTemperature);  // 1.0 at 50K, 0.0 at 300K
+    float extremeFrozen = smoothstep(100.0, 20.0, uTemperature);  // Extra frozen below 100K
+    
+    // For extremely cold worlds, FORCE blue ice colors (ignore physical color)
+    vec3 iceBlue = ICE_COLOR_BLUE;
+    vec3 iceWhite = ICE_COLOR_WHITE;
+    vec3 iceDeep = ICE_COLOR_DEEP;
+    
+    // Colder = more saturated blue
+    iceBlue = mix(iceBlue, vec3(0.5, 0.75, 1.0), extremeFrozen * 0.4);
+    iceWhite = mix(iceWhite, vec3(0.85, 0.92, 1.0), frozen * 0.3);
+    iceDeep = mix(iceDeep, vec3(0.25, 0.5, 0.9), extremeFrozen * 0.3);
 
-    // Blend physical color with ice palette (ice dominates but physical adds variety)
-    vec3 iceBlue = mix(ICE_COLOR_BLUE, physColor, 0.2);
-    vec3 iceWhite = mix(ICE_COLOR_WHITE, physColor * 1.1, 0.15);
+    // Base ice color varies with terrain - blue to white gradient
+    vec3 iceColor = mix(iceDeep, iceBlue, terrain * 0.7);
+    iceColor = mix(iceColor, iceWhite, smoothstep(0.6, 0.9, terrain));
 
-    // Base ice color varies with terrain
-    vec3 iceColor = mix(iceBlue, iceWhite, terrain);
-
-    // Add grey/brown variations
-    float dirtiness = vnoise3D(p * 8.0 + vec3(phaseOffset)) * 0.5 + 0.5;
-    dirtiness *= seedHash(uSeed + 0.7) * 0.5;  // Seed determines overall dirtiness
-    vec3 greyTinted = mix(ICE_COLOR_GREY, physColor * 0.8, 0.2);
-    iceColor = mix(iceColor, greyTinted, dirtiness * 0.3);
-
-    // Density affects color - higher density = more rock/mineral content
-    vec3 brownTinted = mix(ICE_COLOR_BROWN, physColor * 0.7, 0.25);
-    iceColor = mix(iceColor, brownTinted, uDensity * 0.15);
-
-    // Apply fractures
-    if (fractures > 0.0) {
-        // Fractures are darker with hint of warmth - tinted by physical color
-        vec3 fractureBase = mix(FRACTURE_COLOR, physColor * 0.5, 0.2);
-        vec3 fractureCol = mix(fractureBase, SUBSURFACE_COLOR, FRACTURE_GLOW);
-        iceColor = mix(iceColor, fractureCol, fractures * FRACTURE_DEPTH);
+    // Add some variation but keep it BLUE (not grey!)
+    float variation = vnoise3D(p * 8.0 + vec3(phaseOffset)) * 0.5 + 0.5;
+    vec3 variationColor = mix(iceDeep, ICE_COLOR_GREY, 0.3);  // Blue-tinted grey
+    iceColor = mix(iceColor, variationColor, variation * 0.15);
+    
+    // Very slight brown only for high density (rocky material mixed in)
+    if (uDensity > 0.6) {
+        float brownAmount = (uDensity - 0.6) * 0.15;
+        iceColor = mix(iceColor, ICE_COLOR_BROWN, brownAmount * 0.3);
     }
 
-    // Apply chaos terrain
-    iceColor *= 1.0 - chaos * 0.3;
-    iceColor = mix(iceColor, greyTinted, chaos * 0.5);
+    // === STYLIZED CRACKS - dark blue veins ===
+    // The cracks are the DARK areas in the reference - deep blue/navy
+    vec3 crackColor = mix(iceDeep * 0.4, vec3(0.1, 0.2, 0.4), 0.5);  // Dark navy blue
+    iceColor = mix(iceColor, crackColor, fractures * 0.7);
+    
+    // === FROST PATCHES - bright white areas ===
+    float frost = frostPatches(p, uSeed);
+    vec3 frostColor = mix(iceWhite, vec3(0.95, 0.97, 1.0), frozen * 0.5);
+    iceColor = mix(iceColor, frostColor, frost * 0.4);
+
+    // Apply chaos terrain - slightly darker
+    iceColor *= 1.0 - chaos * 0.2;
 
     // Apply craters
     iceColor *= mix(1.0, CRATER_FLOOR_DARKNESS, craterMask);
     iceColor *= mix(1.0, CRATER_RIM_BRIGHTNESS, craterRim);
 
-    // Subsurface hints (blue-ish undertones with physical tint)
+    // Subsurface hints (blue undertones - hint of ocean beneath)
     float subsurface = vnoise3D(p * 3.0 + vec3(phaseOffset * 2.0)) * 0.5 + 0.5;
-    vec3 subsurfaceTinted = mix(SUBSURFACE_COLOR, physColor * 0.7, 0.15);
-    iceColor = mix(iceColor, subsurfaceTinted, subsurface * SUBSURFACE_HINT * (1.0 - fractures));
+    iceColor = mix(iceColor, SUBSURFACE_COLOR, subsurface * SUBSURFACE_HINT * (1.0 - fractures));
 
-    // Apply hue shift for seed-based variety
+    // Apply subtle hue shift for seed-based variety (but keep it blue!)
     vec3 iceHSV = rgb2hsv(iceColor);
-    iceHSV.x = fract(iceHSV.x + hueShift);
+    iceHSV.x = fract(iceHSV.x + hueShift * 0.5);  // Reduced hue shift
     iceColor = hsv2rgb(iceHSV);
+    
+    // === ICE SPARKLE ===
+    float sparkle = iceSparkle(spherePos, wrappedTime, uSeed);
+    sparkle *= 1.0 + extremeFrozen;  // More sparkle on colder worlds
+    iceColor += vec3(0.9, 0.95, 1.0) * sparkle;
 
     // === ZOOM-BASED DETAIL ===
     // Add fine ice cracks, crystals and texture when zoomed in
@@ -342,8 +424,13 @@ void main() {
     }
     
     // === STAR TINT ===
+    // Reduce star tint influence so frozen worlds stay blue
     vec3 starTint = starLightTint(uStarTemp);
+    starTint = mix(vec3(1.0), starTint, 0.4);  // Only 40% star influence
     litColor *= starTint;
+    
+    // Boost blue for frozen worlds
+    litColor = mix(litColor, litColor * vec3(0.9, 0.95, 1.1), frozen * 0.3);
     
     gl_FragColor = vec4(litColor, 1.0);
 }

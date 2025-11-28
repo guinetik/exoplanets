@@ -17,7 +17,11 @@ type SortOption =
   | 'discoveryYear'
   | 'radius'
   | 'mass'
-  | 'habitability';
+  | 'habitability'
+  | 'temperatureHot'
+  | 'temperatureCold';
+
+type DiscoveryMethod = 'all' | 'transit' | 'rv' | 'both';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -53,8 +57,14 @@ export default function Planets() {
   const [circumbinaryOnly, setCircumbinaryOnly] = useState(
     searchParams.get('circumbinary') === 'true'
   );
-  const [hasRvDataOnly, setHasRvDataOnly] = useState(
-    searchParams.get('rv') === 'true'
+  const [discoveryMethod, setDiscoveryMethod] = useState<DiscoveryMethod>(
+    (searchParams.get('method') as DiscoveryMethod) || 'all'
+  );
+  const [ultraHotOnly, setUltraHotOnly] = useState(
+    searchParams.get('ultrahot') === 'true'
+  );
+  const [frozenOnly, setFrozenOnly] = useState(
+    searchParams.get('frozen') === 'true'
   );
   const [currentPage, setCurrentPage] = useState(
     parseInt(searchParams.get('page') || '1', 10)
@@ -121,9 +131,33 @@ export default function Planets() {
       result = result.filter((planet) => planet.is_circumbinary);
     }
 
-    // Apply RV data filter
-    if (hasRvDataOnly) {
-      result = result.filter((planet) => planet.has_rv_data);
+    // Apply discovery method filter
+    if (discoveryMethod !== 'all') {
+      result = result.filter((planet) => {
+        const hasRv = planet.has_rv_data;
+        const hasTransit = planet.is_transiting;
+
+        switch (discoveryMethod) {
+          case 'rv':
+            return hasRv && !hasTransit;
+          case 'transit':
+            return hasTransit && !hasRv;
+          case 'both':
+            return hasRv && hasTransit;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply ultra hot filter
+    if (ultraHotOnly) {
+      result = result.filter((planet) => planet.is_ultra_hot);
+    }
+
+    // Apply frozen world filter
+    if (frozenOnly) {
+      result = result.filter((planet) => planet.is_frozen_world);
     }
 
     // Apply search filter
@@ -151,6 +185,10 @@ export default function Planets() {
           const aScore = a.habitability_score ?? 0;
           const bScore = b.habitability_score ?? 0;
           return bScore - aScore;
+        case 'temperatureHot':
+          return (b.pl_eqt ?? 0) - (a.pl_eqt ?? 0);
+        case 'temperatureCold':
+          return (a.pl_eqt ?? Infinity) - (b.pl_eqt ?? Infinity);
         case 'name':
         default:
           return a.pl_name.localeCompare(b.pl_name);
@@ -166,7 +204,9 @@ export default function Planets() {
     earthLikeOnly,
     eccentricOnly,
     circumbinaryOnly,
-    hasRvDataOnly,
+    discoveryMethod,
+    ultraHotOnly,
+    frozenOnly,
     searchQuery,
     sortBy,
   ]);
@@ -191,7 +231,9 @@ export default function Planets() {
     if (earthLikeOnly) params.set('earthlike', 'true');
     if (eccentricOnly) params.set('eccentric', 'true');
     if (circumbinaryOnly) params.set('circumbinary', 'true');
-    if (hasRvDataOnly) params.set('rv', 'true');
+    if (discoveryMethod !== 'all') params.set('method', discoveryMethod);
+    if (ultraHotOnly) params.set('ultrahot', 'true');
+    if (frozenOnly) params.set('frozen', 'true');
     if (validPage !== 1) params.set('page', String(validPage));
 
     setSearchParams(params, { replace: true });
@@ -204,7 +246,9 @@ export default function Planets() {
     earthLikeOnly,
     eccentricOnly,
     circumbinaryOnly,
-    hasRvDataOnly,
+    discoveryMethod,
+    ultraHotOnly,
+    frozenOnly,
     validPage,
     setSearchParams,
   ]);
@@ -259,8 +303,18 @@ export default function Planets() {
     handleFilterChange();
   };
 
-  const handleHasRvDataToggle = () => {
-    setHasRvDataOnly((prev) => !prev);
+  const handleDiscoveryMethodChange = (method: DiscoveryMethod) => {
+    setDiscoveryMethod(method);
+    handleFilterChange();
+  };
+
+  const handleUltraHotToggle = () => {
+    setUltraHotOnly((prev) => !prev);
+    handleFilterChange();
+  };
+
+  const handleFrozenToggle = () => {
+    setFrozenOnly((prev) => !prev);
     handleFilterChange();
   };
 
@@ -272,7 +326,9 @@ export default function Planets() {
     setEarthLikeOnly(false);
     setEccentricOnly(false);
     setCircumbinaryOnly(false);
-    setHasRvDataOnly(false);
+    setDiscoveryMethod('all');
+    setUltraHotOnly(false);
+    setFrozenOnly(false);
     setSortBy('name');
     setCurrentPage(1);
   };
@@ -309,7 +365,9 @@ export default function Planets() {
     earthLikeOnly ||
     eccentricOnly ||
     circumbinaryOnly ||
-    hasRvDataOnly;
+    discoveryMethod !== 'all' ||
+    ultraHotOnly ||
+    frozenOnly;
 
   return (
     <div className="page-container">
@@ -362,6 +420,21 @@ export default function Planets() {
             </div>
           </div>
 
+          {/* Discovery Method Filter */}
+          <div className="filter-group">
+            <label className="filter-label">{t('pages.planets.filters.discoveryMethod')}</label>
+            <select
+              value={discoveryMethod}
+              onChange={(e) => handleDiscoveryMethodChange(e.target.value as DiscoveryMethod)}
+              className="sort-select"
+            >
+              <option value="all">{t('pages.planets.filters.discoveryMethods.all')}</option>
+              <option value="transit">{t('pages.planets.filters.discoveryMethods.transit')}</option>
+              <option value="rv">{t('pages.planets.filters.discoveryMethods.rv')}</option>
+              <option value="both">{t('pages.planets.filters.discoveryMethods.both')}</option>
+            </select>
+          </div>
+
           {/* Sort Dropdown */}
           <div className="filter-group">
             <label className="filter-label">{t('pages.planets.filters.sortBy')}</label>
@@ -376,6 +449,8 @@ export default function Planets() {
               <option value="radius">{t('pages.planets.sort.radius')}</option>
               <option value="discoveryYear">{t('pages.planets.sort.discoveryYear')}</option>
               <option value="habitability">{t('pages.planets.sort.habitability')}</option>
+              <option value="temperatureHot">Temperature (Hottest)</option>
+              <option value="temperatureCold">Temperature (Coldest)</option>
             </select>
           </div>
         </div>
@@ -421,11 +496,20 @@ export default function Planets() {
           <label className="toggle-filter">
             <input
               type="checkbox"
-              checked={hasRvDataOnly}
-              onChange={handleHasRvDataToggle}
+              checked={ultraHotOnly}
+              onChange={handleUltraHotToggle}
               className="toggle-checkbox"
             />
-            <span>{t('pages.planets.filters.hasRvDataOnly')}</span>
+            <span>Ultra Hot Worlds</span>
+          </label>
+          <label className="toggle-filter">
+            <input
+              type="checkbox"
+              checked={frozenOnly}
+              onChange={handleFrozenToggle}
+              className="toggle-checkbox"
+            />
+            <span>Frozen Worlds</span>
           </label>
         </div>
 

@@ -19,6 +19,15 @@ import {
   formatAltitude,
   LOCATIONS,
 } from '../../utils/astronomy';
+import {
+  INTRO_ANIMATION,
+  INTRO_EARTH,
+  CAMERA_CONTROLLER,
+  BACKGROUND_STARS_SETTINGS,
+  STARFIELD_SCENE,
+  LOCATION_ANIMATION,
+  EASING,
+} from '../../utils/starfieldVisuals';
 
 interface StarfieldProps {
   stars: Star[];
@@ -31,8 +40,8 @@ function easeInOutCubic(t: number): number {
 }
 
 function easeInOutBack(t: number): number {
-  const c1 = 1.70158;
-  const c2 = c1 * 1.525;
+  const c1 = EASING.INOUT_BACK_C1;
+  const c2 = c1 * EASING.INOUT_BACK_C2_MULTIPLIER;
   return t < 0.5
     ? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2
     : (Math.pow(2 * t - 2, 2) * ((c2 + 1) * (t * 2 - 2) + c2) + 2) / 2;
@@ -162,7 +171,7 @@ function IntroEarth({ progress }: { progress: number }) {
 
   useFrame((state, delta) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.15;
+      groupRef.current.rotation.y += delta * INTRO_EARTH.ROTATION_SPEED;
     }
     uniforms.uTime.value = state.clock.elapsedTime;
   });
@@ -170,17 +179,15 @@ function IntroEarth({ progress }: { progress: number }) {
   // Don't render when fully transitioned
   if (progress >= 1) return null;
 
-  const baseRadius = 580;
-
   // Animate: scale down and move away as progress goes 0 -> 1
-  const scale = 0.35 * (1 - progress);
-  const zPos = -600 - progress * 500; // Move further away
+  const scale = INTRO_EARTH.SCALE_MULTIPLIER * (1 - progress);
+  const zPos = INTRO_EARTH.INITIAL_Z - progress * INTRO_EARTH.Z_MOVEMENT_DISTANCE;
 
   return (
     <group ref={groupRef} position={[0, 0, zPos]} scale={[scale, scale, scale]}>
       {/* Main Earth body with procedural shader */}
       <mesh>
-        <sphereGeometry args={[baseRadius, 64, 64]} />
+        <sphereGeometry args={[INTRO_EARTH.BASE_RADIUS, 64, 64]} />
         <shaderMaterial
           vertexShader={introPlanetVertexShader}
           fragmentShader={introPlanetFragmentShader}
@@ -190,23 +197,23 @@ function IntroEarth({ progress }: { progress: number }) {
       </mesh>
 
       {/* Atmosphere glow */}
-      <mesh scale={[1.05, 1.05, 1.05]}>
-        <sphereGeometry args={[baseRadius, 32, 32]} />
+      <mesh scale={[INTRO_EARTH.ATMOSPHERE_SCALE, INTRO_EARTH.ATMOSPHERE_SCALE, INTRO_EARTH.ATMOSPHERE_SCALE]}>
+        <sphereGeometry args={[INTRO_EARTH.BASE_RADIUS, 32, 32]} />
         <meshBasicMaterial
-          color={0x4488ff}
+          color={INTRO_EARTH.ATMOSPHERE_COLOR}
           transparent
-          opacity={0.15}
+          opacity={INTRO_EARTH.ATMOSPHERE_OPACITY}
           side={THREE.BackSide}
         />
       </mesh>
 
       {/* Outer glow */}
-      <mesh scale={[1.12, 1.12, 1.12]}>
-        <sphereGeometry args={[baseRadius, 32, 32]} />
+      <mesh scale={[INTRO_EARTH.OUTER_GLOW_SCALE, INTRO_EARTH.OUTER_GLOW_SCALE, INTRO_EARTH.OUTER_GLOW_SCALE]}>
+        <sphereGeometry args={[INTRO_EARTH.BASE_RADIUS, 32, 32]} />
         <meshBasicMaterial
-          color={0x66aaff}
+          color={INTRO_EARTH.OUTER_GLOW_COLOR}
           transparent
-          opacity={0.08}
+          opacity={INTRO_EARTH.OUTER_GLOW_OPACITY}
           side={THREE.BackSide}
         />
       </mesh>
@@ -229,7 +236,7 @@ function CameraController({
   const { camera, gl } = useThree();
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
-  const rotation = useRef({ azimuth: 180, altitude: 10 });
+  const rotation = useRef<{ azimuth: number; altitude: number }>({ azimuth: CAMERA_CONTROLLER.INITIAL_AZIMUTH, altitude: CAMERA_CONTROLLER.INITIAL_ALTITUDE });
 
   // Intro animation
   useFrame(() => {
@@ -238,7 +245,7 @@ function CameraController({
     if (phase === 'earth-spin' || phase === 'camera-swoop') {
       // Camera stays fixed at origin looking forward during intro
       camera.position.set(0, 0, 0);
-      camera.lookAt(0, 0, -100);
+      camera.lookAt(0, 0, -CAMERA_CONTROLLER.LOOKAT_DISTANCE);
       camera.updateProjectionMatrix();
     } else if (phase === 'stars-fade' || phase === 'complete') {
       // Final position maintained by user controls or default
@@ -247,9 +254,9 @@ function CameraController({
         const azRad = (rotation.current.azimuth * Math.PI) / 180;
         const altRad = (rotation.current.altitude * Math.PI) / 180;
         camera.lookAt(
-          -Math.sin(azRad) * Math.cos(altRad) * 100,
-          Math.sin(altRad) * 100,
-          -Math.cos(azRad) * Math.cos(altRad) * 100
+          -Math.sin(azRad) * Math.cos(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE,
+          Math.sin(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE,
+          -Math.cos(azRad) * Math.cos(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE
         );
         camera.updateProjectionMatrix();
       }
@@ -280,12 +287,12 @@ function CameraController({
     const handleMouseDown = (e: MouseEvent) => {
       isDragging.current = true;
       previousMouse.current = { x: e.clientX, y: e.clientY };
-      canvas.style.cursor = 'grabbing';
+      canvas.style.cursor = CAMERA_CONTROLLER.DRAGGING_CURSOR;
     };
 
     const handleMouseUp = () => {
       isDragging.current = false;
-      canvas.style.cursor = 'grab';
+      canvas.style.cursor = CAMERA_CONTROLLER.DEFAULT_CURSOR;
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -294,12 +301,12 @@ function CameraController({
       const deltaX = e.clientX - previousMouse.current.x;
       const deltaY = e.clientY - previousMouse.current.y;
 
-      rotation.current.azimuth -= deltaX * 0.3;
-      rotation.current.altitude += deltaY * 0.3;
+      rotation.current.azimuth -= deltaX * CAMERA_CONTROLLER.DRAG_SENSITIVITY;
+      rotation.current.altitude += deltaY * CAMERA_CONTROLLER.DRAG_SENSITIVITY;
       rotation.current.azimuth = ((rotation.current.azimuth % 360) + 360) % 360;
       rotation.current.altitude = Math.max(
-        -10,
-        Math.min(90, rotation.current.altitude)
+        CAMERA_CONTROLLER.MIN_ALTITUDE,
+        Math.min(CAMERA_CONTROLLER.MAX_ALTITUDE, rotation.current.altitude)
       );
 
       previousMouse.current = { x: e.clientX, y: e.clientY };
@@ -308,7 +315,7 @@ function CameraController({
 
     const handleMouseLeave = () => {
       isDragging.current = false;
-      canvas.style.cursor = 'grab';
+      canvas.style.cursor = CAMERA_CONTROLLER.DEFAULT_CURSOR;
     };
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -330,19 +337,19 @@ function CameraController({
       const deltaX = touch.clientX - previousMouse.current.x;
       const deltaY = touch.clientY - previousMouse.current.y;
 
-      rotation.current.azimuth -= deltaX * 0.3;
-      rotation.current.altitude += deltaY * 0.3;
+      rotation.current.azimuth -= deltaX * CAMERA_CONTROLLER.DRAG_SENSITIVITY;
+      rotation.current.altitude += deltaY * CAMERA_CONTROLLER.DRAG_SENSITIVITY;
       rotation.current.azimuth = ((rotation.current.azimuth % 360) + 360) % 360;
       rotation.current.altitude = Math.max(
-        -10,
-        Math.min(90, rotation.current.altitude)
+        CAMERA_CONTROLLER.MIN_ALTITUDE,
+        Math.min(CAMERA_CONTROLLER.MAX_ALTITUDE, rotation.current.altitude)
       );
 
       previousMouse.current = { x: touch.clientX, y: touch.clientY };
       updateCameraPosition();
     };
 
-    canvas.style.cursor = 'grab';
+    canvas.style.cursor = CAMERA_CONTROLLER.DEFAULT_CURSOR;
     canvas.addEventListener('mousedown', handleMouseDown);
     canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('mousemove', handleMouseMove);
@@ -372,14 +379,14 @@ function CameraController({
  * Background stars (random small stars for ambiance)
  */
 function BackgroundStars({ opacity }: { opacity: number }) {
-  const count = 3000;
+  const count = BACKGROUND_STARS_SETTINGS.COUNT;
 
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const r = 800;
+      const r = BACKGROUND_STARS_SETTINGS.SPHERE_RADIUS;
 
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
@@ -399,10 +406,10 @@ function BackgroundStars({ opacity }: { opacity: number }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.8}
-        color={0x888888}
+        size={BACKGROUND_STARS_SETTINGS.POINT_SIZE}
+        color={BACKGROUND_STARS_SETTINGS.COLOR}
         transparent
-        opacity={opacity * 0.5}
+        opacity={opacity * BACKGROUND_STARS_SETTINGS.OPACITY_MULTIPLIER}
         sizeAttenuation={false}
       />
     </points>
@@ -419,10 +426,6 @@ function useIntroSequence() {
   });
 
   const phaseStartTime = useRef(Date.now());
-
-  const EARTH_SPIN_DURATION = 5000; // Longer for letter animation
-  const CAMERA_SWOOP_DURATION = 2500;
-  const STARS_FADE_DURATION = 2000;
 
   // Skip intro function
   const skipIntro = useCallback(() => {
@@ -441,7 +444,7 @@ function useIntroSequence() {
         if (prev.phase === 'complete') return prev;
 
         if (prev.phase === 'earth-spin') {
-          const progress = Math.min(elapsed / EARTH_SPIN_DURATION, 1);
+          const progress = Math.min(elapsed / INTRO_ANIMATION.EARTH_SPIN_DURATION, 1);
           if (progress >= 1) {
             phaseStartTime.current = now;
             return { phase: 'camera-swoop', progress: 0 };
@@ -450,7 +453,7 @@ function useIntroSequence() {
         }
 
         if (prev.phase === 'camera-swoop') {
-          const progress = Math.min(elapsed / CAMERA_SWOOP_DURATION, 1);
+          const progress = Math.min(elapsed / INTRO_ANIMATION.CAMERA_SWOOP_DURATION, 1);
           if (progress >= 1) {
             phaseStartTime.current = now;
             return { phase: 'stars-fade', progress: 0 };
@@ -459,7 +462,7 @@ function useIntroSequence() {
         }
 
         if (prev.phase === 'stars-fade') {
-          const progress = Math.min(elapsed / STARS_FADE_DURATION, 1);
+          const progress = Math.min(elapsed / INTRO_ANIMATION.STARS_FADE_DURATION, 1);
           if (progress >= 1) {
             return { phase: 'complete', progress: 1 };
           }
@@ -516,8 +519,6 @@ function useAnimatedLocation(initialLocation: ObserverLocation) {
   const animationStart = useRef(Date.now());
   const startLocation = useRef(initialLocation);
 
-  const ANIMATION_DURATION = 2000; // 2 seconds
-
   useEffect(() => {
     if (!isAnimating) return;
 
@@ -525,7 +526,7 @@ function useAnimatedLocation(initialLocation: ObserverLocation) {
 
     const animate = () => {
       const elapsed = Date.now() - animationStart.current;
-      const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
+      const progress = Math.min(elapsed / LOCATION_ANIMATION.DURATION_MS, 1);
       const eased = easeInOutCubic(progress);
 
       // Interpolate lat/long
@@ -641,7 +642,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     ) {
       const timer = setTimeout(() => {
         setShowWelcomeCard(true);
-      }, 300);
+      }, INTRO_ANIMATION.WELCOME_CARD_DELAY);
       return () => clearTimeout(timer);
     }
   }, [state.phase, showWelcomeCard]);
@@ -655,7 +656,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     setTimeout(() => {
       setShowWelcomeCard(false);
       setIsWelcomeCardExiting(false);
-    }, 300);
+    }, INTRO_ANIMATION.WELCOME_CARD_DISMISS_DURATION);
   }, []);
 
   const handleBearingChange = useCallback(
@@ -689,15 +690,15 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     <div className="starfield-container">
       <Canvas
         camera={{
-          fov: 60,
-          near: 0.1,
-          far: 2000,
-          position: [0, 50, 400],
+          fov: STARFIELD_SCENE.CAMERA_FOV,
+          near: STARFIELD_SCENE.CAMERA_NEAR,
+          far: STARFIELD_SCENE.CAMERA_FAR,
+          position: [STARFIELD_SCENE.CAMERA_INITIAL_X, STARFIELD_SCENE.CAMERA_INITIAL_Y, STARFIELD_SCENE.CAMERA_INITIAL_Z],
         }}
         gl={{ antialias: true, alpha: false }}
-        style={{ background: '#000' }}
+        style={{ background: STARFIELD_SCENE.BACKGROUND_COLOR }}
       >
-        <color attach="background" args={['#000000']} />
+        <color attach="background" args={[STARFIELD_SCENE.BACKGROUND_COLOR_ALT]} />
 
         <CameraController
           introState={state}
@@ -706,7 +707,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         />
 
         {/* Ambient light */}
-        <ambientLight intensity={0.3} />
+        <ambientLight intensity={STARFIELD_SCENE.AMBIENT_LIGHT_INTENSITY} />
 
         {/* Intro Earth (scales down and moves away) */}
         <IntroEarth progress={introEarthExitProgress} />
@@ -833,7 +834,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
                       key={i}
                       className="intro-letter"
                       style={{
-                        animationDelay: `${i * 0.25}s`,
+                        animationDelay: `${i * INTRO_ANIMATION.LETTER_ANIMATION_DELAY}s`,
                       }}
                     >
                       {letter}
@@ -846,7 +847,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
                       key={i}
                       className="intro-letter"
                       style={{
-                        animationDelay: `${3 * 0.25 + i * 0.25}s`,
+                        animationDelay: `${INTRO_ANIMATION.PLANETS_LINE_START_OFFSET * INTRO_ANIMATION.LETTER_ANIMATION_DELAY + i * INTRO_ANIMATION.LETTER_ANIMATION_DELAY}s`,
                       }}
                     >
                       {letter}

@@ -8,52 +8,8 @@ import { useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import type { Exoplanet } from '../../types';
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-/** Habitable zone boundaries for Sun-like star (AU) */
-const HZ_INNER_AU = 0.95;
-const HZ_OUTER_AU = 1.67;
-
-/**
- * Calculates habitable zone boundaries scaled by stellar luminosity
- * @param luminosity - Star luminosity in log(L☉)
- * @returns Inner and outer HZ boundaries in AU
- */
-function calculateHabitableZone(luminosity: number | null): { inner: number; outer: number } {
-  const lum = luminosity ? Math.pow(10, luminosity) : 1;
-  const sqrtLum = Math.sqrt(Math.max(lum, 0.001));
-  return {
-    inner: HZ_INNER_AU * sqrtLum,
-    outer: HZ_OUTER_AU * sqrtLum,
-  };
-}
-
-/**
- * Gets color based on planet type
- */
-function getPlanetColor(planet: Exoplanet): string {
-  if (planet.is_habitable_zone) return '#00ff88';
-  if (planet.is_earth_like) return '#4a90d9';
-  switch (planet.planet_type) {
-    case 'Sub-Earth':
-      return '#a0a0a0';
-    case 'Earth-sized':
-      return '#4a90d9';
-    case 'Super-Earth':
-      return '#6bb86b';
-    case 'Sub-Neptune':
-      return '#7ec8e3';
-    case 'Neptune-like':
-      return '#4169e1';
-    case 'Gas Giant':
-      return '#d4a574';
-    default:
-      return '#00ccff';
-  }
-}
+import { calculateHabitableZone } from '../../utils/math/planet';
+import { getPlanetVisualizationColor } from '../../utils/planetComparison';
 
 interface OrbitalPositionChartProps {
   /** Current planet being viewed */
@@ -101,7 +57,7 @@ export function OrbitalPositionChart({
         eccentricity: p.pl_orbeccen || 0,
         habitable: p.is_habitable_zone || false,
         isCurrent: p.pl_name === planet.pl_name,
-        color: getPlanetColor(p),
+        color: getPlanetVisualizationColor(p),
         planetType: p.planet_type,
       }))
       .sort((a, b) => a.semiMajorAxis - b.semiMajorAxis);

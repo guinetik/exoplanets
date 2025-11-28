@@ -214,12 +214,18 @@
       "filters": {
         "planetType": "Planet Type:",
         "starClass": "Star Class:",
+        "discoveryMethod": "Discovery Method:",
         "sortBy": "Sort by:",
+        "discoveryMethods": {
+          "all": "All Methods",
+          "transit": "Transit Only",
+          "rv": "Radial Velocity Only",
+          "both": "Both (RV + Transit)"
+        },
         "habitableOnly": "Habitable Zone Only",
         "earthLikeOnly": "Earth-like Only",
         "eccentricOnly": "Eccentric Orbit",
         "circumbinaryOnly": "Circumbinary System",
-        "hasRvDataOnly": "Has RV Data",
         "clearFilters": "Clear Filters"
       },
       "sort": {
@@ -260,6 +266,7 @@
         "temperature": "Temperature Zone",
         "orbitalPosition": "Orbital Position",
         "radialVelocity": "Radial Velocity Analysis",
+        "transitDetection": "Transit Detection",
         "travelTime": "Travel Time"
       },
       "comparison": {
@@ -373,6 +380,65 @@
           "eccentricity": "Eccentricity",
           "stellarRotation": "Stellar Rotation",
           "stellarRotationNote": "Stellar rotation adds noise to RV measurements"
+        }
+      },
+      "transit": {
+        "title": "Transit Detection",
+        "intro": "The transit method is the most successful planet detection technique, responsible for discovering thousands of exoplanets including Earth-sized worlds. When a planet passes in front of its star from our viewpoint, it blocks a tiny fraction of the star's light. By measuring these periodic dips in brightness, astronomers can determine the planet's size, orbital period, and atmospheric composition.",
+        "curveTitle": "Transit Light Curve",
+        "xAxisLabel": "Orbital Phase",
+        "yAxisLabel": "Relative Flux",
+        "comparisonTitle": "Transit Depth Comparison",
+        "comparisonDescription": "Transit depth directly reveals the planet's radius relative to its star. Deeper transits mean larger planets. This chart compares all transiting planets in this system.",
+        "dataDisplay": {
+          "currentFlux": "Current Flux",
+          "transitDepth": "Transit Depth",
+          "planetRadius": "Planet Radius",
+          "phase": "Phase"
+        },
+        "visualizations": {
+          "orbitalGeometry": "Orbital Geometry",
+          "topView": "Top View (Orbital Plane)",
+          "sideView": "Side View (From Earth)",
+          "whatWeLearn": "What We Learn From Transits"
+        },
+        "noData": {
+          "title": "No Transit Data Available",
+          "message": "This planet was discovered using {{method}}, which doesn't provide transit measurements.",
+          "example": "For comparison, from a distant viewpoint:",
+          "jupiterExample": "Jupiter transiting the Sun: 0.01% depth",
+          "earthExample": "Earth transiting the Sun: 0.008% depth",
+          "detectionLimit": "Detection limit: ~0.001% with Kepler/TESS"
+        },
+        "explanation": {
+          "geometryTitle": "Why Does Geometry Matter?",
+          "geometryContent": "Transit detection requires precise orbital alignment. The planet's orbit must be nearly edge-on from Earth's perspective. Only about 0.5-1% of randomly oriented planetary systems will transit as seen from Earth.",
+          "depthTitle": "What Does Transit Depth Tell Us?",
+          "depthContent": "The transit depth directly reveals the planet's size. It's proportional to (planet radius / star radius)². A Jupiter-sized planet blocks ~1% of light, while Earth blocks only ~0.008%.",
+          "timingTitle": "Transit Timing Variations",
+          "timingContent": "By measuring transits repeatedly, astronomers can detect gravitational tugs from other planets. These tiny timing variations reveal additional planets that might not transit themselves."
+        },
+        "legend": {
+          "duringTransit": "DURING TRANSIT:",
+          "duringTransitItem1": "Planet crosses in front of star",
+          "duringTransitItem2": "Flux drops as light is blocked",
+          "duringTransitItem3": "Depth reveals planet size",
+          "outsideTransit": "OUTSIDE TRANSIT:",
+          "outsideTransitItem1": "Full starlight reaches us",
+          "outsideTransitItem2": "Flux returns to baseline (1.0)",
+          "whatWeLearn": "WHAT WE LEARN:",
+          "whatWeLearnItem1": "Planet radius from depth",
+          "whatWeLearnItem2": "Orbital period from timing",
+          "whatWeLearnItem3": "Atmosphere from spectra"
+        },
+        "technical": {
+          "depth": "Transit Depth",
+          "duration": "Transit Duration",
+          "period": "Orbital Period",
+          "radiusRatio": "Radius Ratio (Rp/R★)",
+          "semiMajorRatio": "a/R★ Ratio",
+          "impactParameter": "Impact Parameter",
+          "planetRadius": "Planet Radius"
         }
       },
       "siblings": {

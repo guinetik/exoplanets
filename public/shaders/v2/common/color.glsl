@@ -22,6 +22,7 @@ const vec4 RGB_TO_HSV_K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
 const float RGB_TO_HSV_EPSILON = 1.0e-10;           // Prevents division by zero
 
 // --- Hue Rotation ---
+const float PI = 3.14159265359;                     // Pi constant
 const float TAU = 6.28318530718;                    // 2 * PI - full hue rotation
 
 // --- Luminance Weights ---

@@ -9,9 +9,11 @@ import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderService } from '../../services/shaderService';
-
-/** Fade-in animation duration in seconds */
-const FADE_DURATION = 2.5;
+import {
+  NEBULA_ANIMATION,
+  NEBULA_GEOMETRY,
+  generateNebulaColors,
+} from '../../utils/nebulaVisuals';
 
 // Generate a deterministic seed from star name
 function generateSeed(name: string): number {
@@ -24,50 +26,6 @@ function generateSeed(name: string): number {
   return Math.abs(hash % 10000) / 10000;
 }
 
-// Generate nebula colors based on seed
-function generateNebulaColors(seed: number): { primary: THREE.Color; secondary: THREE.Color } {
-  // Different nebula color themes based on seed
-  const theme = Math.floor(seed * 6);
-
-  switch (theme) {
-    case 0:
-      // Blue-purple (emission nebula)
-      return {
-        primary: new THREE.Color().setHSL(0.7 + seed * 0.1, 0.6, 0.5),
-        secondary: new THREE.Color().setHSL(0.8 + seed * 0.05, 0.5, 0.4),
-      };
-    case 1:
-      // Red-orange (star-forming region)
-      return {
-        primary: new THREE.Color().setHSL(0.0 + seed * 0.05, 0.7, 0.5),
-        secondary: new THREE.Color().setHSL(0.05 + seed * 0.05, 0.6, 0.4),
-      };
-    case 2:
-      // Teal-cyan (reflection nebula)
-      return {
-        primary: new THREE.Color().setHSL(0.5 + seed * 0.05, 0.5, 0.5),
-        secondary: new THREE.Color().setHSL(0.55 + seed * 0.05, 0.4, 0.4),
-      };
-    case 3:
-      // Green-yellow (planetary nebula)
-      return {
-        primary: new THREE.Color().setHSL(0.25 + seed * 0.1, 0.5, 0.45),
-        secondary: new THREE.Color().setHSL(0.15 + seed * 0.1, 0.4, 0.4),
-      };
-    case 4:
-      // Pink-magenta (HII region)
-      return {
-        primary: new THREE.Color().setHSL(0.9 + seed * 0.05, 0.6, 0.55),
-        secondary: new THREE.Color().setHSL(0.85 + seed * 0.05, 0.5, 0.45),
-      };
-    default:
-      // Deep blue-violet (dark nebula with stars)
-      return {
-        primary: new THREE.Color().setHSL(0.65 + seed * 0.1, 0.4, 0.35),
-        secondary: new THREE.Color().setHSL(0.7 + seed * 0.1, 0.3, 0.3),
-      };
-  }
-}
 
 interface NebulaBackgroundProps {
   /** Star system name for seed generation */
@@ -120,8 +78,8 @@ export function NebulaBackground({
       if (!isFullyVisible) {
         const elapsed = state.clock.elapsedTime - fadeStartTime.current;
         // Ease-out cubic for smooth deceleration
-        const t = Math.min(elapsed / FADE_DURATION, 1);
-        const opacity = 1 - Math.pow(1 - t, 3);
+        const t = Math.min(elapsed / NEBULA_ANIMATION.FADE_DURATION, 1);
+        const opacity = 1 - Math.pow(1 - t, NEBULA_ANIMATION.FADE_EASING_POWER);
 
         materialRef.current.uniforms.uOpacity.value = opacity;
 
@@ -139,7 +97,7 @@ export function NebulaBackground({
 
   return (
     <mesh>
-      <sphereGeometry args={[radius, 64, 32]} />
+      <sphereGeometry args={[radius, NEBULA_GEOMETRY.WIDTH_SEGMENTS, NEBULA_GEOMETRY.HEIGHT_SEGMENTS]} />
       <shaderMaterial
         ref={materialRef}
         vertexShader={shaderService.get('v2NebulaVert')}

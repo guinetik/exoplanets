@@ -4340,3 +4340,204 @@
   @apply w-2 h-2 rounded-full bg-white;
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
+
+/* ========================================
+   TRANSIT SECTION STYLES
+   ======================================== */
+
+.transit-section {
+  @apply flex flex-col gap-6;
+}
+
+.transit-intro {
+  @apply text-base leading-relaxed text-white/80;
+}
+
+.transit-curve-container {
+  @apply flex flex-col gap-2;
+}
+
+.transit-curve-title {
+  @apply text-lg font-semibold text-white/90;
+}
+
+.transit-curve-chart {
+  @apply w-full overflow-visible;
+}
+
+.transit-data-display {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-black/30 rounded-lg;
+}
+
+.transit-data-item {
+  @apply flex flex-col items-center gap-1;
+}
+
+.transit-data-label {
+  @apply text-xs text-white/50 uppercase tracking-wide;
+}
+
+.transit-data-value {
+  @apply text-xl font-bold text-cyan-400 font-mono;
+}
+
+.transit-data-value.transit-data-current {
+  @apply text-2xl text-orange-400;
+}
+
+.transit-data-unit {
+  @apply text-sm text-white/40 ml-1;
+}
+
+/* Visualizations Grid */
+.transit-visualizations-grid {
+  @apply grid md:grid-cols-2 gap-4;
+}
+
+.transit-orbital-card,
+.transit-legend-card {
+  @apply bg-black/30 rounded-lg p-4;
+}
+
+.transit-viz-subtitle {
+  @apply text-sm font-semibold text-white/70 uppercase tracking-wide mb-3;
+}
+
+.transit-orbital-views {
+  @apply flex flex-col items-center gap-5;
+}
+
+.transit-orbital-diagram-container,
+.transit-side-view-container {
+  @apply w-full;
+}
+
+.transit-orbital-diagram,
+.transit-side-view {
+  @apply flex justify-center;
+}
+
+/* Comparison Chart */
+.transit-comparison-container {
+  @apply mt-6;
+}
+
+.transit-comparison-title {
+  @apply text-lg font-semibold text-white/90 mb-2;
+}
+
+.transit-comparison-description {
+  @apply text-sm text-white/70 mb-3;
+}
+
+.transit-comparison-chart {
+  @apply w-full overflow-visible;
+}
+
+.transit-comparison-legend {
+  @apply flex flex-wrap justify-center gap-6 mt-4 pt-4 border-t border-white/10;
+}
+
+.transit-comparison-legend-item {
+  @apply flex items-center gap-2 text-sm text-white/70;
+}
+
+.transit-legend-dot {
+  @apply w-3 h-3 rounded-full;
+}
+
+.transit-legend-dot.current {
+  @apply bg-green-400;
+}
+
+.transit-legend-dot.sibling {
+  @apply bg-cyan-400;
+}
+
+.transit-legend-dot.threshold {
+  @apply bg-red-500;
+}
+
+/* Educational Content */
+.transit-explanation-header {
+  @apply flex flex-col gap-2 mb-4;
+}
+
+.transit-explanation-section {
+  @apply border border-white/10 rounded-lg overflow-hidden;
+}
+
+.transit-explanation-trigger {
+  @apply w-full flex items-center justify-between p-3 bg-black/20 hover:bg-black/30 cursor-pointer transition-colors duration-200;
+}
+
+.transit-explanation-icon {
+  @apply text-xl text-cyan-400 transition-transform duration-200;
+}
+
+.transit-explanation-icon.expanded {
+  @apply rotate-90;
+}
+
+.transit-explanation-content {
+  @apply p-4 text-sm text-white/70 leading-relaxed bg-black/10;
+}
+
+/* Technical Details */
+.transit-technical-details {
+  @apply grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-black/20 rounded-lg mt-4;
+}
+
+.transit-detail-item {
+  @apply flex flex-col gap-1;
+}
+
+.transit-detail-label {
+  @apply text-xs text-white/50 uppercase tracking-wide;
+}
+
+.transit-detail-value {
+  @apply text-base font-semibold text-white/90 font-mono;
+}
+
+/* Legend Panel */
+.transit-legend-section {
+  @apply text-sm leading-relaxed;
+}
+
+.transit-legend-title {
+  @apply font-semibold text-cyan-400 mt-3 mb-1 first:mt-0;
+}
+
+.transit-legend-item {
+  @apply text-white/60 pl-2;
+}
+
+.transit-legend-item::before {
+  @apply content-['•'] text-cyan-400 mr-2;
+}
+
+/* No Data State */
+.transit-no-data-container {
+  @apply flex flex-col gap-4;
+}
+
+.transit-no-data-message {
+  @apply bg-orange-500/10 border border-orange-500/30 rounded-lg p-4;
+}
+
+.transit-no-data-title {
+  @apply text-lg font-semibold text-orange-400 mb-2;
+}
+
+.transit-no-data-explanation {
+  @apply text-sm text-white/70;
+}
+
+.transit-example {
+  @apply bg-black/20 rounded-lg p-4 text-sm text-white/70;
+}
+
+.transit-example ul {
+  @apply list-disc list-inside mt-2 space-y-1;
+}

@@ -1,17 +1,18 @@
 /**
  * Star Surface Fragment Shader V2
  *
- * Creates realistic burning star surfaces with:
+ * Creates dramatic burning star surfaces with:
+ * - Boiling plasma effect (surface appears to bubble and flow)
+ * - Spherical UV distortion (flames billow outward from center)
  * - Outward-flowing flame patterns
- * - Surface granulation (convection cells)
- * - Sunspots
- * - Temperature-based coloring (M-type red to O-type blue)
- * - Proper limb darkening
- * - Pulsating brightness (breathing effect)
- * - Edge flame overflow
+ * - Convective cells that rise and fall
+ * - Temperature-based coloring
+ * - Pulsating brightness
  *
- * Based on trisomie21's Shadertoy technique, enhanced with
- * physically-grounded temperature mapping and dynamic activity.
+ * Inspired by trisomie21's Shadertoy star technique
+ * 
+ * @author guinetik
+ * @see https://github.com/guinetik
  */
 
 #include "v2/common/noise.glsl"
@@ -30,112 +31,36 @@ uniform float uSeed;            // Deterministic seed for this star
 uniform float uActivityLevel;   // Stellar activity level (0-1)
 
 // =============================================================================
-// STAR SURFACE CONSTANTS
+// CONSTANTS
 // =============================================================================
 
-// --- Burning Effect (spherical glow) ---
-// Simplified smooth falloff without discontinuity
-const float BURN_CENTER_BRIGHTNESS = 1.2;   // Brightness at center
-const float BURN_EDGE_BRIGHTNESS = 0.85;    // Brightness at edge (was causing dark ring when too low)
-const float BURN_FALLOFF_POWER = 1.5;       // How quickly brightness falls off
+// Plasma boiling effect
+const float PLASMA_SCALE = 3.0;             // Scale of plasma bubbles
+const float PLASMA_SPEED = 0.12;            // Boiling speed
 
-// --- Flame Animation ---
-const float FLAME_TIME_SCALE = 0.1;         // Overall animation speed
-const float FLAME_LAYER1_SPEED = 0.35;      // First flame layer speed
-const float FLAME_LAYER2_SPEED = 0.15;      // Second flame layer speed
-const float FLAME_BRIGHTNESS_INFLUENCE = 0.001;  // How brightness affects speed
-const float FLAME_Z_SPEED = 0.015;          // Z-axis animation speed
+// Flame flow  
+const float FLAME_SCALE_COARSE = 15.0;
+const float FLAME_SCALE_FINE = 45.0;
+const float FLAME_FLOW_SPEED = 0.35;
+const float FLAME_RISE_SPEED = 0.08;
+const int FLAME_OCTAVES = 7;
 
-// --- Flame Noise Resolutions ---
-const float FLAME_RES_COARSE = 15.0;        // Coarse flame detail
-const float FLAME_RES_FINE = 45.0;          // Fine flame detail
-const float FLAME_OCTAVE_BASE_COARSE = 10.0; // Base multiplier for coarse
-const float FLAME_OCTAVE_BASE_FINE = 25.0;   // Base multiplier for fine
-const int FLAME_OCTAVES = 7;                // Number of octave layers
+// Convection cells
+const float CELL_SCALE = 6.0;
+const float CELL_SPEED = 0.02;
+const float CELL_DEPTH = 0.3;
 
-// --- Flame Blend ---
-const float FLAME_MIX_OFFSET = 0.5;         // Centering offset for flame mix
+// Colors
+const float COLOR_HOTSPOT_BOOST = 1.8;
 
-// --- Surface Granulation (Convection Cells) ---
-const float GRANULE_TIME_SCALE = 0.02;      // Granulation animation speed
-const float GRANULE_DRIFT_X = 0.1;          // X-axis drift rate
-const float GRANULE_DRIFT_Z = 0.05;         // Z-axis drift rate
-const float GRANULE_SCALE_LARGE = 8.0;      // Large convection cell scale
-const float GRANULE_SCALE_FINE = 20.0;      // Fine surface detail scale
-const int GRANULE_OCTAVES_LARGE = 4;        // Octaves for large cells
-const int GRANULE_OCTAVES_FINE = 3;         // Octaves for fine detail
-const float GRANULE_FINE_STRENGTH = 0.3;    // Fine detail contribution
+// Limb effects
+const float LIMB_DARK_POWER = 0.4;
+const float EDGE_FLAME_POWER = 2.5;
 
-// --- Sunspots ---
-const float SUNSPOT_SCALE = 3.0;            // Sunspot pattern scale
-const float SUNSPOT_TIME_SCALE = 0.005;     // Sunspot drift speed
-const float SUNSPOT_THRESHOLD_LOW = 0.55;   // Where sunspots start appearing
-const float SUNSPOT_THRESHOLD_HIGH = 0.75;  // Where sunspots are fully dark
-const float SUNSPOT_DARKNESS = 0.5;         // How dark sunspots get (0 = black, 1 = no effect)
-
-// --- Color Mixing (visible flames without black areas) ---
-const float COLOR_WARM_RED = 1.2;           // Red boost for warm color
-const float COLOR_WARM_BLUE = 0.8;          // Blue reduction for warm color
-const float COLOR_HOT_RED = 1.6;            // Red boost for hot color (white-hot)
-const float COLOR_HOT_GREEN = 1.4;          // Green boost for hot color (white-hot)
-const float COLOR_HOT_BLUE = 1.3;           // Blue boost for hot (white-hot effect)
-const float COLOR_COOL_RED = 0.75;          // Cool color is still bright (deep orange)
-const float COLOR_COOL_GREEN = 0.45;        // Not black, just darker orange
-const float COLOR_COOL_BLUE = 0.25;         // Minimal blue for orange tint
-
-// --- Granule Colors ---
-const float GRANULE_WARM_RED = 1.1;
-const float GRANULE_WARM_GREEN = 1.05;
-const float GRANULE_WARM_BLUE = 0.95;
-const float GRANULE_COOL_RED = 0.85;
-const float GRANULE_COOL_GREEN = 0.75;
-const float GRANULE_COOL_BLUE = 0.7;
-
-// --- Layer Blend Weights (flames dominant for burning appearance) ---
-const float LAYER_BASE_GLOW = 0.35;         // Weight of burning glow (reduced to let flames show)
-const float LAYER_FLAMES = 0.65;            // Weight of flame layer (dominant - this is the fire!)
-const float LAYER_GRANULES = 0.25;          // Weight of granulation (background texture)
-
-// --- Pulsation Effect (DRAMATIC - like reference studies) ---
-const float PULSE_FREQ_BASE = 0.5;          // Base pulsation frequency (faster)
-const float PULSE_FREQ_RANGE = 0.3;         // Frequency variation from seed
-const float PULSE_FREQ2_BASE = 0.25;        // Secondary pulse frequency
-const float PULSE_FREQ2_RANGE = 0.15;       // Secondary frequency variation
-const float PULSE_AMPLITUDE1 = 0.35;        // Primary pulse amplitude (was 0.15)
-const float PULSE_AMPLITUDE2 = 0.25;        // Secondary pulse amplitude (was 0.10)
-
-// --- Edge Flame Overflow ---
-const float EDGE_FLAME_BOOST = 3.0;         // Flames stronger at edges (was 2.0)
-const float EDGE_FLAME_POWER = 0.4;         // Edge boost falloff power
-
-// --- Star Glow (radiance) ---
-const float GLOW_COLOR_RED = 1.0;
-const float GLOW_COLOR_GREEN = 0.6;
-const float GLOW_COLOR_BLUE = 0.3;
-const float GLOW_STRENGTH = 0.3;            // Glow contribution
-
-// --- Limb Darkening (minimal - we want bright burning edges) ---
-const float LIMB_POWER = 0.3;               // Limb darkening curve power (lower = more gradual)
-const float LIMB_TEMP_INFLUENCE = 0.4;      // How much temperature affects limb
-const float LIMB_DARK_BASE = 0.88;          // Minimum limb brightness (high = less darkening)
-const float LIMB_BRIGHT_RANGE = 0.12;       // Brightness range (low = subtle effect)
-
-// --- Center Boost ---
-const float CENTER_POWER = 1.5;             // Center brightness power
-const float CENTER_STRENGTH = 0.35;         // Center boost amount
-
-// --- Temperature Normalization ---
-const float TEMP_NORMALIZE = 10000.0;       // Divide temperature for normalization
-const float TEMP_CLAMP_MIN = 0.3;           // Minimum temp factor
-const float TEMP_CLAMP_MAX = 1.5;           // Maximum temp factor
-
-// --- Hot Star Boost ---
-const float HOT_STAR_TEMP_LOW = 7000.0;     // Where hot boost starts
-const float HOT_STAR_TEMP_HIGH = 15000.0;   // Where hot boost maxes out
-const float HOT_STAR_BOOST = 0.25;          // Maximum hot star brightness boost
-
-// --- Output Clamping ---
-const float OUTPUT_MAX = 2.5;               // HDR clamp maximum
+// Pulsation
+const float PULSE_SPEED1 = 0.5;
+const float PULSE_SPEED2 = 0.25;
+const float PULSE_STRENGTH = 0.3;
 
 // =============================================================================
 // VARYINGS
@@ -144,6 +69,45 @@ const float OUTPUT_MAX = 2.5;               // HDR clamp maximum
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vPosition;
+varying float vDisplacement;  // From vertex shader - height of displacement
+
+// =============================================================================
+// PLASMA NOISE with flowing distortion
+// =============================================================================
+
+float plasmaNoise(vec3 p, float time) {
+    float value = 0.0;
+    float amplitude = 1.0;
+    float frequency = 1.0;
+    float totalAmp = 0.0;
+    
+    for (int i = 0; i < 5; i++) {
+        vec3 offset = vec3(
+            sin(time * 0.1 + float(i)) * 0.5,
+            cos(time * 0.15 + float(i) * 0.7) * 0.5,
+            time * 0.05
+        );
+        
+        value += amplitude * snoise3D((p + offset) * frequency);
+        totalAmp += amplitude;
+        amplitude *= 0.5;
+        frequency *= 2.0;
+    }
+    
+    return value / totalAmp;
+}
+
+// =============================================================================
+// RISING PLASMA CELLS
+// =============================================================================
+
+float risingCells(vec3 p, float time) {
+    float cells = snoise3D(p * CELL_SCALE + vec3(0.0, time * CELL_SPEED, 0.0));
+    float detail = snoise3D(p * CELL_SCALE * 2.5 + vec3(time * CELL_SPEED * 0.5, 0.0, time * 0.01));
+    cells = cells * 0.7 + detail * 0.3;
+    float rise = snoise3D(p * CELL_SCALE + vec3(0.0, time * CELL_SPEED * 2.0, 0.0));
+    return cells * 0.5 + 0.5 + rise * 0.2;
+}
 
 // =============================================================================
 // MAIN
@@ -151,148 +115,189 @@ varying vec3 vPosition;
 
 void main() {
     vec3 spherePos = normalize(vPosition);
+    float time = wrapTime(uTime);
     
-    // Wrap time to prevent precision loss in Chrome/ANGLE
-    float wrappedTime = wrapTime(uTime);
-    
-    // === VIEW ANGLE CALCULATIONS ===
+    // === VIEW GEOMETRY ===
     vec3 viewDir = vec3(0.0, 0.0, 1.0);
     float viewAngle = max(dot(vNormal, viewDir), 0.0);
     float edgeDist = 1.0 - viewAngle;
     
-    // === TEMPERATURE FACTOR ===
-    float tempFactor = clamp(uTemperature / TEMP_NORMALIZE, TEMP_CLAMP_MIN, TEMP_CLAMP_MAX);
-    float brightness = 0.15 + tempFactor * 0.1;
-
-    // === PULSATING BRIGHTNESS (breathing effect) ===
-    // Seed-based pulsation frequencies - each star pulses differently
-    float pulseFreq1 = PULSE_FREQ_BASE + seedHash(uSeed) * PULSE_FREQ_RANGE;
-    float pulseFreq2 = PULSE_FREQ2_BASE + seedHash(uSeed + 1.0) * PULSE_FREQ2_RANGE;
-
-    // Multi-frequency pulsation (like reference's cos + sin pattern)
-    float pulse = cos(wrappedTime * pulseFreq1) * PULSE_AMPLITUDE1
-                + sin(wrappedTime * pulseFreq2) * PULSE_AMPLITUDE2;
-    pulse *= uActivityLevel;  // Scale by stellar activity level
-
-    // Modulate brightness with pulsation
+    // === PULSATION ===
+    float pulse1 = cos(time * PULSE_SPEED1 + seedHash(uSeed) * TAU);
+    float pulse2 = sin(time * PULSE_SPEED2 + seedHash(uSeed + 1.0) * TAU);
+    float pulse = (pulse1 * 0.6 + pulse2 * 0.4) * PULSE_STRENGTH * uActivityLevel;
+    float brightness = 0.15 + (uTemperature / 10000.0) * 0.1;
     brightness *= 1.0 + pulse;
-
-    // Pulsation factor for other effects (0.5 to 1.5 range for high activity stars)
-    float pulseFactor = 1.0 + pulse * 0.5;
     
-    // === BURNING GLOW (smooth spherical falloff - no discontinuity) ===
-    // Simple power curve from center to edge
-    float burnFactor = mix(BURN_CENTER_BRIGHTNESS, BURN_EDGE_BRIGHTNESS, pow(edgeDist, BURN_FALLOFF_POWER));
+    // === SPHERICAL COORDINATES ===
+    float angle = atan(spherePos.y, spherePos.x);
+    float elevation = acos(clamp(spherePos.z, -1.0, 1.0));
     
-    // === POLAR COORDINATES FOR FLAMES ===
-    float angle = atan(spherePos.y, spherePos.x) / TAU;
-    float elevation = atan(length(spherePos.xy), spherePos.z) / 3.1416;
+    // ==========================================================================
+    // SPHERICAL DISTORTION - THE KEY EFFECT
+    // This makes the surface appear to bulge outward like boiling plasma
+    // ==========================================================================
     
-    float time = wrappedTime * FLAME_TIME_SCALE;
+    // Screen-space position on the sphere (like looking at it from front)
+    vec2 sp = spherePos.xy;
+    float r = dot(sp, sp);  // Squared distance from center
+    
+    // The magic distortion formula from trisomie21
+    // Creates a lens-like effect where center bulges toward viewer
+    float distortStrength = 2.0 - brightness;  // Brighter = more distortion
+    sp *= distortStrength;
+    r = dot(sp, sp);
+    
+    // Distortion factor - creates the bulging effect
+    float f = (1.0 - sqrt(abs(1.0 - r))) / (r + 0.001) + brightness * 0.5;
+    
+    // Apply distortion to create warped UVs
+    vec2 warpedUV;
+    warpedUV.x = sp.x * f;
+    warpedUV.y = sp.y * f;
+    
+    // Animate the warped UVs - this creates the flowing effect
+    warpedUV += vec2(time * 0.1, 0.0);
+    
+    // ==========================================================================
+    // PLASMA TEXTURE using warped coordinates
+    // ==========================================================================
+    
+    // Sample noise with the distorted, animated coordinates
+    vec3 plasmaCoord = vec3(warpedUV * PLASMA_SCALE, time * PLASMA_SPEED);
+    float plasma1 = plasmaNoise(plasmaCoord, time);
+    
+    // Secondary layer with different phase
+    vec3 plasma2Coord = vec3(warpedUV * PLASMA_SCALE * 1.3, time * PLASMA_SPEED * 0.8);
+    float plasma2 = plasmaNoise(plasma2Coord + vec3(50.0, 50.0, 0.0), time * 1.2);
+    
+    // Combine plasma layers
+    float plasma = plasma1 * 0.6 + plasma2 * 0.4;
+    plasma = plasma * 0.5 + 0.5;  // Normalize to 0-1
+    
+    // Add more distortion influence from brightness variation
+    float plasmaDistort = plasma * brightness * 3.14159;
+    vec2 extraWarp = warpedUV + vec2(plasmaDistort, 0.0);
+    
+    // Third plasma layer with extra warping for more chaos
+    float plasma3 = plasmaNoise(vec3(extraWarp * PLASMA_SCALE * 0.8, time * PLASMA_SPEED * 1.5), time);
+    plasma = mix(plasma, plasma3 * 0.5 + 0.5, 0.3);
     
     // === OUTWARD FLOWING FLAMES ===
-    vec3 flameCoord = vec3(angle, elevation, time * FLAME_TIME_SCALE);
+    vec3 flameCoord = vec3(angle / TAU, elevation / PI, time * 0.1);
     
-    // Time distortion for organic movement
-    float newTime1 = abs(tiledNoise3D(flameCoord + vec3(0.0, -time * (FLAME_LAYER1_SPEED + brightness * FLAME_BRIGHTNESS_INFLUENCE), time * FLAME_Z_SPEED), FLAME_RES_COARSE));
-    float newTime2 = abs(tiledNoise3D(flameCoord + vec3(0.0, -time * (FLAME_LAYER2_SPEED + brightness * FLAME_BRIGHTNESS_INFLUENCE), time * FLAME_Z_SPEED), FLAME_RES_FINE));
+    float newTime1 = abs(tiledNoise3D(
+        flameCoord + vec3(0.0, -time * FLAME_FLOW_SPEED, time * FLAME_RISE_SPEED),
+        FLAME_SCALE_COARSE
+    ));
+    float newTime2 = abs(tiledNoise3D(
+        flameCoord + vec3(0.0, -time * FLAME_FLOW_SPEED * 0.5, time * FLAME_RISE_SPEED),
+        FLAME_SCALE_FINE
+    ));
     
-    // Accumulate flame intensity across octaves
     float flameVal1 = 1.0 - edgeDist;
     float flameVal2 = 1.0 - edgeDist;
     
     for (int i = 1; i <= FLAME_OCTAVES; i++) {
         float power = pow(2.0, float(i + 1));
         float contribution = 0.5 / power;
-        flameVal1 += contribution * tiledNoise3D(flameCoord + vec3(0.0, -time, time * 0.2), power * FLAME_OCTAVE_BASE_COARSE * (newTime1 + 1.0));
-        flameVal2 += contribution * tiledNoise3D(flameCoord + vec3(0.0, -time, time * 0.2), power * FLAME_OCTAVE_BASE_FINE * (newTime2 + 1.0));
+        
+        flameVal1 += contribution * tiledNoise3D(
+            flameCoord + vec3(0.0, -time * 0.1, time * 0.2),
+            power * 10.0 * (newTime1 + 1.0)
+        );
+        flameVal2 += contribution * tiledNoise3D(
+            flameCoord + vec3(0.0, -time * 0.1, time * 0.2),
+            power * 25.0 * (newTime2 + 1.0)
+        );
     }
     
-    // Combine and normalize flames
-    float flames = (flameVal1 + flameVal2) * FLAME_MIX_OFFSET;
-    flames = flames * FLAME_MIX_OFFSET + FLAME_MIX_OFFSET;
-
-    // === EDGE FLAME OVERFLOW (flames "spill out" at edges) ===
-    // Like the reference studies - flames are more intense at the star's edge
-    float edgeFlameBoost = pow(edgeDist, EDGE_FLAME_POWER) * EDGE_FLAME_BOOST * uActivityLevel;
-    flames += edgeFlameBoost * flames * 0.5;
-
-    // === SURFACE GRANULATION (convection cells) ===
-    float slowTime = wrappedTime * GRANULE_TIME_SCALE;
-    vec3 granulePos = spherePos + vec3(slowTime * GRANULE_DRIFT_X, 0.0, slowTime * GRANULE_DRIFT_Z);
+    float flames = (flameVal1 + flameVal2) * 0.5;
+    flames = clamp(flames, 0.0, 1.0);
     
-    // Large convection cells
-    float granulation = fbm3D(granulePos * GRANULE_SCALE_LARGE, GRANULE_OCTAVES_LARGE) * 0.5 + 0.5;
+    // Edge flame overflow
+    float edgeBoost = pow(edgeDist, 0.5) * EDGE_FLAME_POWER * uActivityLevel;
+    flames += edgeBoost * flames * 0.5;
     
-    // Fine surface detail
-    float fineDetail = fbm3D(granulePos * GRANULE_SCALE_FINE + vec3(wrappedTime * 0.01), GRANULE_OCTAVES_FINE) * GRANULE_FINE_STRENGTH;
+    // === CONVECTION CELLS ===
+    float cells = risingCells(spherePos, time);
     
     // === SUNSPOTS ===
-    float spotNoise = snoise3D(spherePos * SUNSPOT_SCALE + vec3(0.0, wrappedTime * SUNSPOT_TIME_SCALE, 0.0));
-    float spotMask = smoothstep(SUNSPOT_THRESHOLD_LOW, SUNSPOT_THRESHOLD_HIGH, spotNoise);
-    float spotDarkening = 1.0 - spotMask * (1.0 - SUNSPOT_DARKNESS);
+    float spotNoise = snoise3D(spherePos * 3.0 + vec3(0.0, time * 0.005, 0.0));
+    float spotMask = smoothstep(0.55, 0.75, spotNoise);
+    float spotDarkening = 1.0 - spotMask * 0.5;
     
     // === COLOR CALCULATION ===
-    // Get base color from temperature
     vec3 baseColor = temperatureToColor(uTemperature);
-
-    // Mix with provided star color for consistency
     baseColor = mix(baseColor, uStarColor, 0.3);
-
-    // NORMALIZE base color to prevent washout from bright stars
-    // The star should look like it's burning regardless of actual luminosity
-    // Luminosity affects planet lighting, not the star's own surface appearance
-    float maxComponent = max(baseColor.r, max(baseColor.g, baseColor.b));
-    if (maxComponent > 0.01) {
-        baseColor = baseColor / maxComponent * 0.85; // Normalize to 85% max
+    
+    // Normalize to prevent washout
+    float maxComp = max(baseColor.r, max(baseColor.g, baseColor.b));
+    if (maxComp > 0.01) {
+        baseColor = baseColor / maxComp * 0.85;
     }
     
-    // Create color variants with HIGH contrast for visible flames
-    vec3 warmColor = baseColor * vec3(COLOR_WARM_RED, 1.0, COLOR_WARM_BLUE);
-    vec3 hotColor = baseColor * vec3(COLOR_HOT_RED, COLOR_HOT_GREEN, COLOR_HOT_BLUE); // White-hot
-    vec3 coolColor = baseColor * vec3(COLOR_COOL_RED, COLOR_COOL_GREEN, COLOR_COOL_BLUE); // Dark red
-    vec3 granuleWarm = baseColor * vec3(GRANULE_WARM_RED, GRANULE_WARM_GREEN, GRANULE_WARM_BLUE);
-    vec3 granuleCool = baseColor * vec3(GRANULE_COOL_RED, GRANULE_COOL_GREEN, GRANULE_COOL_BLUE);
+    // Color variants
+    vec3 hotColor = baseColor * vec3(1.5, 1.3, 1.2);
+    hotColor = min(hotColor, vec3(1.8));
+    vec3 coolColor = baseColor * vec3(0.7, 0.4, 0.3);
+    vec3 warmColor = baseColor * vec3(1.2, 1.0, 0.85);
     
-    // Burning glow base
-    vec3 baseGlow = burnFactor * (0.75 + brightness * 0.3) * warmColor;
+    // === COMBINE ALL EFFECTS ===
     
-    // Flame color layer
-    vec3 flameColor = mix(coolColor, hotColor, flames);
+    // Plasma creates the base boiling texture (DOMINANT)
+    float plasmaIntensity = plasma;
     
-    // Granulation color layer
-    vec3 granuleColor = mix(granuleCool, granuleWarm, granulation);
-    granuleColor += baseColor * fineDetail * 0.2;
+    // Flames add streaks
+    float flameIntensity = flames * 0.6;
     
-    // Apply sunspot darkening
-    granuleColor *= spotDarkening;
+    // Cells add larger variation
+    float cellIntensity = cells * CELL_DEPTH;
     
-    // Combine layers - pulseFactor affects flame and glow intensity
-    vec3 surfaceColor = baseGlow * LAYER_BASE_GLOW * pulseFactor
-                      + flameColor * LAYER_FLAMES * pulseFactor
-                      + granuleColor * LAYER_GRANULES;
+    // Combined - plasma is the main visual, flames and cells modulate it
+    float totalIntensity = plasmaIntensity * 0.5 + flameIntensity * 0.35 + cellIntensity * 0.15;
+    totalIntensity *= spotDarkening;
+    totalIntensity *= 1.0 + pulse * 0.5;
     
-    // === STAR GLOW (warm radiance) ===
-    float starGlow = clamp(1.0 - edgeDist * (1.0 - brightness), 0.0, 1.0);
-    vec3 glowColor = baseColor * vec3(GLOW_COLOR_RED, GLOW_COLOR_GREEN, GLOW_COLOR_BLUE);
-    surfaceColor += starGlow * glowColor * GLOW_STRENGTH;
+    // Raised areas (positive displacement) are hotter/brighter
+    float displacementBoost = vDisplacement * 8.0;  // Amplify the effect
+    totalIntensity += displacementBoost * 0.5;
+    totalIntensity = clamp(totalIntensity, 0.0, 1.5);
+    
+    // Map intensity to color
+    vec3 surfaceColor;
+    if (totalIntensity < 0.4) {
+        surfaceColor = mix(coolColor, warmColor, totalIntensity / 0.4);
+    } else if (totalIntensity < 0.7) {
+        surfaceColor = mix(warmColor, hotColor, (totalIntensity - 0.4) / 0.3);
+    } else {
+        surfaceColor = hotColor * (1.0 + (totalIntensity - 0.7) * COLOR_HOTSPOT_BOOST);
+    }
+    
+    // Base glow
+    float burnGlow = 0.6 + brightness * 0.4;
+    surfaceColor *= burnGlow;
     
     // === LIMB DARKENING ===
-    float limbDark = pow(viewAngle, LIMB_POWER);
-    limbDark = mix(limbDark, 1.0, tempFactor * LIMB_TEMP_INFLUENCE);
-    surfaceColor *= LIMB_DARK_BASE + limbDark * LIMB_BRIGHT_RANGE;
+    float limbDark = pow(viewAngle, LIMB_DARK_POWER);
+    float tempInfluence = clamp(uTemperature / 10000.0, 0.3, 1.5);
+    limbDark = mix(limbDark, 1.0, tempInfluence * 0.3);
+    surfaceColor *= 0.85 + limbDark * 0.15;
     
-    // === CENTER BRIGHTNESS BOOST ===
-    float centerBoost = pow(viewAngle, CENTER_POWER) * CENTER_STRENGTH;
+    // === EDGE GLOW ===
+    float edgeGlow = pow(edgeDist, 0.3) * flames * 0.4 * uActivityLevel;
+    surfaceColor += warmColor * edgeGlow;
+    
+    // === CENTER BOOST ===
+    float centerBoost = pow(viewAngle, 1.5) * 0.3;
     surfaceColor += baseColor * centerBoost;
     
-    // === HOT STAR BOOST ===
-    float hotBoost = smoothstep(HOT_STAR_TEMP_LOW, HOT_STAR_TEMP_HIGH, uTemperature) * HOT_STAR_BOOST;
+    // === HOT STAR BRIGHTNESS ===
+    float hotBoost = smoothstep(7000.0, 15000.0, uTemperature) * 0.2;
     surfaceColor += baseColor * hotBoost;
     
-    // === HDR CLAMP ===
-    surfaceColor = clamp(surfaceColor, 0.0, OUTPUT_MAX);
+    // === FINAL OUTPUT ===
+    surfaceColor = clamp(surfaceColor, 0.0, 2.5);
     
     gl_FragColor = vec4(surfaceColor, 1.0);
 }
-

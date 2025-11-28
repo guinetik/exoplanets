@@ -214,12 +214,18 @@
       "filters": {
         "planetType": "Tipo de Planeta:",
         "starClass": "Classe Estelar:",
+        "discoveryMethod": "Método de Descoberta:",
         "sortBy": "Ordenar por:",
+        "discoveryMethods": {
+          "all": "Todos os Métodos",
+          "transit": "Apenas Trânsito",
+          "rv": "Apenas Velocidade Radial",
+          "both": "Ambos (RV + Trânsito)"
+        },
         "habitableOnly": "Apenas Zona Habitável",
         "earthLikeOnly": "Apenas Semelhantes à Terra",
         "eccentricOnly": "Órbita Excêntrica",
         "circumbinaryOnly": "Sistema Circumbinário",
-        "hasRvDataOnly": "Com Dados RV",
         "clearFilters": "Limpar Filtros"
       },
       "sort": {
@@ -260,6 +266,7 @@
         "temperature": "Zona de Temperatura",
         "orbitalPosition": "Posição Orbital",
         "radialVelocity": "Análise de Velocidade Radial",
+        "transitDetection": "Detecção por Trânsito",
         "travelTime": "Tempo de Viagem"
       },
       "comparison": {
@@ -373,6 +380,65 @@
           "eccentricity": "Excentricidade",
           "stellarRotation": "Rotação Estelar",
           "stellarRotationNote": "A rotação estelar adiciona ruído às medições RV"
+        }
+      },
+      "transit": {
+        "title": "Detecção por Trânsito",
+        "intro": "O método de trânsito é a técnica de detecção de exoplanetas mais bem-sucedida, responsável por descobrir milhares de exoplanetas, incluindo mundos do tamanho da Terra. Quando um planeta passa em frente da sua estrela do nosso ponto de vista, bloqueia uma pequena fração da luz da estrela. Medindo essas quedas periódicas no brilho, os astrônomos podem determinar o tamanho do planeta, seu período orbital e a composição atmosférica.",
+        "curveTitle": "Curva de Luz do Trânsito",
+        "xAxisLabel": "Fase Orbital",
+        "yAxisLabel": "Fluxo Relativo",
+        "comparisonTitle": "Comparação de Profundidade de Trânsito",
+        "comparisonDescription": "A profundidade do trânsito revela diretamente o raio do planeta em relação à sua estrela. Trânsitos mais profundos significam planetas maiores. Este gráfico compara todos os planetas em trânsito neste sistema.",
+        "dataDisplay": {
+          "currentFlux": "Fluxo Atual",
+          "transitDepth": "Profundidade do Trânsito",
+          "planetRadius": "Raio do Planeta",
+          "phase": "Fase"
+        },
+        "visualizations": {
+          "orbitalGeometry": "Geometria Orbital",
+          "topView": "Vista de Cima (Plano Orbital)",
+          "sideView": "Vista Lateral (Da Terra)",
+          "whatWeLearn": "O que Aprendemos com Trânsitos"
+        },
+        "noData": {
+          "title": "Nenhum Dado de Trânsito Disponível",
+          "message": "Este planeta foi descoberto usando {{method}}, que não fornece medições de trânsito.",
+          "example": "Para comparação, de um ponto de vista distante:",
+          "jupiterExample": "Júpiter em trânsito do Sol: profundidade de 0,01%",
+          "earthExample": "Terra em trânsito do Sol: profundidade de 0,008%",
+          "detectionLimit": "Limite de detecção: ~0,001% com Kepler/TESS"
+        },
+        "explanation": {
+          "geometryTitle": "Por que a Geometria Importa?",
+          "geometryContent": "A detecção por trânsito requer um alinhamento orbital preciso. A órbita do planeta deve estar quase perpendicular do ponto de vista da Terra. Apenas cerca de 0,5-1% dos sistemas planetários orientados aleatoriamente estarão em trânsito como visto da Terra.",
+          "depthTitle": "O que a Profundidade do Trânsito nos Diz?",
+          "depthContent": "A profundidade do trânsito revela diretamente o tamanho do planeta. É proporcional a (raio do planeta / raio da estrela)². Um planeta do tamanho de Júpiter bloqueia ~1% da luz, enquanto a Terra bloqueia apenas ~0,008%.",
+          "timingTitle": "Variações de Tempo de Trânsito",
+          "timingContent": "Medindo trânsitos repetidamente, os astrônomos podem detectar puxões gravitacionais de outros planetas. Essas pequenas variações de tempo revelam planetas adicionais que podem não estar em trânsito por si só."
+        },
+        "legend": {
+          "duringTransit": "DURANTE O TRÂNSITO:",
+          "duringTransitItem1": "O planeta passa em frente da estrela",
+          "duringTransitItem2": "O fluxo cai conforme a luz é bloqueada",
+          "duringTransitItem3": "A profundidade revela o tamanho do planeta",
+          "outsideTransit": "FORA DO TRÂNSITO:",
+          "outsideTransitItem1": "Toda a luz da estrela nos alcança",
+          "outsideTransitItem2": "O fluxo retorna à linha de base (1,0)",
+          "whatWeLearn": "O QUE APRENDEMOS:",
+          "whatWeLearnItem1": "Raio do planeta pela profundidade",
+          "whatWeLearnItem2": "Período orbital pelo tempo",
+          "whatWeLearnItem3": "Atmosfera pelo espectro"
+        },
+        "technical": {
+          "depth": "Profundidade do Trânsito",
+          "duration": "Duração do Trânsito",
+          "period": "Período Orbital",
+          "radiusRatio": "Razão de Raio (Rp/R★)",
+          "semiMajorRatio": "Razão a/R★",
+          "impactParameter": "Parâmetro de Impacto",
+          "planetRadius": "Raio do Planeta"
         }
       },
       "siblings": {

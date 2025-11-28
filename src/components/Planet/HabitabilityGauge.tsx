@@ -119,8 +119,17 @@ function getScoreColor(score: number): string {
 
 /**
  * Gets the habitability tier label
+ * Also considers extreme temperature deal-breakers
  */
-function getHabitabilityTier(score: number): string {
+function getHabitabilityTier(score: number, planet?: Exoplanet): string {
+  // DEAL-BREAKERS: Extreme temperatures override score
+  if (planet?.pl_eqt) {
+    // Too hot - metals vaporize, no life possible
+    if (planet.pl_eqt > 800) return 'uninhabitable';
+    // Too cold - colder than Pluto
+    if (planet.pl_eqt < 50) return 'uninhabitable';
+  }
+  
   if (score >= 80) return 'excellent';
   if (score >= 60) return 'good';
   if (score >= 40) return 'moderate';

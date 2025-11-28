@@ -6,6 +6,7 @@
 
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../../types';
+import { calculateEquilibriumTemp } from '../../utils/math/planet';
 
 // Temperature zone boundaries (Kelvin)
 const TEMP_ZONES = {
@@ -26,31 +27,6 @@ const REFERENCE_TEMPS = {
   MARS: 210, // Equilibrium temp
   MERCURY: 440, // Average
 };
-
-// Solar radius in AU for calculations
-const SOLAR_RADIUS_AU = 0.00465047;
-
-/**
- * Calculate equilibrium temperature using Stefan-Boltzmann law
- * T_eq = T_star * sqrt(R_star / (2 * a))
- * Assumes zero albedo (perfect black body absorption)
- */
-function calculateEquilibriumTemp(planet: Exoplanet): number | null {
-  const { st_teff, st_rad, pl_orbsmax } = planet;
-
-  // Need all three parameters
-  if (!st_teff || !st_rad || !pl_orbsmax) {
-    return null;
-  }
-
-  // Convert stellar radius from solar radii to AU
-  const starRadiusAU = st_rad * SOLAR_RADIUS_AU;
-
-  // Calculate equilibrium temperature
-  const T_eq = st_teff * Math.sqrt(starRadiusAU / (2 * pl_orbsmax));
-
-  return Math.round(T_eq);
-}
 
 /**
  * Gets the zone classification for a temperature
@@ -149,9 +125,13 @@ export function TemperatureZoneIndicator({
 
   // Use NASA data if available, otherwise calculate approximation
   const nasaTemp = planet.pl_eqt;
-  const calculatedTemp = nasaTemp ? null : calculateEquilibriumTemp(planet);
-  const temp = nasaTemp || calculatedTemp;
-  const isApproximate = !nasaTemp && calculatedTemp !== null;
+  const calculatedTempObj = nasaTemp ? null : calculateEquilibriumTemp(
+    planet.st_teff ?? null,
+    planet.st_rad ?? null,
+    planet.pl_orbsmax ?? null
+  );
+  const temp: number | null = nasaTemp || calculatedTempObj?.temperatureK || null;
+  const isApproximate = !nasaTemp && calculatedTempObj !== null;
 
   const zoneInfo = getTemperatureZone(temp);
   const position = temp ? calculatePosition(temp) : 50;

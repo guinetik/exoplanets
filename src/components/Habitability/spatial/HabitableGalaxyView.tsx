@@ -15,6 +15,12 @@ import type {
 } from '../../../utils/habitabilityAnalytics';
 import { filterSpatialData } from '../../../utils/habitabilityAnalytics';
 import { nameToSlug } from '../../../utils/urlSlug';
+import {
+  GALAXY_CANVAS,
+  ORBIT_CONTROLS,
+  GALAXY_LABELS,
+  TOOLTIP_POSITION,
+} from '../../../utils/habitabilityVisuals';
 import HabitablePlanetCloud from './HabitablePlanetCloud';
 import DistanceRings from './DistanceRings';
 
@@ -57,11 +63,16 @@ export default function HabitableGalaxyView({
       {/* 3D Canvas */}
       <div className="galaxy-canvas">
         <Canvas
-          camera={{ position: [0, 20, 60], fov: 60, near: 0.1, far: 5000 }}
+          camera={{
+            position: [GALAXY_CANVAS.CAMERA_X, GALAXY_CANVAS.CAMERA_Y, GALAXY_CANVAS.CAMERA_Z],
+            fov: GALAXY_CANVAS.CAMERA_FOV,
+            near: GALAXY_CANVAS.CAMERA_NEAR,
+            far: GALAXY_CANVAS.CAMERA_FAR,
+          }}
           gl={{ antialias: true, alpha: true }}
         >
           <Suspense fallback={null}>
-            <ambientLight intensity={0.3} />
+            <ambientLight intensity={GALAXY_CANVAS.AMBIENT_LIGHT_INTENSITY} />
 
             {/* Planet point cloud */}
             <HabitablePlanetCloud
@@ -76,12 +87,12 @@ export default function HabitableGalaxyView({
             {/* Sol marker at origin */}
             <Text
               position={[0, 0, 0]}
-              fontSize={2}
-              color="#ffd700"
+              fontSize={GALAXY_LABELS.SOL_FONT_SIZE}
+              color={GALAXY_LABELS.SOL_COLOR}
               anchorX="center"
               anchorY="middle"
             >
-              SOL
+              {GALAXY_LABELS.SOL_TEXT}
             </Text>
 
             {/* Controls */}
@@ -89,12 +100,12 @@ export default function HabitableGalaxyView({
               enablePan={true}
               enableZoom={true}
               enableRotate={true}
-              minDistance={20}
-              maxDistance={1000}
-              minPolarAngle={0}
-              maxPolarAngle={Math.PI}
-              autoRotate
-              autoRotateSpeed={0.3}
+              minDistance={ORBIT_CONTROLS.MIN_DISTANCE}
+              maxDistance={ORBIT_CONTROLS.MAX_DISTANCE}
+              minPolarAngle={ORBIT_CONTROLS.MIN_POLAR_ANGLE}
+              maxPolarAngle={ORBIT_CONTROLS.MAX_POLAR_ANGLE}
+              autoRotate={ORBIT_CONTROLS.AUTO_ROTATE}
+              autoRotateSpeed={ORBIT_CONTROLS.AUTO_ROTATE_SPEED}
             />
           </Suspense>
         </Canvas>
@@ -188,8 +199,8 @@ export default function HabitableGalaxyView({
         <div
           className="galaxy-tooltip"
           style={{
-            left: tooltipPos.x + 15,
-            top: tooltipPos.y - 10,
+            left: tooltipPos.x + TOOLTIP_POSITION.X_OFFSET,
+            top: tooltipPos.y + TOOLTIP_POSITION.Y_OFFSET,
           }}
         >
           <div className="tooltip-name">{hoveredPlanet.name}</div>

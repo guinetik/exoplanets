@@ -34,7 +34,20 @@ src/
 │   ├── shaderService.ts # GLSL shader management
 │   └── apodService.ts   # NASA APOD API
 ├── context/             # React Context (DataContext)
-├── utils/               # Helpers (astronomy, habitability, 3D math)
+├── utils/               # Helpers and domain-specific utilities
+│   ├── math/            # Pure mathematical primitives (constants, formulas, conversions)
+│   │   ├── index.ts     # Public API
+│   │   ├── constants.ts # All physical & mathematical constants
+│   │   ├── planet.ts    # Planet physics calculations
+│   │   ├── conversions.ts # Unit conversions
+│   │   └── utilities.ts # General math functions (normalize, clamp, lerp, etc)
+│   ├── astronomy.ts     # Coordinate transformations, sidereal time
+│   ├── math3d.ts        # Kepler solver, orbital mechanics
+│   ├── planetUniforms.ts # Shader parameter generation
+│   ├── ringVisuals.ts   # Ring color system (domain logic with types)
+│   ├── planetComparison.ts # Planet comparison visualization
+│   ├── solarSystem.ts   # Ring probability, rotation, tilt heuristics
+│   └── habitabilityAnalytics.ts # Data aggregation
 ├── types/               # TypeScript interfaces
 ├── i18n/                # Translations (en.json, pt.json)
 └── styles/              # Tailwind CSS with @apply patterns
@@ -60,6 +73,48 @@ data/
 - React Three Fiber (`@react-three/fiber`) for Three.js integration
 - Custom GLSL shaders loaded via `shaderService`
 - Shader selection based on planet type in `planetUniforms.ts`
+
+### Math Module Architecture
+**Pure Numbers → Math Module | Domain Logic with Types → Utilities**
+
+All mathematical operations follow strict separation of concerns:
+
+**`src/utils/math/`** - Pure Mathematical Primitives
+- Constants: `MATH_CONSTANTS` for all physical values and numeric thresholds
+- Functions: Physics calculations (`calculateEquilibriumTemp`, `calculateSurfaceGravity`, `calculateDensity`)
+- Conversions: Unit transformations (AU↔km, K↔C, parsec↔ly, etc)
+- Utilities: General math operations (`normalize`, `clamp`, `map`, `lerp`, `smoothstep`)
+- **Key Rule**: No types, interfaces, or domain logic—only pure numbers and formulas
+- **Single Source of Truth**: Change a constant once, used everywhere
+
+**`src/utils/*.ts`** - Domain-Specific Logic
+- Uses primitives from math module
+- Introduces types and interfaces (`RingColorProperties`, etc)
+- Composes math functions with business logic
+- Examples: `ringVisuals.ts`, `planetComparison.ts`, `solarSystem.ts`
+
+**Components** - Just Consume
+- Import what they need from utilities and math module
+- No scattered magic numbers, no duplicate logic
+- Clean, readable, maintainable code
+
+Example:
+```typescript
+// ✅ CORRECT - Numbers in constants
+RING_COLOR_THRESHOLD_COLD: 200,
+TEMPERATURE_DEFAULT_FALLBACK: 150,
+
+// ✅ CORRECT - Domain logic uses constants
+export function getRingColorProperties(temp, seed): RingColorProperties {
+  if (temp < MATH_CONSTANTS.RING_COLOR_THRESHOLD_COLD) { ... }
+}
+
+// ✅ CORRECT - Component uses function
+const ringColor = createRingColorFromTemperature(temp, seed);
+
+// ❌ WRONG - Magic number in component
+if (temperature < 200) { ... }
+```
 
 ### Styling Convention
 **Use @apply in index.css, not inline Tailwind:**

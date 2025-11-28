@@ -236,7 +236,6 @@ export function RadialVelocitySection({
       .attr('opacity', 0.8);
 
     // Draw the RV curve
-    const pathData = line(data);
     svg.append('path')
       .datum(data)
       .attr('id', 'rv-curve-path')
@@ -468,7 +467,6 @@ export function RadialVelocitySection({
     const coneLength = 60;
     // Reuse observerAngleDeg from color calculation above
 
-    const angleRad = (observerAngleDeg * Math.PI) / 180;
     const leftAngleRad = ((observerAngleDeg - coneAngle / 2) * Math.PI) / 180;
     const rightAngleRad = ((observerAngleDeg + coneAngle / 2) * Math.PI) / 180;
 
@@ -590,7 +588,6 @@ export function RadialVelocitySection({
     if (!hasRvData || !spectrumRef.current || !spectrumContainerRef.current) return;
 
     const width = Math.min(spectrumContainerRef.current.clientWidth, 600);
-    const height = 80;
 
     const svg = d3.select(spectrumRef.current);
     svg.selectAll('*').remove();
@@ -743,9 +740,6 @@ export function RadialVelocitySection({
 
       if (item.bold) {
         text.attr('font-weight', 'bold').attr('fill', 'rgba(255, 255, 255, 0.8)');
-      }
-      if (item.italic) {
-        text.attr('font-style', 'italic');
       }
     });
 
