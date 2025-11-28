@@ -158,9 +158,19 @@ export function CelestialBody({
       onPositionUpdate(body.id, groupRef.current.position);
     }
 
-    // Rotate on own axis - always spin
+    // Rotate on own axis - use physics-based rotation speed and axial tilt
     if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.2;
+      // Apply axial tilt (rotation around X axis to tilt the spin axis)
+      meshRef.current.rotation.x = body.axialTilt;
+      
+      if (body.isTidallyLocked && body.type === 'planet') {
+        // Tidally locked: one face always toward the star (at origin)
+        // The planet's rotation matches its orbital angle so same face points to star
+        meshRef.current.rotation.y = -orbitAngleRef.current + Math.PI;
+      } else {
+        // Normal rotation: spin on axis using physics-based speed
+        meshRef.current.rotation.y += delta * body.rotationSpeed;
+      }
     }
 
     // Update shader time uniforms
@@ -323,9 +333,9 @@ export function CelestialBody({
         />
       </mesh>
 
-      {/* Rings for gas giants - color derived from planet */}
+      {/* Rings for gas giants - tilted with the planet's axial tilt */}
       {body.hasRings && (
-        <mesh rotation={[Math.PI / 2.5, 0, 0]}>
+        <mesh rotation={[Math.PI / 2 + body.axialTilt, 0, 0]}>
           <ringGeometry args={[body.diameter * 0.7, body.diameter * 1.2, 64]} />
           <meshBasicMaterial
             color={new THREE.Color(body.color).lerp(

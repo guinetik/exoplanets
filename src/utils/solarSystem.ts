@@ -32,6 +32,10 @@ export interface StellarBody {
   // Binary star system properties
   isPrimaryStar?: boolean;
   isCompanionStar?: boolean;
+  // Rotation properties
+  rotationSpeed: number; // radians per second for animation
+  axialTilt: number; // radians - tilt of rotation axis
+  isTidallyLocked: boolean; // if true, one face always toward star
 }
 
 // Binary system data from binary.json
@@ -206,6 +210,137 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 // =============================================================================
+// ROTATION & AXIAL TILT UTILITIES
+// =============================================================================
+
+/** Degrees to radians conversion */
+const DEG_TO_RAD = Math.PI / 180;
+
+/**
+ * Generate a deterministic hash from a string (for consistent random values)
+ * @param str - Input string (typically planet name)
+ * @returns Number in range 0-1
+ */
+export function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash % 1000) / 1000;
+}
+
+/**
+ * Base rotation speeds by planet type (radians per second for animation)
+ * Based on real solar system data:
+ * - Jupiter: ~10 hour rotation → fastest
+ * - Earth: ~24 hour rotation → medium
+ * - Venus: ~243 days → very slow (tidally influenced)
+ */
+const ROTATION_SPEEDS: Record<string, number> = {
+  'Gas Giant': 0.6,     // Fast rotators like Jupiter
+  'Neptune-like': 0.4,  // Ice giants rotate moderately fast
+  'Sub-Neptune': 0.3,   // Mini-Neptunes
+  'Super-Earth': 0.15,  // Larger rocky worlds
+  'Earth-sized': 0.15,  // Earth-like rotation
+  'Sub-Earth': 0.1,     // Small rocky worlds
+  'Terrestrial': 0.12,  // Default rocky
+};
+
+/**
+ * Estimate rotation speed based on planet type and tidal locking
+ * @param planet - Exoplanet data
+ * @returns Rotation speed in radians per second (for animation)
+ */
+export function estimateRotationSpeed(planet: Exoplanet): number {
+  const planetType = planet.planet_type || 'Terrestrial';
+  const baseSpeed = ROTATION_SPEEDS[planetType] ?? 0.12;
+  
+  // Tidally locked planets don't rotate relative to their star
+  // Return 0 for animation - CelestialBody will handle the locked face
+  if (planet.is_likely_tidally_locked) {
+    return 0;
+  }
+  
+  // Add small variation based on planet name hash for uniqueness
+  const variation = hashString(planet.pl_name) * 0.3 - 0.15; // ±15%
+  
+  return baseSpeed * (1 + variation);
+}
+
+/**
+ * Estimate axial tilt using physics-based heuristics
+ * 
+ * Factors considered:
+ * - Tidal locking: locked planets have near-zero tilt
+ * - Distance from star: closer = more tidal damping = lower tilt
+ * - Temperature: hot planets experience more damping
+ * - Eccentricity: high eccentricity may indicate dynamical history
+ * - Planet type: gas giants damp faster due to fluid nature
+ * 
+ * @param planet - Exoplanet data
+ * @returns Axial tilt in radians
+ */
+export function estimateAxialTilt(planet: Exoplanet): number {
+  // Base tilt: Earth-like default (23.4°)
+  let baseTilt = 23.4;
+  
+  // Tidally locked planets have very low axial tilt (tidal forces align the axis)
+  if (planet.is_likely_tidally_locked) {
+    // Small variation 0-3° for locked planets
+    return hashString(planet.pl_name) * 3 * DEG_TO_RAD;
+  }
+  
+  // Tidal damping factor based on orbital distance
+  // Closer planets experience stronger tides → lower tilt
+  const semiMajorAxis = planet.pl_orbsmax ?? 1.0;
+  if (semiMajorAxis < 0.1) {
+    // Very close: strong damping (reduce tilt by 70%)
+    baseTilt *= 0.3;
+  } else if (semiMajorAxis < 0.3) {
+    // Close: moderate damping (reduce by 50%)
+    baseTilt *= 0.5;
+  } else if (semiMajorAxis < 0.5) {
+    // Moderately close: some damping (reduce by 30%)
+    baseTilt *= 0.7;
+  }
+  
+  // Temperature factor: hot planets (>1000K) have more damping
+  const temp = planet.pl_eqt ?? 300;
+  if (temp > 1500) {
+    baseTilt *= 0.4; // Ultra-hot: significant damping
+  } else if (temp > 1000) {
+    baseTilt *= 0.6; // Hot: moderate damping
+  }
+  
+  // Planet type: gas giants damp faster due to fluid interiors
+  const planetType = planet.planet_type || 'Terrestrial';
+  if (planetType === 'Gas Giant' || planetType === 'Neptune-like') {
+    baseTilt *= 0.7; // Gas/ice giants tend toward lower tilts
+  }
+  
+  // Eccentricity factor: high eccentricity may indicate past perturbations
+  // which could result in higher tilts
+  const eccentricity = planet.pl_orbeccen ?? 0.05;
+  if (eccentricity > 0.3) {
+    // High eccentricity: widen the possible tilt range
+    baseTilt *= (1 + eccentricity * 0.5);
+  }
+  
+  // Add deterministic variation based on planet name
+  // This ensures each planet has a unique but consistent tilt
+  const hash = hashString(planet.pl_name);
+  const variation = (hash - 0.5) * 0.6; // ±30% variation
+  baseTilt *= (1 + variation);
+  
+  // Clamp to realistic range (0-45°, extreme tilts like Uranus are rare)
+  baseTilt = clamp(baseTilt, 0, 45);
+  
+  return baseTilt * DEG_TO_RAD;
+}
+
+// =============================================================================
 // GENERATOR
 // =============================================================================
 
@@ -274,6 +409,10 @@ export function generateSolarSystem(
       orbitArgOfPeriastron: argOfPeriastronRad,
       isPrimaryStar: true,
       isCompanionStar: false,
+      // Stars use default rotation values (not physics-based)
+      rotationSpeed: 0.1,
+      axialTilt: 0,
+      isTidallyLocked: false,
     });
 
     // Add companion star (Star B)
@@ -294,6 +433,10 @@ export function generateSolarSystem(
       orbitArgOfPeriastron: argOfPeriastronRad + Math.PI, // Opposite side
       isPrimaryStar: false,
       isCompanionStar: true,
+      // Stars use default rotation values (not physics-based)
+      rotationSpeed: 0.1,
+      axialTilt: 0,
+      isTidallyLocked: false,
     });
   } else {
     // =========================================================================
@@ -326,6 +469,10 @@ export function generateSolarSystem(
       orbitEccentricity: 0.1,
       isPrimaryStar: true,
       isCompanionStar: false,
+      // Stars use default rotation values (not physics-based)
+      rotationSpeed: 0.1,
+      axialTilt: 0,
+      isTidallyLocked: false,
     });
 
     // Add companion star for binary/multiple systems (estimated)
@@ -348,6 +495,10 @@ export function generateSolarSystem(
         orbitEccentricity: 0.1,
         isPrimaryStar: false,
         isCompanionStar: true,
+        // Stars use default rotation values (not physics-based)
+        rotationSpeed: 0.1,
+        axialTilt: 0,
+        isTidallyLocked: false,
       });
     }
   }
@@ -417,6 +568,11 @@ export function generateSolarSystem(
       hasAtmosphere = 0.2; // Thin or no atmosphere for small rocky worlds
     }
 
+    // Calculate physics-based rotation and axial tilt
+    const rotationSpeed = estimateRotationSpeed(planet);
+    const axialTilt = estimateAxialTilt(planet);
+    const isTidallyLocked = planet.is_likely_tidally_locked ?? false;
+
     bodies.push({
       id: planet.pl_name,
       name: planet.pl_name,
@@ -433,6 +589,10 @@ export function generateSolarSystem(
       orbitEccentricity: eccentricity,
       hasRings,
       planetData: planet,
+      // Physics-based rotation properties
+      rotationSpeed,
+      axialTilt,
+      isTidallyLocked,
     });
   });
 

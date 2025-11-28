@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import type { Exoplanet } from '../../types';
 import { shaderService } from '../../services/shaderService';
 import { createPlanetUniforms, getPlanetShaderType, getShaderFileName } from '../../utils/planetUniforms';
+import { estimateRotationSpeed, estimateAxialTilt } from '../../utils/solarSystem';
 
 // Background stars for depth
 function BackgroundStars({ count = 2000 }: { count?: number }) {
@@ -99,6 +100,11 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
     starTemp: planet.st_teff ?? undefined,
   }), [planet]);
 
+  // Physics-based rotation speed and axial tilt from shared utilities
+  const rotationSpeed = useMemo(() => estimateRotationSpeed(planet), [planet]);
+  const axialTilt = useMemo(() => estimateAxialTilt(planet), [planet]);
+  const isTidallyLocked = planet.is_likely_tidally_locked ?? false;
+
   // Ring uniforms - data-driven
   const ringUniforms = useMemo(() => {
     const seed = generateSeed(planet.pl_name);
@@ -116,9 +122,19 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
 
   // Animate rotation and update time uniforms
   useFrame((state, delta) => {
-    // Rotate the whole group (planet + rings together)
+    // Apply axial tilt and physics-based rotation
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.1;
+      // Apply axial tilt (rotation around X axis to tilt the spin axis)
+      groupRef.current.rotation.x = axialTilt;
+      
+      if (isTidallyLocked) {
+        // Tidally locked: very slow or no visible rotation
+        // For the planet page view, show minimal rotation to indicate locked state
+        groupRef.current.rotation.y += delta * 0.02;
+      } else {
+        // Normal rotation using physics-based speed
+        groupRef.current.rotation.y += delta * rotationSpeed;
+      }
     }
     // Update shader time uniforms
     const time = state.clock.elapsedTime;
@@ -133,11 +149,12 @@ function PlanetMesh({ planet }: PlanetMeshProps) {
   // Determine if planet should have rings (gas giants and some ice giants)
   const hasRings = planet.planet_type === 'Gas Giant' || planet.planet_type === 'Neptune-like';
 
-  // Ring tilt varies by seed for variety
+  // Ring tilt uses physics-based axial tilt for consistency
   const ringTilt = useMemo(() => {
-    const seed = generateSeed(planet.pl_name);
-    return Math.PI / 2.5 + (seed - 0.5) * 0.3; // Vary tilt ±~17°
-  }, [planet.pl_name]);
+    // Rings are in the equatorial plane, so they're perpendicular to spin axis
+    // The axial tilt is already applied to the group, so rings just need base rotation
+    return Math.PI / 2;
+  }, []);
 
   return (
     <group position={[0, 0.2, 0]}>
