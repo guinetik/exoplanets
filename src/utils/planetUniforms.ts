@@ -100,7 +100,7 @@ function getBaseColor(planet: Exoplanet): THREE.Color {
  * @param name - Planet name
  * @returns Seed value between 0 and 1
  */
-function generateSeed(name: string): number {
+export function generateSeed(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     const char = name.charCodeAt(i);
@@ -108,6 +108,39 @@ function generateSeed(name: string): number {
     hash = hash & hash;
   }
   return Math.abs(hash % 1000) / 1000;
+}
+
+/**
+ * Get stellar activity level based on spectral type
+ * Activity affects pulsation intensity and flame dynamics
+ *
+ * Scientific basis:
+ * - M-dwarfs: Known for frequent, violent flares
+ * - K-dwarfs: Moderate activity
+ * - G-stars (Sun-like): Steady, moderate activity
+ * - F-stars: Lower activity
+ * - A-stars: Low activity (radiative envelope)
+ * - B/O-stars: Violent stellar winds
+ * - L/T/Y (Brown dwarfs): Slow convection
+ *
+ * @param spectralType - Star's spectral type (e.g., "G2V", "M5", "K")
+ * @returns Activity level between 0 and 1
+ */
+export function getStarActivityLevel(spectralType: string | undefined): number {
+  const type = spectralType?.charAt(0)?.toUpperCase() ?? 'G';
+  const activityMap: Record<string, number> = {
+    'M': 0.95,  // Flare stars - very active
+    'K': 0.65,
+    'G': 0.55,
+    'F': 0.35,
+    'A': 0.25,
+    'B': 0.85,  // Violent stellar winds
+    'O': 0.90,  // Extremely violent
+    'L': 0.20,  // Brown dwarfs - calm
+    'T': 0.15,  // T-dwarfs - very calm
+    'Y': 0.10,  // Ultra-cool - minimal activity
+  };
+  return activityMap[type] ?? 0.5;
 }
 
 /**
@@ -487,4 +520,12 @@ export function getStarCoronaShaders(version: ShaderVersion = 'v1'): { vert: str
   return version === 'v2'
     ? { vert: 'v2StarCoronaVert', frag: 'v2StarCoronaFrag' }
     : { vert: 'starCoronaVert', frag: 'starCoronaFrag' };
+}
+
+/**
+ * Get solar flare shader names (V2 only)
+ * @returns Object with vert and frag shader names
+ */
+export function getStarFlareShaders(): { vert: string; frag: string } {
+  return { vert: 'v2StarFlareVert', frag: 'v2StarFlareFrag' };
 }

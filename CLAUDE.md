@@ -1,5 +1,9 @@
 # CLAUDE.md - Exoplanets Project Guide
 
+## IMPORTANT RULES
+- **NEVER run `npm run dev`** - The user manages the dev server themselves
+- **NEVER start background servers** - Only run `npm run build` or `npm test`
+
 ## Quick Start
 
 ```bash

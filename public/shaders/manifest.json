@@ -41,6 +41,8 @@
     { "name": "v2StarSurfaceVert", "path": "v2/star/surface.vert" },
     { "name": "v2StarSurfaceFrag", "path": "v2/star/surface.frag" },
     { "name": "v2StarCoronaVert", "path": "v2/star/corona.vert" },
-    { "name": "v2StarCoronaFrag", "path": "v2/star/corona.frag" }
+    { "name": "v2StarCoronaFrag", "path": "v2/star/corona.frag" },
+    { "name": "v2StarFlareVert", "path": "v2/star/flare.vert" },
+    { "name": "v2StarFlareFrag", "path": "v2/star/flare.frag" }
   ]
 }

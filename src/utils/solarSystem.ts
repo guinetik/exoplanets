@@ -20,6 +20,7 @@ export interface StellarBody {
   emissive?: string;
   emissiveIntensity?: number;
   temperature?: number; // Temperature in Kelvin (star or planet equilibrium)
+  spectralType?: string; // Star spectral type (e.g., "G2V", "M5", "K")
   planetType?: string; // Planet classification (Gas Giant, Neptune-like, etc.)
   hasAtmosphere?: number; // 0-1 scale for atmosphere thickness
   orbitRadius: number;
@@ -177,6 +178,23 @@ function getStarColorFromTemp(temperature: number): string {
   if (temperature >= 1300) return STELLAR_COLORS.L;
   if (temperature >= 550) return STELLAR_COLORS.T;
   return STELLAR_COLORS.Y;
+}
+
+/**
+ * Get spectral type string from temperature
+ * Used for stars without explicit spectral type data
+ */
+function getSpectralTypeFromTemp(temperature: number): string {
+  if (temperature >= 30000) return 'O';
+  if (temperature >= 10000) return 'B';
+  if (temperature >= 7500) return 'A';
+  if (temperature >= 6000) return 'F';
+  if (temperature >= 5200) return 'G';
+  if (temperature >= 3700) return 'K';
+  if (temperature >= 2400) return 'M';
+  if (temperature >= 1300) return 'L';
+  if (temperature >= 550) return 'T';
+  return 'Y';
 }
 
 /**
@@ -402,6 +420,7 @@ export function generateSolarSystem(
       emissive: getStarColorFromTemp(starA.temperature),
       emissiveIntensity: 0.8 + Math.min(starA.luminosity * 0.1, 0.5),
       temperature: starA.temperature,
+      spectralType: star.st_spectype ?? star.star_class ?? undefined,
       orbitRadius: binaryVisualSeparation * massRatioA,
       orbitPeriod: animationPeriod,
       orbitTilt: ((90 - orbit.inclination) * Math.PI) / 180, // Convert to radians
@@ -416,6 +435,8 @@ export function generateSolarSystem(
     });
 
     // Add companion star (Star B)
+    // For companions, estimate spectral type from temperature (cooler = later type)
+    const companionSpectralType = getSpectralTypeFromTemp(starB.temperature);
     bodies.push({
       id: `${star.id}-B`,
       name: `${star.hostname} B`,
@@ -426,6 +447,7 @@ export function generateSolarSystem(
       emissive: getStarColorFromTemp(starB.temperature),
       emissiveIntensity: 0.8 + Math.min(starB.luminosity * 0.1, 0.5),
       temperature: starB.temperature,
+      spectralType: companionSpectralType,
       orbitRadius: binaryVisualSeparation * massRatioB,
       orbitPeriod: animationPeriod, // Same period, opposite phase handled in renderer
       orbitTilt: ((90 - orbit.inclination) * Math.PI) / 180,
@@ -463,6 +485,7 @@ export function generateSolarSystem(
       emissive: getStarColor(star.star_class),
       emissiveIntensity: 0.8 + Math.pow(10, starLum) * 0.2,
       temperature: star.st_teff ?? 5778,
+      spectralType: star.st_spectype ?? star.star_class ?? undefined,
       orbitRadius: isMultiStarSystem ? binaryOrbitRadius * 0.4 : 0,
       orbitPeriod: isMultiStarSystem ? 120 : 0,
       orbitTilt: 0,
@@ -489,6 +512,7 @@ export function generateSolarSystem(
         emissive: getCompanionStarColor(star.star_class),
         emissiveIntensity: 0.6 + Math.pow(10, starLum * 0.7) * 0.15,
         temperature: companionTemp,
+        spectralType: getSpectralTypeFromTemp(companionTemp),
         orbitRadius: binaryOrbitRadius * 0.6,
         orbitPeriod: 120,
         orbitTilt: 0,

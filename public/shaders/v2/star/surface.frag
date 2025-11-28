@@ -1,20 +1,23 @@
 /**
  * Star Surface Fragment Shader V2
- * 
+ *
  * Creates realistic burning star surfaces with:
  * - Outward-flowing flame patterns
  * - Surface granulation (convection cells)
  * - Sunspots
  * - Temperature-based coloring (M-type red to O-type blue)
  * - Proper limb darkening
- * 
+ * - Pulsating brightness (breathing effect)
+ * - Edge flame overflow
+ *
  * Based on trisomie21's Shadertoy technique, enhanced with
- * physically-grounded temperature mapping.
+ * physically-grounded temperature mapping and dynamic activity.
  */
 
 #include "v2/common/noise.glsl"
 #include "v2/common/color.glsl"
 #include "v2/common/lighting.glsl"
+#include "v2/common/seed.glsl"
 
 // =============================================================================
 // UNIFORMS
@@ -23,16 +26,18 @@
 uniform vec3 uStarColor;        // Base star color
 uniform float uTime;            // Animation time
 uniform float uTemperature;     // Star temperature in Kelvin
+uniform float uSeed;            // Deterministic seed for this star
+uniform float uActivityLevel;   // Stellar activity level (0-1)
 
 // =============================================================================
 // STAR SURFACE CONSTANTS
 // =============================================================================
 
 // --- Burning Effect (spherical glow) ---
-const float BURN_EDGE_POWER = 4.0;          // How quickly brightness falls off at edge
-const float BURN_SINGULARITY_GUARD = 0.001; // Prevents division by zero
-const float BURN_BASE_BRIGHTNESS = 0.5;     // Minimum brightness at center
-const float BURN_CLAMP_MAX = 2.0;           // Maximum brightness value
+// Simplified smooth falloff without discontinuity
+const float BURN_CENTER_BRIGHTNESS = 1.2;   // Brightness at center
+const float BURN_EDGE_BRIGHTNESS = 0.85;    // Brightness at edge (was causing dark ring when too low)
+const float BURN_FALLOFF_POWER = 1.5;       // How quickly brightness falls off
 
 // --- Flame Animation ---
 const float FLAME_TIME_SCALE = 0.1;         // Overall animation speed
@@ -68,14 +73,15 @@ const float SUNSPOT_THRESHOLD_LOW = 0.55;   // Where sunspots start appearing
 const float SUNSPOT_THRESHOLD_HIGH = 0.75;  // Where sunspots are fully dark
 const float SUNSPOT_DARKNESS = 0.5;         // How dark sunspots get (0 = black, 1 = no effect)
 
-// --- Color Mixing ---
+// --- Color Mixing (visible flames without black areas) ---
 const float COLOR_WARM_RED = 1.2;           // Red boost for warm color
 const float COLOR_WARM_BLUE = 0.8;          // Blue reduction for warm color
-const float COLOR_HOT_RED = 1.4;            // Red boost for hot color
-const float COLOR_HOT_GREEN = 1.2;          // Green boost for hot color
-const float COLOR_COOL_RED = 0.8;           // Red reduction for cool (spot) color
-const float COLOR_COOL_GREEN = 0.5;         // Green reduction for cool color
-const float COLOR_COOL_BLUE = 0.3;          // Blue reduction for cool color
+const float COLOR_HOT_RED = 1.6;            // Red boost for hot color (white-hot)
+const float COLOR_HOT_GREEN = 1.4;          // Green boost for hot color (white-hot)
+const float COLOR_HOT_BLUE = 1.3;           // Blue boost for hot (white-hot effect)
+const float COLOR_COOL_RED = 0.75;          // Cool color is still bright (deep orange)
+const float COLOR_COOL_GREEN = 0.45;        // Not black, just darker orange
+const float COLOR_COOL_BLUE = 0.25;         // Minimal blue for orange tint
 
 // --- Granule Colors ---
 const float GRANULE_WARM_RED = 1.1;
@@ -85,10 +91,22 @@ const float GRANULE_COOL_RED = 0.85;
 const float GRANULE_COOL_GREEN = 0.75;
 const float GRANULE_COOL_BLUE = 0.7;
 
-// --- Layer Blend Weights ---
-const float LAYER_BASE_GLOW = 0.4;          // Weight of burning glow
-const float LAYER_FLAMES = 0.3;             // Weight of flame layer
-const float LAYER_GRANULES = 0.4;           // Weight of granulation
+// --- Layer Blend Weights (flames dominant for burning appearance) ---
+const float LAYER_BASE_GLOW = 0.35;         // Weight of burning glow (reduced to let flames show)
+const float LAYER_FLAMES = 0.65;            // Weight of flame layer (dominant - this is the fire!)
+const float LAYER_GRANULES = 0.25;          // Weight of granulation (background texture)
+
+// --- Pulsation Effect (DRAMATIC - like reference studies) ---
+const float PULSE_FREQ_BASE = 0.5;          // Base pulsation frequency (faster)
+const float PULSE_FREQ_RANGE = 0.3;         // Frequency variation from seed
+const float PULSE_FREQ2_BASE = 0.25;        // Secondary pulse frequency
+const float PULSE_FREQ2_RANGE = 0.15;       // Secondary frequency variation
+const float PULSE_AMPLITUDE1 = 0.35;        // Primary pulse amplitude (was 0.15)
+const float PULSE_AMPLITUDE2 = 0.25;        // Secondary pulse amplitude (was 0.10)
+
+// --- Edge Flame Overflow ---
+const float EDGE_FLAME_BOOST = 3.0;         // Flames stronger at edges (was 2.0)
+const float EDGE_FLAME_POWER = 0.4;         // Edge boost falloff power
 
 // --- Star Glow (radiance) ---
 const float GLOW_COLOR_RED = 1.0;
@@ -96,11 +114,11 @@ const float GLOW_COLOR_GREEN = 0.6;
 const float GLOW_COLOR_BLUE = 0.3;
 const float GLOW_STRENGTH = 0.3;            // Glow contribution
 
-// --- Limb Darkening ---
-const float LIMB_POWER = 0.35;              // Limb darkening curve power
-const float LIMB_TEMP_INFLUENCE = 0.25;     // How much temperature affects limb
-const float LIMB_DARK_BASE = 0.6;           // Minimum limb brightness
-const float LIMB_BRIGHT_RANGE = 0.4;        // Brightness range
+// --- Limb Darkening (minimal - we want bright burning edges) ---
+const float LIMB_POWER = 0.3;               // Limb darkening curve power (lower = more gradual)
+const float LIMB_TEMP_INFLUENCE = 0.4;      // How much temperature affects limb
+const float LIMB_DARK_BASE = 0.88;          // Minimum limb brightness (high = less darkening)
+const float LIMB_BRIGHT_RANGE = 0.12;       // Brightness range (low = subtle effect)
 
 // --- Center Boost ---
 const float CENTER_POWER = 1.5;             // Center brightness power
@@ -145,11 +163,26 @@ void main() {
     // === TEMPERATURE FACTOR ===
     float tempFactor = clamp(uTemperature / TEMP_NORMALIZE, TEMP_CLAMP_MIN, TEMP_CLAMP_MAX);
     float brightness = 0.15 + tempFactor * 0.1;
+
+    // === PULSATING BRIGHTNESS (breathing effect) ===
+    // Seed-based pulsation frequencies - each star pulses differently
+    float pulseFreq1 = PULSE_FREQ_BASE + seedHash(uSeed) * PULSE_FREQ_RANGE;
+    float pulseFreq2 = PULSE_FREQ2_BASE + seedHash(uSeed + 1.0) * PULSE_FREQ2_RANGE;
+
+    // Multi-frequency pulsation (like reference's cos + sin pattern)
+    float pulse = cos(wrappedTime * pulseFreq1) * PULSE_AMPLITUDE1
+                + sin(wrappedTime * pulseFreq2) * PULSE_AMPLITUDE2;
+    pulse *= uActivityLevel;  // Scale by stellar activity level
+
+    // Modulate brightness with pulsation
+    brightness *= 1.0 + pulse;
+
+    // Pulsation factor for other effects (0.5 to 1.5 range for high activity stars)
+    float pulseFactor = 1.0 + pulse * 0.5;
     
-    // === BURNING GLOW (spherical falloff) ===
-    float r = edgeDist * edgeDist * BURN_EDGE_POWER;
-    float burnFactor = (1.0 - sqrt(abs(1.0 - r))) / (r + BURN_SINGULARITY_GUARD) + BURN_BASE_BRIGHTNESS;
-    burnFactor = clamp(burnFactor, 0.0, BURN_CLAMP_MAX);
+    // === BURNING GLOW (smooth spherical falloff - no discontinuity) ===
+    // Simple power curve from center to edge
+    float burnFactor = mix(BURN_CENTER_BRIGHTNESS, BURN_EDGE_BRIGHTNESS, pow(edgeDist, BURN_FALLOFF_POWER));
     
     // === POLAR COORDINATES FOR FLAMES ===
     float angle = atan(spherePos.y, spherePos.x) / TAU;
@@ -178,7 +211,12 @@ void main() {
     // Combine and normalize flames
     float flames = (flameVal1 + flameVal2) * FLAME_MIX_OFFSET;
     flames = flames * FLAME_MIX_OFFSET + FLAME_MIX_OFFSET;
-    
+
+    // === EDGE FLAME OVERFLOW (flames "spill out" at edges) ===
+    // Like the reference studies - flames are more intense at the star's edge
+    float edgeFlameBoost = pow(edgeDist, EDGE_FLAME_POWER) * EDGE_FLAME_BOOST * uActivityLevel;
+    flames += edgeFlameBoost * flames * 0.5;
+
     // === SURFACE GRANULATION (convection cells) ===
     float slowTime = wrappedTime * GRANULE_TIME_SCALE;
     vec3 granulePos = spherePos + vec3(slowTime * GRANULE_DRIFT_X, 0.0, slowTime * GRANULE_DRIFT_Z);
@@ -197,14 +235,22 @@ void main() {
     // === COLOR CALCULATION ===
     // Get base color from temperature
     vec3 baseColor = temperatureToColor(uTemperature);
-    
+
     // Mix with provided star color for consistency
     baseColor = mix(baseColor, uStarColor, 0.3);
+
+    // NORMALIZE base color to prevent washout from bright stars
+    // The star should look like it's burning regardless of actual luminosity
+    // Luminosity affects planet lighting, not the star's own surface appearance
+    float maxComponent = max(baseColor.r, max(baseColor.g, baseColor.b));
+    if (maxComponent > 0.01) {
+        baseColor = baseColor / maxComponent * 0.85; // Normalize to 85% max
+    }
     
-    // Create color variants
+    // Create color variants with HIGH contrast for visible flames
     vec3 warmColor = baseColor * vec3(COLOR_WARM_RED, 1.0, COLOR_WARM_BLUE);
-    vec3 hotColor = baseColor * vec3(COLOR_HOT_RED, COLOR_HOT_GREEN, 1.0);
-    vec3 coolColor = baseColor * vec3(COLOR_COOL_RED, COLOR_COOL_GREEN, COLOR_COOL_BLUE);
+    vec3 hotColor = baseColor * vec3(COLOR_HOT_RED, COLOR_HOT_GREEN, COLOR_HOT_BLUE); // White-hot
+    vec3 coolColor = baseColor * vec3(COLOR_COOL_RED, COLOR_COOL_GREEN, COLOR_COOL_BLUE); // Dark red
     vec3 granuleWarm = baseColor * vec3(GRANULE_WARM_RED, GRANULE_WARM_GREEN, GRANULE_WARM_BLUE);
     vec3 granuleCool = baseColor * vec3(GRANULE_COOL_RED, GRANULE_COOL_GREEN, GRANULE_COOL_BLUE);
     
@@ -221,8 +267,10 @@ void main() {
     // Apply sunspot darkening
     granuleColor *= spotDarkening;
     
-    // Combine layers
-    vec3 surfaceColor = baseGlow * LAYER_BASE_GLOW + flameColor * LAYER_FLAMES + granuleColor * LAYER_GRANULES;
+    // Combine layers - pulseFactor affects flame and glow intensity
+    vec3 surfaceColor = baseGlow * LAYER_BASE_GLOW * pulseFactor
+                      + flameColor * LAYER_FLAMES * pulseFactor
+                      + granuleColor * LAYER_GRANULES;
     
     // === STAR GLOW (warm radiance) ===
     float starGlow = clamp(1.0 - edgeDist * (1.0 - brightness), 0.0, 1.0);

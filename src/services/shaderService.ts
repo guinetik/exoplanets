@@ -163,7 +163,7 @@ class ShaderService {
     }
 
     // Find and replace all #include directives
-    const resolved = content.replace(INCLUDE_REGEX, (match, includePath: string) => {
+    const resolved = content.replace(INCLUDE_REGEX, (_match, includePath: string) => {
       // Normalize path separators (Windows compatibility)
       const normalizedPath = includePath.replace(/\\/g, '/');
       
