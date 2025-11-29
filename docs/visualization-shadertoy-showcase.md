@@ -203,3 +203,7 @@ vec2 positions[4] = vec2[4](
 This shader is part of the Exoplanets visualization project.
 Feel free to use, modify, and share!
 
+## See Also
+
+- [Shader System V2](visualization-shader-system-v2.md) - Production shader system
+- [ShaderService API](api-shader-service.md) - How shaders are managed in the app

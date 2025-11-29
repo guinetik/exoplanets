@@ -172,3 +172,8 @@ To add support for a new language:
 3. Translate all values under `pages.planets` and `pages.planet`
 4. Register the language in `src/i18n/index.ts`
 
+## See Also
+
+- [i18n Overview](i18n-overview.md) - System setup and best practices
+- [i18n Stars Pages](i18n-stars-pages.md) - Stars-related translation keys
+- [Planet Catalog](feature-planet-catalog.md) - Feature using these keys

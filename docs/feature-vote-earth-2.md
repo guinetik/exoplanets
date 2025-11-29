@@ -104,3 +104,7 @@ Styles are defined in `src/styles/index.css` using Tailwind `@apply` patterns:
 - `pollService` - Firebase vote operations
 - `UserPrompt` - Reused from Reviews for authentication modal
 
+## See Also
+
+- [Planet Catalog](feature-planet-catalog.md) - Main planet discovery interface
+- [DataService API](api-data-service.md) - Getting top habitable planets

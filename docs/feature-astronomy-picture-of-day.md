@@ -97,3 +97,7 @@ Navigate to `/apod` (or `/#/apod` with HashRouter) to view the page.
 
 The page automatically loads today's APOD on mount and provides navigation buttons to browse historical images.
 
+## See Also
+
+- [System Architecture Overview](architecture-system-overview.md) - Page routing
+- [i18n Overview](i18n-overview.md) - Translation system

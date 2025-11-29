@@ -150,4 +150,10 @@ To add support for a new language:
 3. Translate all values under `pages.stars`, `pages.star`, `pages.starCard`, and `pages.starSystem`
 4. Register the language in `src/i18n/index.ts`
 
+## See Also
+
+- [i18n Overview](i18n-overview.md) - System setup and best practices
+- [i18n Planets Pages](i18n-planets-pages.md) - Planets-related translation keys
+- [Star Catalog](feature-star-catalog.md) - Feature using these keys
+- [Star System Overview](feature-star-system-overview.md) - Feature using these keys
 

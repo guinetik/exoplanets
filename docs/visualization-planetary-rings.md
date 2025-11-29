@@ -205,3 +205,10 @@ Seed = 0.552 < 0.795 → HAS RINGS ✓
 - Hill sphere - Gravitational sphere of influence
 - Roche limit - Tidal disruption distance
 - Saturn ring composition studies
+
+## See Also
+
+- [Shader System V2](visualization-shader-system-v2.md) - How rings are rendered
+- [Math Module Design](architecture-math-module.md) - Constants and formulas
+- [CSV Structure & Fields](data-csv-structure.md) - Planet properties used in ring calculations
+- [Planet Rotation & Axial Tilt](visualization-planet-rotation.md) - Related planet visual properties

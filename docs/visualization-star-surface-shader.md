@@ -81,3 +81,8 @@ Based on trisomie21's Shadertoy star technique, enhanced with:
 - Convection cell simulation
 - Dynamic activity levels
 
+## See Also
+
+- [Shader System V2](visualization-shader-system-v2.md) - Complete shader architecture
+- [Star System Overview](feature-star-system-overview.md) - Where stars are displayed
+- [ShaderService API](api-shader-service.md) - Shader loading

@@ -190,3 +190,10 @@ pages.starSystem.systemOverview.tempSizeChart.*
 
 Translations available in English (`en.json`) and Portuguese (`pt.json`).
 
+## See Also
+
+- [Star Catalog](feature-star-catalog.md) - Star listing and filtering
+- [Star Surface Shader](visualization-star-surface-shader.md) - How stars are rendered
+- [DataService API](api-data-service.md) - Data loading and querying
+- [i18n-stars-pages](i18n-stars-pages.md) - Translation keys for stars pages
+

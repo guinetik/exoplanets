@@ -269,3 +269,10 @@ Shader techniques based on:
 - **Lava worlds**: Morgan McGuire's "Vulcan"
 - **Atmospheric scattering**: Various PBR references
 
+## See Also
+
+- [ShaderService API](api-shader-service.md) - How shaders are loaded and managed
+- [Planetary Rings](visualization-planetary-rings.md) - Ring rendering with shader system
+- [Planet Rotation & Axial Tilt](visualization-planet-rotation.md) - How rotation affects visuals
+- [Star Surface Shader](visualization-star-surface-shader.md) - Star-specific rendering techniques
+- [Planet Catalog](feature-planet-catalog.md) - Where these shaders are displayed
