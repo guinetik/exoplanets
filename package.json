@@ -1,6 +1,6 @@
 {
   "name": "exoplanets",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,7 @@
     "deploy": "node ./deploy.js"
   },
   "dependencies": {
-    "@guinetik/logger": "^1.0.0",
+    "@guinetik/logger": "^1.0.1",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "@types/d3": "^7.4.3",
