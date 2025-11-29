@@ -55,9 +55,14 @@ export function renderLegend(
   const itemSize = 12;
   const rowHeight = 18;
 
-  // Create individual legend items - use fixed width for consistency
-  const fixedItemWidth = 70; // Fixed width for all items to ensure uniform spacing
+  // Find the longest text to calculate appropriate fixed width
+  const longestText = items.reduce((max, item) =>
+    item.text.length > max.length ? item.text : max, ''
+  );
+  const estimatedLongestWidth = longestText.length * fontSize * 0.55;
+  const fixedItemWidth = 12 + itemPadding + estimatedLongestWidth + itemPadding;
 
+  // Create individual legend items - use fixed width based on longest text
   const legendNodes = items.map((item) => {
     const g = d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
 

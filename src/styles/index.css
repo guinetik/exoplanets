@@ -2166,7 +2166,7 @@
   }
 
   .rv-comparison-chart {
-    @apply w-full overflow-x-auto;
+    @apply w-full overflow-hidden;
   }
 
   .rv-comparison-legend {

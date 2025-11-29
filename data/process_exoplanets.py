@@ -264,11 +264,20 @@ def calculate_habitability_score(row):
     - Equilibrium temperature (ideal: 200-320K, Earth is ~255K)
     - Planet size (ideal: 0.5-2.0 Earth radii)
     - Star type (ideal: G, K, M dwarfs)
+
+    Hard constraints:
+    - Temperature must be between 100K and 500K (extreme bounds for any life)
+    - If outside this range, score is 0
     """
     score = 0
 
-    # Temperature score (max 40 points)
+    # Hard temperature constraint - disqualify extreme cases
     temp = row["pl_eqt"]
+    if pd.notna(temp):
+        if temp < 100 or temp > 500:
+            return 0  # Too hot or too cold for any habitability consideration
+
+    # Temperature score (max 40 points)
     if pd.notna(temp):
         if 200 <= temp <= 320:
             # Perfect range

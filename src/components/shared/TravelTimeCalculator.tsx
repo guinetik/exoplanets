@@ -158,7 +158,11 @@ export function TravelTimeCalculator({
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
-    svg.attr('width', width).attr('height', height);
+    svg
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('max-width', '100%')
+      .style('height', 'auto');
 
     const g = svg
       .append('g')

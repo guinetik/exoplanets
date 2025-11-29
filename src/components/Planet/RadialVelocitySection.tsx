@@ -723,12 +723,12 @@ export function RadialVelocitySection({
 
     const containerWidth = comparisonContainerRef.current.clientWidth;
     const isMobile = containerWidth < 500;
-    const width = Math.max(isMobile ? 320 : 400, containerWidth - (isMobile ? 20 : 40));
+    const width = containerWidth - (isMobile ? 0 : 40);
     const height = Math.max(200, rvPlanets.length * (isMobile ? 30 : 40));
     const margin = {
       top: 20,
       right: isMobile ? 15 : 30,
-      bottom: isMobile ? 30 : 40,
+      bottom: isMobile ? 40 : 50,
       left: isMobile ? 80 : 150,
     };
 
@@ -789,7 +789,7 @@ export function RadialVelocitySection({
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(
         d3.axisBottom(xScale)
-          .ticks(isMobile ? 3 : 5, '~s')
+          .ticks(isMobile ? 2 : 3)
           .tickFormat(d => `${d} m/s`)
       );
 
@@ -1068,35 +1068,40 @@ export function RadialVelocitySection({
         </div>
       </div>
 
-      {/* Comparison Chart (only if siblings exist) */}
-      {siblings.length > 0 && (
-        <div className="rv-comparison-container">
-          <h4 className="rv-comparison-title">
-            {t('pages.planet.rv.comparisonTitle')}
-          </h4>
-          <p className="rv-comparison-description">
-            {t('pages.planet.rv.comparisonDescription')}
-          </p>
-          <div ref={comparisonContainerRef} className="rv-comparison-chart">
-            <svg ref={comparisonChartRef} />
-          </div>
+      {/* Comparison Chart (only if multiple planets with RV data exist) */}
+      {(() => {
+        const otherSiblings = siblings.filter(s => s.pl_name !== planet.pl_name);
+        const rvPlanets = [planet, ...otherSiblings]
+          .filter(p => p.pl_rvamp !== null && p.pl_rvamp > 0);
+        return rvPlanets.length > 1 ? (
+          <div className="rv-comparison-container">
+            <h4 className="rv-comparison-title">
+              {t('pages.planet.rv.comparisonTitle')}
+            </h4>
+            <p className="rv-comparison-description">
+              {t('pages.planet.rv.comparisonDescription')}
+            </p>
+            <div ref={comparisonContainerRef} className="rv-comparison-chart">
+              <svg ref={comparisonChartRef} />
+            </div>
 
-          <div className="rv-comparison-legend">
-            <div className="rv-comparison-legend-item">
-              <div className="rv-legend-dot current" />
-              <span>{planet.pl_name}</span>
-            </div>
-            <div className="rv-comparison-legend-item">
-              <div className="rv-legend-dot sibling" />
-              <span>Sibling planets</span>
-            </div>
-            <div className="rv-comparison-legend-item">
-              <div className="rv-legend-dot threshold" />
-              <span>{t('pages.planet.rv.detectionThreshold')}</span>
+            <div className="rv-comparison-legend">
+              <div className="rv-comparison-legend-item">
+                <div className="rv-legend-dot current" />
+                <span>{planet.pl_name}</span>
+              </div>
+              <div className="rv-comparison-legend-item">
+                <div className="rv-legend-dot sibling" />
+                <span>Sibling planets</span>
+              </div>
+              <div className="rv-comparison-legend-item">
+                <div className="rv-legend-dot threshold" />
+                <span>{t('pages.planet.rv.detectionThreshold')}</span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        ) : null;
+      })()}
 
       {/* Technical Details */}
       {renderTechnicalDetails()}
