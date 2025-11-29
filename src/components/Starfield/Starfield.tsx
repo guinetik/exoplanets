@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { Stars } from './Stars';
 import { EarthHorizon } from './EarthHorizon';
 import { Satellites } from './Satellites';
+import { PersistentISS } from './PersistentISS';
 import type { Star } from '../../types';
 import {
   ObserverLocation,
@@ -728,6 +729,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
             <EarthHorizon longitude={observer.longitude} />
 
             {state.phase === 'complete' && <Satellites />}
+            {state.phase === 'complete' && <PersistentISS />}
           </>
         )}
       </Canvas>

@@ -425,6 +425,42 @@ export const SATELLITE_VISUALS = {
 } as const;
 
 /**
+ * Persistent ISS orbital parameters
+ */
+export const PERSISTENT_ISS = {
+  /** Orbital altitude above Earth surface (scaled for visibility) */
+  ORBITAL_ALTITUDE: 30,
+
+  /** Orbital radius from Earth center (EARTH_HORIZON.RADIUS + ORBITAL_ALTITUDE) */
+  ORBITAL_RADIUS: 610,
+
+  /** Orbit period in seconds (1.5 minutes) */
+  ORBIT_PERIOD_S: 90,
+
+  /** Angular velocity (radians per second) */
+  ANGULAR_VELOCITY: (2 * Math.PI) / 90,
+
+  /** Starting angle (left side from viewer) */
+  START_ANGLE: -Math.PI / 2,
+
+  /** Orbit direction (1 for left-to-right clockwise) */
+  ORBIT_DIRECTION: 1,
+
+  /** ISS model size multiplier */
+  SIZE_MULTIPLIER: 8.0,
+
+  /** ISS body color (white/light gray for realistic look) */
+  BODY_COLOR: '#e8e8e8',
+
+  /** Solar panel color (blue for realistic solar cells) */
+  PANEL_COLOR: '#1e90ff',
+
+  /** Rotation speeds (very minimal - ISS maintains stable orientation) */
+  ROTATION_X: 0,
+  ROTATION_Y: 0.0005,
+} as const;
+
+/**
  * Location animation settings
  */
 export const LOCATION_ANIMATION = {
