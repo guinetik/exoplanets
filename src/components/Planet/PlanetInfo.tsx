@@ -6,6 +6,8 @@
 import { useTranslation } from 'react-i18next';
 import type { Exoplanet } from '../../types';
 import { Reviews } from '../Reviews';
+import { ExplainablePropertyRow } from '../shared/ExplainablePropertyRow';
+import { ExplainableProperty } from '../shared/ExplainableProperty';
 import { nameToSlug } from '../../utils/urlSlug';
 
 // Earth reference values for comparison tooltips (translation keys)
@@ -166,52 +168,6 @@ function FlagTag({
   );
 }
 
-/**
- * Reusable property row with optional Earth comparison tooltip
- * @param field - Field definition with label key and format function
- * @param planet - Planet data
- */
-function PropertyRow({
-  field,
-  planet,
-}: {
-  field: FieldDef;
-  planet: Exoplanet;
-}) {
-  const { t } = useTranslation();
-  const earthRef = field.earthRef ? EARTH_VALUES[field.earthRef] : null;
-  const unknown = t('pages.planet.info.unknown');
-  const value = field.format(planet, unknown);
-  const label = t(`pages.planet.info.fields.${field.labelKey}`);
-  const earthLabel = earthRef
-    ? t(`pages.planet.info.earthRef.${earthRef.labelKey}`)
-    : null;
-
-  return (
-    <div
-      className="planet-property-row"
-      title={
-        earthRef && earthLabel
-          ? `${earthLabel}: ${earthRef.value} ${earthRef.unit}`
-          : undefined
-      }
-    >
-      <span className="planet-property-label">
-        {label}
-        {earthRef && earthLabel && (
-          <span
-            className="earth-indicator"
-            title={`${earthLabel}: ${earthRef.value} ${earthRef.unit}`}
-          >
-            &#x1F30D;
-          </span>
-        )}
-      </span>
-      <span className="planet-property-value">{value}</span>
-    </div>
-  );
-}
-
 interface PlanetInfoProps {
   planet: Exoplanet;
 }
@@ -230,10 +186,20 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
         <div className="planet-flags">
           {/* Habitability flags */}
           {planet.is_habitable_zone && (
-            <FlagTag flagKey="habitableZone" className="flag-habitable" />
+            <ExplainableProperty
+              propertyKey="habitableZone"
+              category="flag"
+            >
+              <FlagTag flagKey="habitableZone" className="flag-habitable" />
+            </ExplainableProperty>
           )}
           {planet.is_earth_like && (
-            <FlagTag flagKey="earthLike" className="flag-earth-like" />
+            <ExplainableProperty
+              propertyKey="earthLike"
+              category="flag"
+            >
+              <FlagTag flagKey="earthLike" className="flag-earth-like" />
+            </ExplainableProperty>
           )}
           {planet.is_top_habitable_candidate && (
             <FlagTag flagKey="topCandidate" className="flag-top-candidate" />
@@ -353,9 +319,34 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
           {t('pages.planet.info.earthComparison')}
         </p>
         <div className="planet-properties-table">
-          {PLANET_FIELDS.map((field) => (
-            <PropertyRow key={field.id} field={field} planet={planet} />
-          ))}
+          {PLANET_FIELDS.map((field) => {
+            const unknown = t('pages.planet.info.unknown');
+            const value = field.format(planet, unknown);
+            const label = t(`pages.planet.info.fields.${field.labelKey}`);
+            const earthRef = field.earthRef ? EARTH_VALUES[field.earthRef] : null;
+            const earthLabel = earthRef
+              ? t(`pages.planet.info.earthRef.${earthRef.labelKey}`)
+              : null;
+
+            return (
+              <ExplainablePropertyRow
+                key={field.id}
+                propertyKey={field.labelKey}
+                category="planet"
+                label={label}
+                value={value}
+                earthRef={
+                  earthRef && earthLabel
+                    ? {
+                        value: earthRef.value,
+                        unit: earthRef.unit,
+                        label: earthLabel,
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -365,9 +356,34 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
           {t('pages.planet.info.sections.hostStar')}
         </h2>
         <div className="planet-properties-table">
-          {STAR_FIELDS.map((field) => (
-            <PropertyRow key={field.id} field={field} planet={planet} />
-          ))}
+          {STAR_FIELDS.map((field) => {
+            const unknown = t('pages.planet.info.unknown');
+            const value = field.format(planet, unknown);
+            const label = t(`pages.planet.info.fields.${field.labelKey}`);
+            const earthRef = field.earthRef ? EARTH_VALUES[field.earthRef] : null;
+            const earthLabel = earthRef
+              ? t(`pages.planet.info.earthRef.${earthRef.labelKey}`)
+              : null;
+
+            return (
+              <ExplainablePropertyRow
+                key={field.id}
+                propertyKey={field.labelKey}
+                category="star"
+                label={label}
+                value={value}
+                earthRef={
+                  earthRef && earthLabel
+                    ? {
+                        value: earthRef.value,
+                        unit: earthRef.unit,
+                        label: earthLabel,
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -377,9 +393,21 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
           {t('pages.planet.info.sections.discovery')}
         </h2>
         <div className="planet-properties-table">
-          {DISCOVERY_FIELDS.map((field) => (
-            <PropertyRow key={field.id} field={field} planet={planet} />
-          ))}
+          {DISCOVERY_FIELDS.map((field) => {
+            const unknown = t('pages.planet.info.unknown');
+            const value = field.format(planet, unknown);
+            const label = t(`pages.planet.info.fields.${field.labelKey}`);
+
+            return (
+              <ExplainablePropertyRow
+                key={field.id}
+                propertyKey={field.labelKey}
+                category="discovery"
+                label={label}
+                value={value}
+              />
+            );
+          })}
         </div>
       </section>
 

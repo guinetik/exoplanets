@@ -6,6 +6,7 @@
     "habitability": "Habitabilidade",
     "vote": "Votar",
     "apod": "Foto do Dia",
+    "tour": "Tour",
     "about": "Sobre"
   },
   "pages": {
@@ -653,6 +654,117 @@
       "videoNotSupported": "Seu navegador não suporta a tag de vídeo.",
       "viewFullSize": "Clique para ver em tamanho real"
     },
+    "tour": {
+      "title": "Uma Jornada por Mundos Distantes",
+      "subtitle": "Descubra os exoplanetas mais notáveis já encontrados",
+      "scrollHint": "Role para começar",
+      "sections": {
+        "famous": {
+          "chapter": "Capítulo 1",
+          "title": "Mundos Famosos",
+          "intro": "Conheça as celebridades do mundo dos exoplanetas. Esses são os planetas que fizeram manchetes, despertaram nossa imaginação e mudaram como pensamos sobre nosso lugar no cosmos."
+        },
+        "nearest": {
+          "chapter": "Capítulo 2",
+          "title": "Vizinhos Mais Próximos",
+          "intro": "Esses mundos estão praticamente ao lado em termos cósmicos. Alguns estão ao alcance de potenciais missões futuras, tornando-os candidatos ideais para estudos detalhados."
+        },
+        "habitable": {
+          "chapter": "Capítulo 3",
+          "title": "Mais Habitáveis",
+          "intro": "Se a humanidade encontrar um segundo lar entre as estrelas, pode ser um desses mundos. Nosso algoritmo de habitabilidade classifica esses planetas como os candidatos mais promissores para a vida como a conhecemos."
+        },
+        "extreme": {
+          "chapter": "Capítulo 4",
+          "title": "Mundos Extremos",
+          "intro": "Esses planetas desafiam os limites do que pensávamos ser possível. De mundos escaldantes a anomalias gravitacionais, eles desafiam nossa compreensão da formação planetária."
+        },
+        "records": {
+          "chapter": "Capítulo 5",
+          "title": "Recordistas",
+          "intro": "Os campeões das Olimpíadas dos exoplanetas. Esses mundos detêm os recordes de mais quente, mais frio, mais rápido, maior e mais antigo entre todos os exoplanetas conhecidos."
+        }
+      },
+      "footer": {
+        "title": "Pronto para explorar mais?",
+        "cta": "Ver Todos os Planetas"
+      },
+      "cards": {
+        "viewDetails": "Ver detalhes",
+        "distanceLabel": "Distância",
+        "tempLabel": "Temperatura",
+        "scoreLabel": "Habitabilidade",
+        "radiusLabel": "Raio"
+      },
+      "badges": {
+        "famous": "Famoso",
+        "nearby": "Próximo",
+        "habitable": "Habitável",
+        "record": "Recorde",
+        "extreme": "Extremo"
+      },
+      "descriptions": {
+        "common": {
+          "world": "mundo",
+          "veryLow": "muito baixa",
+          "hours": "{{value}} horas",
+          "days": "{{value}} dias"
+        },
+        "famous": {
+          "proximaCenB": "Nosso vizinho exoplanetário mais próximo, a apenas 4,2 anos-luz de distância. Orbitando Proxima Centauri, a estrela mais próxima do Sol, este mundo rochoso está na zona habitável onde água líquida poderia existir.",
+          "trappist1e": "O mundo mais parecido com a Terra em um sistema notável de sete planetas. TRAPPIST-1 e recebe energia similar de sua estrela como a Terra recebe do Sol, tornando-o um alvo principal na busca por vida.",
+          "kepler452b": "Apelidado de 'Primo da Terra', este foi o primeiro planeta de tamanho próximo ao da Terra encontrado na zona habitável de uma estrela similar ao Sol. Sua órbita de 385 dias é notavelmente similar ao nosso ano.",
+          "fiftyOnePegB": "O planeta que mudou tudo. Descoberto em 1995, este foi o primeiro exoplaneta encontrado orbitando uma estrela similar ao Sol, rendendo a seus descobridores o Prêmio Nobel de Física de 2019.",
+          "kepler16b": "Um Tatooine da vida real! Este planeta circumbinário orbita duas estrelas, experimentando pores do sol duplos. Provou que planetas podem se formar e sobreviver em sistemas estelares binários.",
+          "kepler186f": "O primeiro planeta do tamanho da Terra descoberto na zona habitável de outra estrela. Este mundo histórico mostrou que planetas rochosos do tamanho da Terra existem em regiões onde a vida poderia prosperar."
+        },
+        "nearby": {
+          "habitableZone": "A {{distance}} anos-luz, este {{type}} orbita na zona habitável de sua estrela. Sua proximidade o torna um excelente alvo para futuras observações e potenciais estudos atmosféricos.",
+          "multiPlanet": "A apenas {{distance}} anos-luz em um sistema de {{count}} planetas conhecidos. Por estar tão perto da Terra, este sistema oferece oportunidades únicas para estudos detalhados.",
+          "default": "Um dos nossos vizinhos cósmicos mais próximos a {{distance}} anos-luz. Perto o suficiente para que futuros telescópios possam obter imagens diretas deste {{type}} e analisar sua atmosfera."
+        },
+        "habitable": {
+          "intro": "Um {{traits}}. ",
+          "score": "Com uma pontuação de habitabilidade de {{score}}/100, este mundo tem a combinação certa de tamanho, temperatura e ambiente estelar que poderia suportar água líquida em sua superfície.",
+          "traits": {
+            "earthSized": "do tamanho da Terra",
+            "habitableZone": "na zona habitável",
+            "sunLikeStar": "orbitando uma estrela similar ao Sol",
+            "redDwarf": "orbitando uma anã vermelha"
+          }
+        },
+        "extreme": {
+          "ultraHot": "Um inferno escaldante a {{temp}}K, quente o suficiente para vaporizar ferro e titânio. Neste mundo ultra-quente, metais chovem do céu e o lado diurno brilha como uma brasa.",
+          "puffy": "Um gigante inflado com densidade de apenas {{density}} g/cm³—menos denso que isopor. Apesar de ser maior que Júpiter, você teoricamente poderia flutuar neste mundo de algodão-doce.",
+          "circumbinary": "Um mundo com dois sóis em seu céu. Este planeta circumbinário orbita um par de estrelas, criando espetaculares nascer e pôr do sol duplos como o fictício Tatooine.",
+          "ultraDense": "Um mundo de ferro com incrível densidade de {{density}} g/cm³, mais denso que qualquer planeta do nosso sistema solar. Este mundo compacto provavelmente tem um núcleo metálico massivo.",
+          "eccentric": "Uma órbita selvagem com excentricidade de {{ecc}}. Este planeta oscila de aproximações escaldantes a passagens distantes gélidas, experimentando mudanças de temperatura sazonais extremas.",
+          "labels": {
+            "ultraHot": "Ultra Quente",
+            "puffy": "Planeta Inflado",
+            "circumbinary": "Circumbinário",
+            "ultraDense": "Ultra Denso",
+            "eccentric": "Órbita Excêntrica"
+          }
+        },
+        "records": {
+          "hottest": "O exoplaneta mais quente conhecido a {{temp}}K—mais quente que a maioria das estrelas! Sua atmosfera é quente o suficiente para quebrar moléculas em seus átomos componentes.",
+          "coldest": "O exoplaneta mais frio conhecido a apenas {{temp}}K ({{tempC}}°C). Um mundo congelado onde até gases como metano e nitrogênio congelariam sólidos.",
+          "fastest": "Um ano dura apenas {{period}} neste velocista! Ele orbita tão perto de sua estrela que as temperaturas da superfície vaporizariam rochas.",
+          "largest": "O maior exoplaneta conhecido com {{radius}} vezes o raio de Júpiter. Este gigante inflado é tão expandido pela radiação estelar que desafia os limites da física planetária.",
+          "smallest": "O menor exoplaneta confirmado com {{radius}} raios terrestres—menor que nossa Lua. Encontrar mundos tão pequenos mostra o quanto nossos métodos de detecção avançaram.",
+          "oldest": "Com {{age}} bilhões de anos, este sistema antigo se formou quando o universo era jovem. Se a vida surgiu aqui, teve bilhões de anos a mais que a Terra para evoluir.",
+          "labels": {
+            "hottest": "Mais Quente",
+            "coldest": "Mais Frio",
+            "fastest": "Órbita Mais Rápida",
+            "largest": "Maior",
+            "smallest": "Menor",
+            "oldest": "Mais Antigo"
+          }
+        }
+      }
+    },
     "about": {
       "title": "Sobre",
       "subtitle": "Explorando mais de 6.000 mundos confirmados além do nosso sistema solar",
@@ -859,6 +971,421 @@
         "onePercentC": "1% Veloc. da Luz",
         "tenPercentC": "10% Veloc. da Luz",
         "lightSpeed": "Velocidade da Luz"
+      }
+    }
+  },
+  "propertyExplanations": {
+    "planet": {
+      "radius": {
+        "title": "Raio do Planeta",
+        "description": "O raio de um planeta nos diz o quão grande ele é comparado à Terra. Os raios dos planetas variam de menor que Mercúrio (0,4 raios terrestres) até maior que Júpiter (11 raios terrestres). O raio de um planeta, combinado com sua massa, nos ajuda a determinar sua composição—se é um mundo rochoso como a Terra ou um gigante gasoso como Júpiter.",
+        "example": "Júpiter tem raio de 11,2 raios terrestres, tornando-o o maior planeta do nosso sistema solar. Os Júpiteres quentes podem ser ainda maiores devido ao inchaço atmosférico causado pelo calor intenso de suas estrelas.",
+        "technicalNote": "Medido em raios terrestres (R⊕). As observações de trânsito fornecem as medições mais precisas de raio.",
+        "funFact": "Alguns exoplanetas 'inchados' têm menor densidade que poliestireno devido ao aquecimento extremo de suas estrelas próximas!"
+      },
+      "mass": {
+        "title": "Massa do Planeta",
+        "description": "A massa de um planeta determina sua atração gravitacional e, junto com o raio, revela sua composição. Planetas mais massivos tendem a reter atmosferas espessas e podem afetar significativamente o movimento da estrela hospedeira. As medições de massa ajudam a distinguir entre planetas rochosos, gigantes de gelo e gigantes gasosos.",
+        "example": "A Terra tem massa de 1,0 M⊕ por definição. Júpiter é 318 vezes mais massivo, enquanto algumas 'super-Terras' variam de 2-10 massas terrestres.",
+        "technicalNote": "Medido em massas terrestres (M⊕). Medições de velocidade radial fornecem estimativas de massa."
+      },
+      "density": {
+        "title": "Densidade do Planeta",
+        "description": "A densidade revela do que um planeta é feito. Planetas rochosos como a Terra têm densidades ao redor de 5 g/cm³, enquanto gigantes gasosos como Júpiter são muito menos densos em 1,3 g/cm³. Planetas ultra-densos podem ter núcleos ricos em ferro, enquanto planetas 'inchados' podem ter densidades inferiores à água.",
+        "example": "Terra: 5,51 g/cm³ (rochoso), Júpiter: 1,33 g/cm³ (gás), Saturno: 0,69 g/cm³ (menos denso que a água!)",
+        "technicalNote": "Calculado a partir de massa e raio: ρ = M / (4/3 × π × R³)"
+      },
+      "eqTemperature": {
+        "title": "Temperatura de Equilíbrio",
+        "description": "Esta é a temperatura que um planeta teria se estivesse em equilíbrio térmico com a radiação de sua estrela, assumindo que não tem atmosfera. É calculada a partir do brilho da estrela e da distância do planeta. Planetas mais quentes que 1.000 K são tipicamente bloqueados por maré em suas estrelas.",
+        "example": "Terra: ~255 K (sem atmosfera), Vênus: ~730 K, Mercúrio: ~435 K. Júpiteres quentes frequentemente excedem 1.500 K.",
+        "technicalNote": "Medido em Kelvin (K). Calculado a partir de temperatura, raio e distância orbital da estrela."
+      },
+      "orbitalPeriod": {
+        "title": "Período Orbital",
+        "description": "O período orbital é quanto tempo um planeta leva para completar uma órbita ao redor de sua estrela—essencialmente, o comprimento de seu ano. O período da Terra é 365,25 dias. Alguns exoplanetas orbitam em meras horas, enquanto outros levam milhares de anos.",
+        "example": "Mercúrio: 88 dias, Terra: 365 dias, Júpiter quente: 1-10 dias, Planeta distante: 1.000+ dias",
+        "technicalNote": "Medido em dias terrestres. Derivado de observações repetidas de trânsito ou velocidade radial.",
+        "funFact": "Alguns planetas de 'período ultra-curto' orbitam suas estrelas mais rápido do que a Terra gira!"
+      },
+      "insolationFlux": {
+        "title": "Fluxo de Insolação",
+        "description": "O fluxo de insolação é a quantidade de energia estelar recebida por um planeta por unidade de área. É comparado à insolação da Terra (1 S⊕). Planetas com insolação muito alta são extremamente quentes, enquanto aqueles com insolação baixa são gelados. Isso determina a temperatura de equilíbrio do planeta e seu clima.",
+        "example": "Terra: 1,0 S⊕, Vênus: 2,6 S⊕ (muito mais quente), Mercúrio: 6,9 S⊕ (extremamente quente), Marte: 0,43 S⊕ (muito mais frio)",
+        "technicalNote": "Medido em unidades de insolação terrestre (S⊕). Calculado a partir de luminosidade estelar e distância orbital.",
+        "funFact": "Júpiteres quentes podem receber 1.000+ vezes a insolação da Terra, tornando-os muito mais quentes que Vênus!"
+      },
+      "planetType": {
+        "title": "Tipo de Planeta",
+        "description": "O tipo de planeta é uma classificação baseada em tamanho e composição. Planetas sub-terrestres são menores que a Terra (rochosos), Super-Terras são 1-10 massas terrestres (rochosos), semelhantes a Netuno são gigantes gasosos menores, e Gigantes de Gás são mundos massivos de hidrogênio/hélio. O tipo ajuda a prever como o planeta pode ser.",
+        "example": "Terra: Tamanho terrestre, Super-Terra: 2-5 massas terrestres, Júpiter quente: Gigante gasoso em órbita curta, Semelhante a Netuno: Gigante de gelo",
+        "technicalNote": "Classificação baseada em raio e massa. Sub-Terra < 1,25 R⊕, Super-Terra 1,25-2 R⊕, Semelhante a Netuno 2-6 R⊕, Gigante de Gás > 6 R⊕"
+      },
+      "hostStar": {
+        "title": "Estrela Hospedeira",
+        "description": "A estrela hospedeira é a estrela que o planeta orbita. As propriedades da estrela hospedeira—seu tamanho, temperatura e idade—afetam dramaticamente o clima do planeta e sua potencial habitabilidade. O nome da estrela frequentemente se torna parte do nome do planeta.",
+        "example": "Nosso Sol hospeda a Terra, TRAPPIST-1 hospeda 7 planetas do tamanho terrestre, Proxima Centauri hospeda Proxima Centauri b",
+        "technicalNote": "Do campo hostname do Exoplanet Archive."
+      }
+    },
+    "star": {
+      "starTemperature": {
+        "title": "Temperatura da Estrela",
+        "description": "A temperatura da superfície de uma estrela determina sua cor e o tipo de luz que emite. Anãs vermelhas mais frias queimam a 2.500-3.500 K, enquanto nosso Sol é 5.778 K, e estrelas azuis quentes excedem 30.000 K. A temperatura estelar afeta diretamente a zona habitável—a região onde planetas poderiam ter água líquida.",
+        "example": "Anã vermelha (tipo M): 3.000 K (brilho vermelho), Sol (tipo G): 5.778 K (amarelo), Estrela azul quente (tipo O): 40.000 K",
+        "technicalNote": "Medido em Kelvin (K). Determinado a partir de análise espectral.",
+        "funFact": "Anãs vermelhas são as estrelas mais comuns na galáxia e podem queimar por trilhões de anos!"
+      },
+      "starRadius": {
+        "title": "Raio da Estrela",
+        "description": "O raio de uma estrela determina o quão grande ela parece no céu e afeta o tamanho de sua zona habitável. Nosso Sol tem um raio de aproximadamente 700.000 km. Anãs vermelhas são muito menores (0,1 R☉), enquanto gigantes vermelhas podem ser 1.000 vezes maiores.",
+        "example": "Sol: 1,0 R☉, Anã vermelha: 0,1 R☉, Gigante vermelha Betelgeuse: ~900 R☉",
+        "technicalNote": "Medido em raios solares (R☉). Determinado a partir de modelos estelares e medições de binárias em eclipse."
+      },
+      "starMass": {
+        "title": "Massa da Estrela",
+        "description": "A massa de uma estrela determina quanto tempo ela viverá e quão brilhante será. Estrelas mais massivas queimam mais quente e mais brilhantes, mas morrem mais jovens. O Sol tem uma massa de 1 M☉. As estrelas mais massivas têm cerca de 150 M☉, enquanto as menores têm cerca de 0,08 M☉.",
+        "example": "Sol: 1,0 M☉, Anã vermelha: 0,08-0,5 M☉, Gigante azul: 5-10 M☉",
+        "technicalNote": "Medido em massas solares (M☉). Determinado a partir de mecânica orbital e modelos estelares."
+      },
+      "starLuminosity": {
+        "title": "Luminosidade da Estrela",
+        "description": "Luminosidade é a quantidade total de energia que uma estrela emite por segundo. É o fator primário na determinação do tamanho e da localização da zona habitável de uma estrela. Nosso Sol tem uma luminosidade de 1 L☉. A luminosidade aumenta dramaticamente com temperatura e tamanho.",
+        "example": "Sol: 1,0 L☉, Sirius: 26 L☉ (muito mais brilhante), Anã vermelha: 0,001-0,1 L☉ (muito mais fraca)",
+        "technicalNote": "Medido em luminosidades solares (L☉). Calculado a partir de modelos estelares ou dados observacionais."
+      },
+      "starSurfaceGravity": {
+        "title": "Gravidade Superficial",
+        "description": "A gravidade superficial determina como é forte o puxão na superfície da estrela. Depende tanto da massa quanto do raio da estrela. Uma estrela mais massiva e compacta tem maior gravidade superficial. A gravidade superficial afeta como hidrogênio e hélio se comportam na atmosfera de uma estrela.",
+        "example": "Sol: log g = 4,83, Anã branca: log g > 8 (compressão extrema), Gigante vermelha: log g = 1-2 (gravidade fraca)",
+        "technicalNote": "Medido como log g (logaritmo da gravidade superficial em cm/s²). Valores variam de 0-10."
+      },
+      "starMetallicity": {
+        "title": "Metalicidade da Estrela",
+        "description": "Em astronomia, 'metalicidade' significa a abundância de elementos mais pesados que hélio (chamados de 'metais'). Estrelas com maior metalicidade tendem a ter mais planetas e são menos prováveis de estar na sequência principal. Nosso Sol tem metalicidade de 0 dex por definição.",
+        "example": "Sol: 0,0 dex, Estrela rica em metais: +0,5 dex (duas vezes mais elementos pesados), Estrela pobre em metais: -1,0 dex (10x menos)",
+        "technicalNote": "Medido em dex (magnitudes decimais). Calculado comparando linhas espectrais com valores solares.",
+        "funFact": "Estrelas com maior metalicidade são mais propensas a ter planetas, especialmente gigantes gasosos!"
+      },
+      "starAge": {
+        "title": "Idade da Estrela",
+        "description": "A idade de uma estrela indica quanto de sua vida ela já viveu. Estrelas jovens (< 1 bilhão de anos) podem ter sistemas planetários instáveis, enquanto estrelas antigas (> 10 bilhões de anos) têm sistemas estáveis e maduros. A idade é estimada a partir de modelos estelares e composição química.",
+        "example": "Sol: 4,6 bilhões de anos, Estrela jovem: < 100 milhões de anos, Estrela antiga: > 10 bilhões de anos",
+        "technicalNote": "Medido em Gyr (bilhões de anos). Estimativas de idade têm incertezas significativas."
+      },
+      "starRotationPeriod": {
+        "title": "Período de Rotação",
+        "description": "Este é quanto tempo leva para uma estrela completar uma rotação em seu eixo. Estrelas mais jovens giram mais rápido, enquanto estrelas mais antigas desaceleram devido a travagem magnética. O período de rotação afeta a atividade estelar e pode influenciar planetas através da radiação estelar.",
+        "example": "Sol: ~25 dias (equador) a 35 dias (pólos), Estrela jovem: < 5 dias, Estrela antiga: > 50 dias",
+        "technicalNote": "Medido em dias. Determinado a partir de variações fotométricas ou medições espectroscópicas."
+      },
+      "starSpectralType": {
+        "title": "Tipo Espectral",
+        "description": "O tipo espectral é determinado pela temperatura e cor de uma estrela. Os tipos principais são O, B, A, F, G, K, M (do mais quente para o mais frio), com subdivisões 0-9. Nosso Sol é uma estrela G2V. O tipo espectral rapidamente diz aos astrônomos a temperatura e composição de uma estrela.",
+        "example": "O5: 50.000 K (azul), A0: 10.000 K (branco-azul), G2: 5.778 K (amarelo), M5: 3.200 K (vermelho)",
+        "technicalNote": "A partir de análise espectroscópica. Formato: Letra (classe de temperatura) + Número (subclasse 0-9) + Numeral romano (classe de luminosidade)"
+      },
+      "starClass": {
+        "title": "Classe de Estrela",
+        "description": "A classe de estrela é uma classificação simplificada do tipo espectral. As principais classes são O, B, A, F, G, K, M do mais quente (azul) para o mais frio (vermelho). A maioria das estrelas na galáxia são do tipo K ou M, anãs vermelhas. O Sol é uma estrela do tipo G.",
+        "example": "Tipo O: Quente, brilhante, de vida curta, Tipo M: Frio, fraco, de vida longa (mais comum)",
+        "technicalNote": "Derivado do tipo espectral. A designação de letra indica classe de temperatura."
+      }
+    },
+    "discovery": {
+      "discoveryYear": {
+        "title": "Ano de Descoberta",
+        "description": "O ano em que o exoplaneta foi primeiro confirmado e anunciado à comunidade científica. O primeiro exoplaneta foi descoberto em 1992 orbitando um pulsar, e o primeiro ao redor de uma estrela semelhante ao Sol em 1995. As datas de descoberta contam a história da pesquisa de exoplanetas.",
+        "example": "Primeiro exoplaneta: 1992, Primeiro semelhante ao Sol: 1995, Mais recente: 2024",
+        "technicalNote": "Ano do anúncio de descoberta no Exoplanet Archive."
+      },
+      "discoveryMethod": {
+        "title": "Método de Descoberta",
+        "description": "A técnica usada para detectar o exoplaneta. Método de trânsito (planeta bloqueia luz estelar) descobriu a maioria dos exoplanetas. Velocidade Radial (estrela oscila) encontrou o primeiro exoplaneta. Imagem Direta (fotografar o planeta), Microlente e Variações de Tempo são outros métodos. Cada método tem forças e tendências.",
+        "example": "Trânsito: ~70% dos exoplanetas, Velocidade Radial: ~20%, Tempo: ~3%, Microlente: ~3%",
+        "technicalNote": "Diferentes métodos detectam diferentes tipos de planetas. Trânsito funciona melhor para planetas próximos; RV funciona melhor para planetas massivos.",
+        "funFact": "A missão Kepler descobriu mais de 2.600 exoplanetas usando o método de trânsito!"
+      },
+      "facility": {
+        "title": "Instalação de Descoberta",
+        "description": "O observatório, telescópio ou missão que fez a descoberta inicial. Descobridores famosos incluem o Telescópio Espacial Kepler, TESS e observatórios terrestres. A instalação conta sobre o estado da tecnologia quando a descoberta foi feita.",
+        "example": "Telescópio Espacial Kepler, TESS, Observatório Keck, VLT (Very Large Telescope), Missão Gaia",
+        "technicalNote": "O observatório ou missão listado no Exoplanet Archive."
+      }
+    },
+    "orbital": {
+      "semiMajorAxis": {
+        "title": "Semi-Eixo Maior",
+        "description": "O semi-eixo maior é a distância média de um planeta para sua estrela. É medido em unidades astronômicas (AU)—a distância da Terra ao Sol. Esta distância determina quanta energia o planeta recebe e se está na zona habitável.",
+        "example": "Mercúrio: 0,39 AU, Terra: 1,0 AU, Marte: 1,52 AU, Júpiter: 5,2 AU",
+        "technicalNote": "Medido em AU. Para órbitas circulares, é o raio orbital; para órbitas elípticas, é a média."
+      },
+      "orbitalEccentricity": {
+        "title": "Excentricidade Orbital",
+        "description": "Excentricidade mede como uma órbita é alongada. Um valor de 0 significa um círculo perfeito, enquanto valores próximos a 1 significam uma elipse altamente alongada. Alta excentricidade pode causar variações extremas de temperatura em um planeta conforme se move mais perto e mais longe de sua estrela.",
+        "example": "Terra: 0,017 (quase circular), Mercúrio: 0,206 (notavelmente elíptica), Alguns exoplanetas: >0,9 (muito alongada)",
+        "technicalNote": "Valor adimensional entre 0 e 1. Medido através de variações orbitais em velocidade radial ou tempo de trânsito."
+      }
+    },
+    "detection": {
+      "transitDepth": {
+        "title": "Profundidade de Trânsito",
+        "description": "Quando um planeta passa na frente de sua estrela, ele bloqueia uma pequena fração da luz estelar. Este mergulho de brilho é a profundidade de trânsito, revelando diretamente o tamanho do planeta em relação à sua estrela. Planetas do tamanho de Júpiter bloqueiam cerca de 1% da luz, enquanto planetas do tamanho da Terra bloqueiam apenas 0,008%.",
+        "example": "Trânsito de Júpiter: ~1% profundidade, Trânsito da Terra: ~0,008% profundidade, Júpiter quente: 1-3%",
+        "technicalNote": "Medido como porcentagem ou partes por milhão (ppm). Proporcional a (R_planeta / R_estrela)²",
+        "funFact": "O telescópio Kepler podia detectar mudanças de brilho tão pequenas quanto 0,001%!"
+      },
+      "transitDuration": {
+        "title": "Duração do Trânsito",
+        "description": "A duração do trânsito é quanto tempo leva para um planeta cruzar completamente o disco de sua estrela. Depende da velocidade orbital do planeta e do tamanho da estrela. Trânsitos mais longos ocorrem para planetas orbitando mais lentamente ou ao redor de estrelas maiores.",
+        "example": "Terra transitando o Sol: ~13 horas, Júpiter quente: 2-4 horas, Semelhante a Netuno: 5-8 horas",
+        "technicalNote": "Medido em horas. Relacionado ao período orbital e semi-eixo maior."
+      },
+      "transitRatio": {
+        "title": "Razão de Raio Planeta-Estrela",
+        "description": "Esta é a razão entre o raio do planeta e o raio da estrela. Afeta diretamente a profundidade de trânsito. Um planeta orbitando uma estrela pequena pode bloquear mais luz relativamente ao tamanho da estrela. Esta razão ajuda a caracterizar o planeta e é essencial para análise atmosférica.",
+        "example": "Júpiter/Sol: 0,1, Terra/Sol: 0,009, Júpiter quente/Estrela pequena: 0,15",
+        "technicalNote": "Razão adimensional. Calculada como R_planeta / R_estrela."
+      },
+      "orbitalRatio": {
+        "title": "Razão de Distância Orbital para Raio Estelar",
+        "description": "Esta é a razão entre o semi-eixo maior e o raio da estrela. Diz-nos o quão perto o planeta orbita relativamente ao tamanho da estrela. Valores pequenos significam que o planeta está muito próximo de sua estrela (planetas próximos), enquanto valores grandes significam órbitas distantes.",
+        "example": "Mercúrio (Sol): 11,7, Júpiter quente (estrela pequena): 2-5, Terra (Sol): 215",
+        "technicalNote": "Razão adimensional. Também chamado 'a/R★'. Razões menores indicam órbitas mais próximas."
+      },
+      "impactParameter": {
+        "title": "Parâmetro de Impacto",
+        "description": "O parâmetro de impacto descreve onde o caminho do planeta cruza o disco da estrela. Um valor de 0 significa que o planeta passa pelo centro, enquanto valores próximos a 1 significam trânsitos rasantes. Isso determina quanta luz o planeta bloqueia e ajuda a entender a geometria do sistema planetário.",
+        "example": "Trânsito central: b = 0, Trânsito rasante: b > 0,9, Trânsito perdido: b > 1",
+        "technicalNote": "Valor adimensional entre 0 e 1. Determinado a partir de curvas de luz de trânsito."
+      },
+      "rvAmplitude": {
+        "title": "Amplitude de Velocidade Radial",
+        "description": "A amplitude de velocidade radial (RV) é a velocidade máxima com a qual uma estrela 'oscila' devido ao puxão gravitacional de um planeta em órbita. Amplitude maior significa um planeta mais massivo ou período orbital mais curto. RV foi o primeiro método para descobrir exoplanetas.",
+        "example": "Efeito de Júpiter no Sol: 12,5 m/s, Júpiter quente: 50-500 m/s, Efeito da Terra no Sol: 0,09 m/s",
+        "technicalNote": "Medido em metros por segundo (m/s). Proporcional à massa do planeta e velocidade orbital.",
+        "funFact": "Detectar o puxão da Terra no Sol à distância exigiria precisão além da tecnologia atual!"
+      },
+      "stellar RV": {
+        "title": "Velocidade Radial Estelar",
+        "description": "Esta é a moção da estrela em relação à Terra devido à sua órbita ao redor da galáxia e movimentos estelares locais. É diferente do RV causado por planetas. Subtrair este RV 'de base' é necessário para identificar planetas a partir de medições RV.",
+        "example": "Sol: ~7 km/s (em direção ao ápex solar), Estrela típica: -50 a +50 km/s",
+        "technicalNote": "Medido em km/s. Determinado a partir de análise espectroscópica."
+      },
+      "stellar Vsin": {
+        "title": "Velocidade de Rotação Estelar",
+        "description": "Esta é a velocidade de rotação da estrela no equador como visto da Terra (é o seno da inclinação, portanto não podemos ver a verdadeira velocidade). Estrelas que giram rapidamente dificultam a detecção de planetas via velocidade radial porque a rotação cria ruído nas medições.",
+        "example": "Estrela não-rotante: < 1 km/s, Sol: 2 km/s, Rotação rápida: > 10 km/s",
+        "technicalNote": "Medido em km/s. Determinado a partir do alargamento de linhas espectroscópicas. Velocidade verdadeira é v_rot / sin(i)."
+      }
+    },
+    "flag": {
+      "habitableZone": {
+        "title": "Zona Habitável",
+        "description": "A zona habitável (ou 'zona de Goldilocks') é a região ao redor de uma estrela onde as temperaturas permitem que água líquida exista na superfície de um planeta—nem muito quente, nem muito fria. Para nosso Sol, esta zona se estende de aproximadamente a órbita de Vênus até a órbita de Marte. Estar na zona habitável não garante vida, mas é um sinal promissor.",
+        "example": "Zona habitável do Sol: 0,95-1,67 AU, Anã vermelha: 0,1-0,3 AU (muito mais próximo), Estrela quente: 2-10 AU (muito mais longe)",
+        "technicalNote": "Os limites dependem da luminosidade estelar e modelos atmosféricos.",
+        "funFact": "A Terra está bem no meio da zona habitável do Sol, às vezes chamada de 'distância perfeita'!"
+      },
+      "earthLike": {
+        "title": "Semelhante à Terra",
+        "description": "Um planeta 'semelhante à Terra' é aquele que compartilha similaridades significativas com a Terra. Isso tipicamente significa que é um planeta rochoso na zona habitável de uma estrela semelhante ao Sol. No entanto, ser semelhante à Terra não significa que seja realmente habitável—apenas tem condições similares às da Terra.",
+        "example": "Proxima Centauri b é um dos exoplanetas semelhantes à Terra mais próximos, embora orbite uma anã vermelha.",
+        "technicalNote": "Definição varia por fonte. Este aplicativo usa raio (0,8-1,25 R⊕), localização zona habitável e composição rochosa.",
+        "funFact": "Apenas alguns duzias de exoplanetas confirmados são considerados semelhantes à Terra baseado em critérios atuais!"
+      },
+      "topCandidate": {
+        "title": "Principal Candidato Habitável",
+        "description": "Um principal candidato habitável é um planeta que se classifica altamente na probabilidade de poder suportar vida. Isso considera múltiplos fatores incluindo localização zona habitável, tamanho, composição, tipo estelar e idade. Estes são os planetas mais dignos de estudar para potencial habitabilidade.",
+        "example": "Gliese 667Cc, TRAPPIST-1e, Kepler-452b",
+        "technicalNote": "Baseado em algoritmos de pontuação de habitabilidade que pesam múltiplos fatores."
+      },
+      "potentiallyRocky": {
+        "title": "Potencialmente Rochoso",
+        "description": "Um planeta potencialmente rochoso é estimado ter composição rochosa (terrestre) em vez de ser um gigante de gás ou gelo. Planetas rochosos são mais prováveis de ter superfícies sólidas onde a vida poderia existir. Esta classificação é baseada em estimativas de raio e massa.",
+        "example": "Pequenos planetas semelhantes à Terra, Super-Terras, a maioria dos planetas < 2 raios terrestres",
+        "technicalNote": "Classificação baseada em raio e massa. Rochoso se R < 1,5 R⊕ tipicamente, ou se densidade sugere composição rochosa."
+      },
+      "earthLikeInsolation": {
+        "title": "Insolação Semelhante à Terra",
+        "description": "Insolação semelhante à Terra significa que o planeta recebe aproximadamente a mesma quantidade de energia estelar que a Terra recebe do Sol. Este é um fator chave em habitabilidade porque determina a temperatura da superfície. Planetas com insolação semelhante à Terra são mais prováveis de ter água líquida.",
+        "example": "Terra: 1,0 S⊕, Kepler-186f: 0,32 S⊕ (fresco mas habitável), Júpiteres quentes: > 100 S⊕",
+        "technicalNote": "Similar à insolação da Terra (1 S⊕). Tipicamente definido como 0,25-4 S⊕."
+      },
+      "hotJupiter": {
+        "title": "Júpiter Quente",
+        "description": "Um Júpiter quente é um planeta gigante gasoso orbitando muito próximo de sua estrela—muito mais próximo que Mercúrio orbita o Sol. Isto foi surpreendente quando primeiro descoberto porque os gigantes gasosos do nosso sistema solar são distantes. Júpiteres quentes são fáceis de detectar via método de trânsito porque são grandes e frequentemente eclipsam suas estrelas.",
+        "example": "51 Pegasi b, WASP-12b, HD 209458b",
+        "technicalNote": "Tipicamente definido como planetas massa-de-Júpiter com períodos orbitais < 10 dias."
+      },
+      "hotNeptune": {
+        "title": "Netuno Quente",
+        "description": "Um Netuno quente é um gigante de gelo tamanho-Netuno orbitando perto de sua estrela. Acredita-se que estes planetas sejam gigantes gasosos primordiais que migraram para dentro e perderam suas atmosferas externas de hidrogênio/hélio devido a radiação estelar. São intermediários entre gigantes gasosos e planetas rochosos.",
+        "example": "GJ 436b, HAT-P-11b",
+        "technicalNote": "Tipicamente definido como planetas massa-Netuno (4-10 M⊕) com períodos orbitais < 10 dias."
+      },
+      "ultraHot": {
+        "title": "Planeta Ultra-Quente",
+        "description": "Um planeta ultra-quente tem temperatura de equilíbrio excepcionalmente alta, tipicamente > 2.000 K. Estes planetas orbitam extremamente próximos de suas estrelas e experimentam radiação intensa. Suas atmosferas podem ser parcialmente despojadas, e podem ter superfícies fundidas.",
+        "example": "KELT-9b (4.600 K), WASP-103b, KELT-7b",
+        "technicalNote": "Tipicamente definido como planetas com Teq > 2.000 K ou período orbital < 1 dia."
+      },
+      "frozenWorld": {
+        "title": "Mundo Congelado",
+        "description": "Um mundo congelado é um planeta com temperatura de equilíbrio muito baixa, tipicamente < 200 K (-73°C). Estes planetas orbitam longe de suas estrelas e recebem energia estelar mínima. Suas superfícies estariam cobertas de gelo e gases congelados a menos que aquecidas por processos internos.",
+        "example": "Planetas distantes ao redor de estrelas de baixa luminosidade, alguns gigantes de gelo",
+        "technicalNote": "Tipicamente definido como planetas com Teq < 200 K."
+      },
+      "ultraDense": {
+        "title": "Planeta Ultra-Denso",
+        "description": "Um planeta ultra-denso tem densidade excepcionalmente alta, sugerindo um núcleo de ferro ou compressão extrema. Estes planetas podem ter experimentado acreção de núcleo e migração planetária, ou perdido suas atmosferas. Mundos ultra-densos são fundamentalmente diferentes de qualquer coisa no nosso sistema solar.",
+        "example": "55 Cancri e (densidade ~ 12 g/cm³), Corot-7b",
+        "technicalNote": "Definido por alta densidade relativamente ao tamanho. Tipicamente > 8-10 g/cm³."
+      },
+      "puffy": {
+        "title": "Planeta Inchado",
+        "description": "Um planeta inchado é surpreendentemente grande para sua massa—tem densidade inferior ao esperado. Estes planetas podem ter atmosferas espessas de hidrogênio/hélio ou ser aquecidos tão intensamente por suas estrelas que suas atmosferas se incham. Alguns são tão leves que flutariam em água!",
+        "example": "WASP-17b, HAT-P-18b, alguns Júpiteres quentes",
+        "technicalNote": "Definido por baixa densidade relativamente ao tamanho. Densidade < 0,5 g/cm³ (menos denso que água)."
+      },
+      "superMassive": {
+        "title": "Planeta Super-Massivo",
+        "description": "Um planeta super-massivo é excepcionalmente grande, tipicamente > 13 massas de Júpiter. Nesta massa, planetas se aproximam do limite de queima de deutério e podem ser considerados anãs marrons. Estes são os planetas mais massivos conhecidos.",
+        "example": "Alguns planetas massivos em dezenas de massas de Júpiter",
+        "technicalNote": "Definido como tendo massa > ~13 M_J, próximo ao limite de queima de hidrogênio."
+      },
+      "lightweight": {
+        "title": "Planeta Leve",
+        "description": "Um planeta leve tem massa inusualmente baixa para seu tamanho, ou tamanho pequeno para seu tipo. Estes planetas são interessantes porque sua massa baixa e/ou densidade fornecem pistas sobre formação e escape atmosférico. Alguns planetas leves podem ter perdido suas atmosferas ao longo do tempo.",
+        "example": "Super-Terras ultra-leves, gigantes de gelo de baixa densidade",
+        "technicalNote": "Definido por massa < 3 M⊕ para Super-Terras, ou densidade menor que esperada."
+      },
+      "ultraShortPeriod": {
+        "title": "Período Ultra-Curto",
+        "description": "Um planeta de período ultra-curto orbita sua estrela extremamente rapidamente, tipicamente com período < 1 dia. Estes planetas estão tão próximos de suas estrelas que experimentam calor intenso e forças de maré. Alguns podem até estar se espiralizando para suas estrelas.",
+        "example": "KELT-9b (período de 0,45 dia), Kepler-1657b (0,36 dias)",
+        "technicalNote": "Definido como período orbital < 1 dia. Alguns têm períodos de apenas algumas horas!"
+      },
+      "longPeriod": {
+        "title": "Planeta de Período Longo",
+        "description": "Um planeta de período longo leva mais de um ano para orbitar sua estrela, colocando-o longe de sua estrela. Estes planetas recebem pouca energia estelar e são frios. Planetas de período longo são frequentemente mais difíceis de detectar porque precisamos de anos de observações para confirmar a órbita.",
+        "example": "Planetas com períodos > 1 ano ou > 365 dias",
+        "technicalNote": "Definido como período orbital > 365 dias (anos terrestres)."
+      },
+      "eccentricOrbit": {
+        "title": "Órbita Excêntrica",
+        "description": "Uma órbita excêntrica é alongada em vez de circular. Planetas com órbitas excêntricas experimentam variações extremas de temperatura conforme se movem mais perto e mais longe de sua estrela. Isto é inusual porque interações orbitais tendem a circularizar órbitas ao longo do tempo.",
+        "example": "Alguns exoplanetas com e > 0,2 ou maior",
+        "technicalNote": "Definido por excentricidade orbital > ~0,1-0,2."
+      },
+      "circularOrbit": {
+        "title": "Órbita Circular",
+        "description": "Uma órbita circular é quase perfeitamente redonda, fornecendo condições estáveis e consistentes para planetas. Nossa Terra tem uma das órbitas mais circulares (e = 0,017). Órbitas circulares sugerem que o sistema é antigo e estável.",
+        "example": "Terra: e = 0,017, Vênus: e = 0,007 (círculos quase perfeitos)",
+        "technicalNote": "Definido por excentricidade orbital < ~0,05."
+      },
+      "tidallyLocked": {
+        "title": "Provável Bloqueado por Maré",
+        "description": "Um planeta bloqueado por maré sempre mostra a mesma face para sua estrela—um lado perpetuamente enfrenta a estrela enquanto o outro enfrenta afastado. Isto acontece para planetas muito próximos de suas estrelas. O lado do dia é extremamente quente enquanto o lado da noite é freezer-cold.",
+        "example": "A maioria dos Júpiteres quentes, muitos planetas ultra-quentes, planetas semelhantes a Mercúrio próximos",
+        "technicalNote": "Provável se período orbital e semi-eixo maior sugerem que bloqueio por maré está completo."
+      },
+      "circumbinary": {
+        "title": "Circumbinária",
+        "description": "Um planeta circumbinária orbita dois sóis em vez de um. Estes são raros e fascinantes—planetas devem orbitar longe o bastante para evitar destabilizar interações com o par binário. Têm dinâmicas mais complexas mas poderiam potencialmente ter dois sóis em seu céu.",
+        "example": "Kepler-16b, Kepler-34b, Kepler-35b",
+        "technicalNote": "Sóis binários com planetas orbitando ambos. Requer cálculos orbitais cuidadosos."
+      },
+      "multiPlanet": {
+        "title": "Sistema Multi-Planetário",
+        "description": "Um sistema multi-planetário tem mais de um exoplaneta confirmado orbitando a mesma estrela. Estes sistemas são valiosos porque podemos estudar interações planetárias e formação. A maioria dos exoplanetas conhecidos estão em sistemas com múltiplos planetas.",
+        "example": "TRAPPIST-1 (7 planetas), Kepler-90 (8 planetas), Nosso sistema solar (8 planetas)",
+        "technicalNote": "Simplesmente significa sy_pnum > 1 nos dados."
+      },
+      "richSystem": {
+        "title": "Sistema Rico",
+        "description": "Um sistema rico tem muitos planetas orbitando a mesma estrela, tipicamente 5 ou mais. Estes sistemas são minas de ouro para entender a formação planetária. Sistemas compactos com muitos planetas amontoados próximos são especialmente interessantes.",
+        "example": "TRAPPIST-1 (7), Kepler-90 (8), Gliese 667 (pelo menos 5 planetas visíveis)",
+        "technicalNote": "Definido como sy_pnum ≥ 5."
+      },
+      "multiStar": {
+        "title": "Sistema Multi-Estelar",
+        "description": "Um sistema multi-estelar tem planetas orbitando ao redor de múltiplas estrelas em vez de apenas uma. Isto inclui ambos planetas circumbinários e planetas em sistemas binários amplos. Planetas nestes sistemas experimentam dinâmicas gravitacionais mais complexas.",
+        "example": "Alpha Centauri, Sistema Sirius, muitos sistemas de múltiplas estrelas",
+        "technicalNote": "Indicado por sy_snum > 1 (mais de um componente estelar)."
+      },
+      "veryNearby": {
+        "title": "Muito Próximo",
+        "description": "Um planeta muito próximo orbita uma estrela dentro de 10 anos-luz da Terra. Estes são os exoplanetas mais próximos e são alvos principais para observação futura e potenciais missões intergalácticas. Proxima Centauri b é nosso vizinho exoplanetário mais próximo.",
+        "example": "Proxima Centauri b (4,2 al), TRAPPIST-1e (12 al)",
+        "technicalNote": "Definido como distância < 10 anos-luz."
+      },
+      "nearby": {
+        "title": "Próximo",
+        "description": "Um planeta próximo orbita uma estrela entre 10 e 50 anos-luz de distância. Estes planetas estão próximos o bastante para estudo detalhado com telescópios atuais e próximos futuros. Muitas descobertas importantes de exoplanetas estão em sistemas próximos.",
+        "example": "Epsilon Eridani (10,5 al), Tau Ceti (12 al), Vega (25 al)",
+        "technicalNote": "Definido como distância 10-50 anos-luz (aproximadamente)."
+      },
+      "solarAnalog": {
+        "title": "Análogo Solar",
+        "description": "Um análogo solar é uma estrela muito similar ao nosso Sol—mesma temperatura, tamanho, massa e idade. Planetas orbitando análogos solares são especialmente interessantes porque podemos comparar seus sistemas com o nosso. Encontrar análogos da Terra ao redor de análogos solares é um objetivo principal.",
+        "example": "Estrelas semelhantes ao Sol com Teff, raio e idade similares a nosso Sol de 4,6 bilhões de anos",
+        "technicalNote": "Definido por parâmetros estelares similares ao Sol."
+      },
+      "redDwarfHost": {
+        "title": "Hospedeira Anã Vermelha",
+        "description": "Uma hospedeira anã vermelha é uma pequena e fria estrela tipo M hospedando exoplaneta(s). Anãs vermelhas são as estrelas mais comuns e vivem por trilhões de anos. Suas zonas habitáveis são muito mais próximas que para estrelas semelhantes ao Sol, tornando seus planetas mais fáceis de detectar.",
+        "example": "Proxima Centauri, TRAPPIST-1, Gliese 667",
+        "technicalNote": "Estrelas tipo M com Teff < ~4000 K."
+      },
+      "youngSystem": {
+        "title": "Sistema Jovem",
+        "description": "Um sistema jovem tem idade < 500 milhões de anos ou assim. Sistemas planetários jovens ainda estão se formando e evoluindo—planetas podem estar migrando, e poeira e detritos residuais são comuns. Estes sistemas ajudam-nos a entender a formação planetária.",
+        "example": "Sistemas ao redor de estrelas jovens em regiões de formação estelar",
+        "technicalNote": "Idade < ~500-1000 milhões de anos."
+      },
+      "ancientSystem": {
+        "title": "Sistema Antigo",
+        "description": "Um sistema antigo tem idade > 10 bilhões de anos—é mais antigo que nosso sistema solar. Sistemas antigos são estáveis e assentados. Encontrar planetas ao redor de estrelas antigas nos diz sobre a estabilidade do sistema a longo prazo.",
+        "example": "Alguns sistemas com estrelas tipo M ou em aglomerados globulares",
+        "technicalNote": "Idade > ~10 bilhões de anos."
+      },
+      "metalRich": {
+        "title": "Estrela Rica em Metais",
+        "description": "Uma estrela rica em metais tem maior abundância de elementos mais pesados que hélio do que nosso Sol. Estrelas ricas em metais são mais prováveis de hospedar planetas, especialmente gigantes gasosos. Isto sugere que metalicidade correlaciona com eficiência de formação planetária.",
+        "example": "Estrelas com [Fe/H] > 0,1 dex",
+        "technicalNote": "Metalicidade [Fe/H] > 0 (nosso Sol é 0 por definição).",
+        "funFact": "Estrelas hospedeiras de exoplanetas são estatisticamente mais ricas em metais que estrelas médias!"
+      },
+      "metalPoor": {
+        "title": "Estrela Pobre em Metais",
+        "description": "Uma estrela pobre em metais tem menor abundância de elementos pesados que nosso Sol. Estrelas pobres em metais são menos prováveis de hospedar planetas. Estas estrelas antigas são frequentemente encontradas em aglomerados globulares e contam-nos sobre o universo primordial.",
+        "example": "Estrelas com [Fe/H] < -0,5 dex",
+        "technicalNote": "Metalicidade [Fe/H] < -0,3 ou -0,5 (abaixo de solar)."
+      },
+      "transiting": {
+        "title": "Transitando",
+        "description": "Um planeta transitante passa na frente de sua estrela da nossa perspectiva, causando um mergulho mensurável na luz das estrelas. Estes planetas são ideais para estudo porque podemos observar seus trânsitos repetidamente e medir seu tamanho, composição e propriedades atmosféricas.",
+        "example": "A maioria das descobertas Kepler, descobertas TESS",
+        "technicalNote": "Diretamente observado a transitar baseado em dados de curva de luz."
+      },
+      "hasRvData": {
+        "title": "Tem Dados de Velocidade Radial",
+        "description": "Este planeta tem medições de velocidade radial mostrando a oscilação da estrela causada pela gravidade do planeta. Dados RV permitem-nos medir a massa mínima do planeta. Combinado com dados de trânsito, RV dá-nos a massa verdadeira.",
+        "example": "Planetas descobertos via ou confirmados por método RV",
+        "technicalNote": "Amplitude RV (pl_rvamp) é medida e disponível."
+      },
+      "hasTtv": {
+        "title": "Tem Variações de Tempo de Trânsito",
+        "description": "Variações de tempo de trânsito (TTVs) ocorrem quando planetas gravitacionalmente interagem um com o outro, causando leves variações em tempos de trânsito. TTV pode revelar as massas de planetas e detectar planetas não-transitantes em sistemas multi-planetários.",
+        "example": "Planetas em sistemas multi-planetários Kepler mostrando sinais TTV",
+        "technicalNote": "Significância estatística requerida para confirmação."
+      },
+      "controversial": {
+        "title": "Controverso",
+        "description": "A existência de um planeta controverso é debatida ou não completamente confirmada. Isto pode ser devido a sinais fracos, dados conflitantes, ou explicações alternativas para observações. Estes planetas requerem observações de acompanhamento adicionais.",
+        "example": "Algumas detecções marginais ou reivindicações requerendo confirmação",
+        "technicalNote": "Marcado no Exoplanet Archive como controverso ou não confirmado."
       }
     }
   }

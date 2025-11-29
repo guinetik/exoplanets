@@ -1006,6 +1006,10 @@
     @apply flex-shrink-0;
   }
 
+  .planet-card-description {
+    @apply text-sm text-gray-400 leading-relaxed mb-4;
+  }
+
   .planet-card-properties {
     @apply flex-1 grid grid-cols-2 gap-3 mb-4;
   }
@@ -1640,6 +1644,134 @@
   .viz-disclaimer {
     @apply text-xs text-white/30 italic pt-3 mt-3;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Property Explanation Dialog - follows viz-dialog pattern */
+  .property-dialog-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background: rgba(10, 10, 15, 0.9);
+    backdrop-filter: blur(8px);
+    animation: fade-in 0.2s ease-out;
+  }
+
+  .property-dialog {
+    @apply relative max-w-lg w-full p-6 rounded-xl;
+    background: linear-gradient(
+      135deg,
+      rgba(20, 20, 30, 0.98) 0%,
+      rgba(15, 15, 25, 0.98) 100%
+    );
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+    @apply max-h-[85vh] overflow-y-auto;
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .property-dialog-close {
+    @apply absolute top-3 right-3 w-7 h-7 rounded-full;
+    @apply flex items-center justify-center text-lg;
+    @apply text-white/40 hover:text-white hover:bg-white/10;
+    @apply transition-colors duration-200 cursor-pointer;
+  }
+
+  .property-dialog-title {
+    @apply text-sm font-medium text-white/90 mb-3 pr-8;
+    @apply uppercase tracking-wider;
+    letter-spacing: 0.1em;
+  }
+
+  .property-dialog-content {
+    @apply space-y-4 text-sm text-white/70;
+  }
+
+  .property-dialog-description {
+    @apply leading-relaxed text-sm;
+  }
+
+  .property-dialog-example {
+    @apply p-3 rounded-lg text-xs leading-relaxed;
+    background: rgba(0, 204, 255, 0.05);
+    border-left: 2px solid rgba(0, 204, 255, 0.3);
+  }
+
+  .property-dialog-example strong {
+    @apply text-cyan-400 font-medium;
+  }
+
+  .property-dialog-technical {
+    @apply text-xs text-white/40 italic;
+  }
+
+  .property-dialog-fun-fact {
+    @apply p-3 rounded-lg text-xs leading-relaxed;
+    background: rgba(255, 204, 0, 0.05);
+    border-left: 2px solid rgba(255, 204, 0, 0.3);
+  }
+
+  /* Explainable Property Wrapper */
+  .explainable-property {
+    @apply relative inline-flex items-center gap-1;
+    @apply cursor-help transition-all duration-200;
+  }
+
+  .explainable-property:hover {
+    @apply text-white/90;
+  }
+
+  .explainable-property:hover .explainable-underline {
+    @apply opacity-100;
+  }
+
+  .explainable-underline {
+    @apply absolute bottom-0 left-0 right-0 h-[1px];
+    @apply opacity-0 transition-opacity duration-200;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 204, 255, 0.4) 20%,
+      rgba(0, 204, 255, 0.4) 80%,
+      transparent
+    );
+  }
+
+  .explainable-icon {
+    @apply inline-flex items-center justify-center;
+    @apply w-3 h-3 rounded-full text-[10px];
+    @apply bg-white/5 text-white/30;
+    @apply transition-all duration-200;
+  }
+
+  .explainable-property:hover .explainable-icon {
+    @apply bg-cyan-500/20 text-cyan-400;
+  }
+
+  /* Mobile responsive adjustments */
+  @media (max-width: 640px) {
+    .property-dialog {
+      @apply max-h-[90vh] p-5;
+    }
+
+    .property-dialog-title {
+      @apply text-xs;
+    }
+
+    .property-dialog-content {
+      @apply text-xs space-y-3;
+    }
+  }
+
+  /* Animation keyframes */
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   /* =============================================================================
@@ -4560,4 +4692,178 @@
 
 .transit-example ul {
   @apply list-disc list-inside mt-2 space-y-1;
+}
+
+/* =============================================================================
+   TOUR PAGE - Vertical scroll storytelling
+   ============================================================================= */
+
+/* Page Container */
+.tour-page {
+  @apply w-full min-h-screen;
+  background: #000;
+  scroll-behavior: smooth;
+}
+
+/* Hero Section */
+.tour-hero {
+  @apply relative flex flex-col items-center justify-between;
+  @apply px-6 text-center;
+  height: 100svh;
+  min-height: 500px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+  overflow: hidden;
+}
+
+.tour-hero.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 3D Canvas Background */
+.tour-hero-canvas {
+  @apply absolute inset-0;
+  z-index: 0;
+}
+
+.tour-hero-canvas canvas {
+  @apply w-full h-full;
+}
+
+/* Hero Content */
+.tour-hero-content {
+  @apply relative z-10 flex-1 flex flex-col items-center justify-center;
+  @apply pt-20;
+}
+
+.tour-hero-title {
+  @apply text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white;
+  @apply mb-4;
+  text-shadow: 0 0 60px rgba(6, 182, 212, 0.4), 0 2px 20px rgba(0, 0, 0, 0.8);
+}
+
+.tour-hero-subtitle {
+  @apply text-lg md:text-xl text-white/60 font-light;
+  @apply max-w-xl mx-auto;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Scroll Indicator */
+.tour-hero-scroll {
+  @apply relative z-10 pb-8 flex flex-col items-center gap-2;
+}
+
+.tour-hero-scroll-hint {
+  @apply text-white/40 text-sm tracking-wider uppercase;
+}
+
+.tour-hero-scroll-arrow {
+  @apply text-white/40 text-2xl;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* Section Container */
+.tour-section {
+  @apply relative min-h-screen py-24 px-6;
+  @apply flex flex-col;
+}
+
+.tour-section:nth-child(odd) {
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.02) 0%, transparent 50%);
+}
+
+.tour-section:nth-child(even) {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+}
+
+/* Section Header */
+.tour-section-header {
+  @apply max-w-4xl mx-auto text-center mb-16;
+}
+
+.tour-chapter-number {
+  @apply text-sm font-mono text-cyan-400 tracking-widest mb-4 block;
+}
+
+.tour-section-title {
+  @apply text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6;
+  @apply tracking-tight;
+}
+
+.tour-section-intro {
+  @apply text-lg md:text-xl text-white/50 leading-relaxed;
+  @apply max-w-2xl mx-auto;
+}
+
+/* Planet Showcase Grid - Reuses existing planets-grid pattern */
+.tour-showcase {
+  @apply max-w-7xl mx-auto w-full flex-1;
+}
+
+.tour-planets-grid {
+  @apply grid gap-4;
+  @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+
+/* Section Navigation (sticky dots) */
+.tour-navigation {
+  @apply fixed right-6 top-1/2 -translate-y-1/2 z-50;
+  @apply hidden lg:flex flex-col gap-3;
+}
+
+.tour-nav-dot {
+  @apply w-3 h-3 rounded-full;
+  @apply bg-white/20 hover:bg-white/40;
+  @apply transition-all duration-200;
+  @apply cursor-pointer border-0;
+}
+
+.tour-nav-dot.active {
+  @apply bg-cyan-400 scale-125;
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+}
+
+/* Footer CTA */
+.tour-footer {
+  @apply py-24 px-6 text-center;
+  @apply bg-gradient-to-t from-cyan-500/5 to-transparent;
+}
+
+.tour-footer-title {
+  @apply text-3xl md:text-4xl font-bold text-white mb-8;
+}
+
+.tour-footer-cta {
+  @apply inline-block px-8 py-4 rounded-xl;
+  @apply bg-white text-black font-semibold;
+  @apply hover:bg-white/90 transition-colors;
+}
+
+/* Scroll animations */
+.tour-animate {
+  @apply opacity-0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.tour-animate.visible {
+  @apply opacity-100;
+  transform: translateY(0);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .tour-hero-title {
+    @apply text-4xl;
+  }
+
+  .tour-section-title {
+    @apply text-3xl;
+  }
+
+  .tour-section {
+    @apply py-16;
+  }
 }

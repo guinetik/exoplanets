@@ -14,6 +14,7 @@ import {
 } from '../../utils/habitabilityAnalytics';
 import useResizeObserver from '../../utils/useResizeObserver';
 import { TravelTimeCalculator } from '../shared/TravelTimeCalculator';
+import { ExplainableProperty } from '../shared/ExplainableProperty';
 
 interface SystemOverviewModalProps {
   /** Star data */
@@ -315,57 +316,141 @@ export function SystemOverviewModal({
               {star.st_teff && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.info.temperature')}
+                    <ExplainableProperty
+                      propertyKey="starTemperature"
+                      category="star"
+                    >
+                      {t('pages.starSystem.info.temperature')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_teff.toFixed(0)} K</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starTemperature"
+                      category="star"
+                    >
+                      {star.st_teff.toFixed(0)} K
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_rad && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.info.radius')}
+                    <ExplainableProperty
+                      propertyKey="starRadius"
+                      category="star"
+                    >
+                      {t('pages.starSystem.info.radius')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_rad.toFixed(2)} R☉</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starRadius"
+                      category="star"
+                    >
+                      {star.st_rad.toFixed(2)} R☉
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_mass && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.info.mass')}
+                    <ExplainableProperty
+                      propertyKey="starMass"
+                      category="star"
+                    >
+                      {t('pages.starSystem.info.mass')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_mass.toFixed(2)} M☉</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starMass"
+                      category="star"
+                    >
+                      {star.st_mass.toFixed(2)} M☉
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_lum && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.systemOverview.luminosity')}
+                    <ExplainableProperty
+                      propertyKey="starLuminosity"
+                      category="star"
+                    >
+                      {t('pages.starSystem.systemOverview.luminosity')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_lum.toFixed(3)} L☉</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starLuminosity"
+                      category="star"
+                    >
+                      {star.st_lum.toFixed(3)} L☉
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_logg && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.systemOverview.surfaceGravity')}
+                    <ExplainableProperty
+                      propertyKey="starSurfaceGravity"
+                      category="star"
+                    >
+                      {t('pages.starSystem.systemOverview.surfaceGravity')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_logg.toFixed(2)} log g</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starSurfaceGravity"
+                      category="star"
+                    >
+                      {star.st_logg.toFixed(2)} log g
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_met && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.systemOverview.metallicity')}
+                    <ExplainableProperty
+                      propertyKey="starMetallicity"
+                      category="star"
+                    >
+                      {t('pages.starSystem.systemOverview.metallicity')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_met.toFixed(2)} [Fe/H]</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starMetallicity"
+                      category="star"
+                    >
+                      {star.st_met.toFixed(2)} [Fe/H]
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
               {star.st_rotp && (
                 <div className="property-row">
                   <span className="property-label">
-                    {t('pages.starSystem.systemOverview.rotationPeriod')}
+                    <ExplainableProperty
+                      propertyKey="starRotationPeriod"
+                      category="star"
+                    >
+                      {t('pages.starSystem.systemOverview.rotationPeriod')}
+                    </ExplainableProperty>
                   </span>
-                  <span className="property-value">{star.st_rotp.toFixed(1)} days</span>
+                  <span className="property-value">
+                    <ExplainableProperty
+                      propertyKey="starRotationPeriod"
+                      category="star"
+                    >
+                      {star.st_rotp.toFixed(1)} days
+                    </ExplainableProperty>
+                  </span>
                 </div>
               )}
             </div>

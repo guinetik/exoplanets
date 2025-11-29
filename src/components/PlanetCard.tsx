@@ -10,7 +10,7 @@ import { nameToSlug } from '../utils/urlSlug';
 import { PlanetThumbnail } from './CelestialBodyThumbnail';
 
 interface PlanetCardProps {
-  planet: Exoplanet;
+  planet: Exoplanet & { tourDescription?: string };
 }
 
 export function PlanetCard({ planet }: PlanetCardProps) {
@@ -36,6 +36,11 @@ export function PlanetCard({ planet }: PlanetCardProps) {
             </div>
           )}
         </div>
+
+        {/* Tour description (if available) */}
+        {planet.tourDescription && (
+          <p className="planet-card-description">{planet.tourDescription}</p>
+        )}
 
         {/* Planet properties grid */}
         <div className="planet-card-properties">

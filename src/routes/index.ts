@@ -9,6 +9,7 @@ const Habitability = lazy(() => import('./Habitability'));
 const Vote = lazy(() => import('./Vote'));
 const Apod = lazy(() => import('./Apod'));
 const About = lazy(() => import('./About'));
+const Tour = lazy(() => import('./Tour'));
 
 export interface RouteConfig {
   path: string;
@@ -22,6 +23,12 @@ export const routes: RouteConfig[] = [
     path: '/',
     element: Home,
     labelKey: 'nav.home',
+    showInNav: true,
+  },
+  {
+    path: '/tour',
+    element: Tour,
+    labelKey: 'nav.tour',
     showInNav: true,
   },
   {

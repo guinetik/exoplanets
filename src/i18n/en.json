@@ -6,6 +6,7 @@
     "habitability": "Habitability",
     "vote": "Vote",
     "apod": "Pic of the Day",
+    "tour": "Tour",
     "about": "About"
   },
   "pages": {
@@ -656,6 +657,117 @@
       "videoNotSupported": "Your browser does not support the video tag.",
       "viewFullSize": "Click to view full size"
     },
+    "tour": {
+      "title": "A Journey Through Distant Worlds",
+      "subtitle": "Discover the most remarkable exoplanets ever found",
+      "scrollHint": "Scroll to begin",
+      "sections": {
+        "famous": {
+          "chapter": "Chapter 1",
+          "title": "Famous Worlds",
+          "intro": "Meet the celebrities of the exoplanet world. These are the planets that captured headlines, sparked our imagination, and changed how we think about our place in the cosmos."
+        },
+        "nearest": {
+          "chapter": "Chapter 2",
+          "title": "Nearest Neighbors",
+          "intro": "These worlds are practically next door in cosmic terms. Some lie within reach of potential future missions, making them prime candidates for detailed study."
+        },
+        "habitable": {
+          "chapter": "Chapter 3",
+          "title": "Most Habitable",
+          "intro": "If humanity ever finds a second home among the stars, it might be one of these worlds. Our habitability algorithm ranks these planets as the most promising candidates for life as we know it."
+        },
+        "extreme": {
+          "chapter": "Chapter 4",
+          "title": "Extreme Worlds",
+          "intro": "These planets push the boundaries of what we thought possible. From scorching hot worlds to gravitational oddballs, they challenge our understanding of planetary formation."
+        },
+        "records": {
+          "chapter": "Chapter 5",
+          "title": "Record Breakers",
+          "intro": "The champions of the exoplanet Olympics. These worlds hold the records for being the hottest, coldest, fastest, largest, and most ancient among all known exoplanets."
+        }
+      },
+      "footer": {
+        "title": "Ready to explore more?",
+        "cta": "View All Planets"
+      },
+      "cards": {
+        "viewDetails": "View details",
+        "distanceLabel": "Distance",
+        "tempLabel": "Temperature",
+        "scoreLabel": "Habitability",
+        "radiusLabel": "Radius"
+      },
+      "badges": {
+        "famous": "Famous",
+        "nearby": "Nearby",
+        "habitable": "Habitable",
+        "record": "Record",
+        "extreme": "Extreme"
+      },
+      "descriptions": {
+        "common": {
+          "world": "world",
+          "veryLow": "very low",
+          "hours": "{{value}} hours",
+          "days": "{{value}} days"
+        },
+        "famous": {
+          "proximaCenB": "Our closest exoplanet neighbor at just 4.2 light-years away. Orbiting Proxima Centauri, the nearest star to our Sun, this rocky world sits in the habitable zone where liquid water could exist.",
+          "trappist1e": "The most Earth-like world in a remarkable system of seven planets. TRAPPIST-1 e receives similar energy from its star as Earth does from the Sun, making it a prime target in the search for life.",
+          "kepler452b": "Nicknamed 'Earth's Cousin', this was the first near-Earth-size planet found in the habitable zone of a Sun-like star. Its 385-day orbit is remarkably similar to our own year.",
+          "fiftyOnePegB": "The planet that changed everything. Discovered in 1995, this was the first exoplanet found orbiting a Sun-like star, earning its discoverers the 2019 Nobel Prize in Physics.",
+          "kepler16b": "A real-life Tatooine! This circumbinary planet orbits two stars, experiencing double sunsets. It proved that planets can form and survive in binary star systems.",
+          "kepler186f": "The first Earth-sized planet discovered in the habitable zone of another star. This milestone world showed that rocky planets the size of Earth exist in regions where life could thrive."
+        },
+        "nearby": {
+          "habitableZone": "At {{distance}} light-years, this {{type}} orbits in its star's habitable zone. Its proximity makes it an excellent target for future observations and potential atmospheric studies.",
+          "multiPlanet": "Just {{distance}} light-years away in a system of {{count}} known planets. Being so close to Earth, this system offers unique opportunities for detailed study.",
+          "default": "One of our nearest cosmic neighbors at {{distance}} light-years. Close enough that future telescopes may be able to directly image this {{type}} and analyze its atmosphere."
+        },
+        "habitable": {
+          "intro": "A {{traits}}. ",
+          "score": "With a habitability score of {{score}}/100, this world has the right combination of size, temperature, and stellar environment that could support liquid water on its surface.",
+          "traits": {
+            "earthSized": "Earth-sized",
+            "habitableZone": "in the habitable zone",
+            "sunLikeStar": "orbiting a Sun-like star",
+            "redDwarf": "orbiting a red dwarf"
+          }
+        },
+        "extreme": {
+          "ultraHot": "A scorching inferno at {{temp}}K, hot enough to vaporize iron and titanium. On this ultra-hot world, metals rain from the sky and the day side glows like an ember.",
+          "puffy": "An inflated giant with density of just {{density}} g/cm³—less dense than styrofoam. Despite being larger than Jupiter, you could theoretically float on this cotton-candy world.",
+          "circumbinary": "A world with two suns in its sky. This circumbinary planet orbits a pair of stars, creating spectacular double sunrises and sunsets like the fictional Tatooine.",
+          "ultraDense": "An iron world with incredible density of {{density}} g/cm³, denser than any planet in our solar system. This compact world likely has a massive metallic core.",
+          "eccentric": "A wild orbit with eccentricity of {{ecc}}. This planet swings from scorching close approaches to frigid distant passes, experiencing extreme seasonal temperature swings.",
+          "labels": {
+            "ultraHot": "Ultra Hot",
+            "puffy": "Puffy Planet",
+            "circumbinary": "Circumbinary",
+            "ultraDense": "Ultra Dense",
+            "eccentric": "Eccentric Orbit"
+          }
+        },
+        "records": {
+          "hottest": "The hottest known exoplanet at {{temp}}K—hotter than most stars! Its atmosphere is hot enough to break apart molecules into their component atoms.",
+          "coldest": "The coldest known exoplanet at just {{temp}}K ({{tempC}}°C). A frozen world where even gases like methane and nitrogen would freeze solid.",
+          "fastest": "A year lasts just {{period}} on this speed demon! It orbits so close to its star that surface temperatures would vaporize rock.",
+          "largest": "The largest known exoplanet at {{radius}} times Jupiter's radius. This bloated giant is so inflated by stellar radiation that it pushes the limits of planetary physics.",
+          "smallest": "The tiniest confirmed exoplanet at {{radius}} Earth radii—smaller than our Moon. Finding worlds this small shows how far our detection methods have come.",
+          "oldest": "At {{age}} billion years old, this ancient system formed when the universe was young. If life ever arose here, it had billions of years more than Earth to evolve.",
+          "labels": {
+            "hottest": "Hottest",
+            "coldest": "Coldest",
+            "fastest": "Fastest Orbit",
+            "largest": "Largest",
+            "smallest": "Smallest",
+            "oldest": "Oldest"
+          }
+        }
+      }
+    },
     "about": {
       "title": "About",
       "subtitle": "Exploring 6,000+ confirmed worlds beyond our solar system",
@@ -862,6 +974,421 @@
         "onePercentC": "1% Light Speed",
         "tenPercentC": "10% Light Speed",
         "lightSpeed": "Light Speed"
+      }
+    }
+  },
+  "propertyExplanations": {
+    "planet": {
+      "radius": {
+        "title": "Planet Radius",
+        "description": "The radius of a planet tells us how large it is compared to Earth. Planetary radii range from smaller than Mercury (0.4 Earth radii) to larger than Jupiter (11 Earth radii). A planet's radius, combined with its mass, helps us determine its composition—whether it's a rocky world like Earth or a gas giant like Jupiter.",
+        "example": "Jupiter has a radius of 11.2 Earth radii, making it the largest planet in our solar system. Hot Jupiters can be even larger due to atmospheric inflation from intense stellar heat.",
+        "technicalNote": "Measured in Earth radii (R⊕). Transit observations provide the most accurate radius measurements.",
+        "funFact": "Some 'puffy' exoplanets have lower density than styrofoam due to extreme heating from their nearby stars!"
+      },
+      "mass": {
+        "title": "Planet Mass",
+        "description": "A planet's mass determines its gravitational pull and, along with radius, reveals its composition. Massive planets tend to retain thick atmospheres and can significantly affect their host star's motion. Mass measurements help distinguish between rocky planets, ice giants, and gas giants.",
+        "example": "Earth has a mass of 1.0 M⊕ by definition. Jupiter is 318 times more massive, while some 'super-Earths' range from 2-10 Earth masses.",
+        "technicalNote": "Measured in Earth masses (M⊕). Radial velocity measurements provide mass estimates."
+      },
+      "density": {
+        "title": "Planet Density",
+        "description": "Density reveals what a planet is made of. Rocky planets like Earth have densities around 5 g/cm³, while gas giants like Jupiter are much less dense at 1.3 g/cm³. Ultra-dense planets may have iron-rich cores, while 'puffy' planets can have densities lower than water.",
+        "example": "Earth: 5.51 g/cm³ (rocky), Jupiter: 1.33 g/cm³ (gas), Saturn: 0.69 g/cm³ (less dense than water!)",
+        "technicalNote": "Calculated from mass and radius: ρ = M / (4/3 × π × R³)"
+      },
+      "eqTemperature": {
+        "title": "Equilibrium Temperature",
+        "description": "This is the temperature a planet would have if it were in thermal equilibrium with its star's radiation, assuming it has no atmosphere. It's calculated from the star's brightness and the planet's distance. Planets hotter than 1,000 K are typically tidally locked to their stars.",
+        "example": "Earth: ~255 K (without atmosphere), Venus: ~730 K, Mercury: ~435 K. Hot Jupiters often exceed 1,500 K.",
+        "technicalNote": "Measured in Kelvin (K). Calculated from stellar temperature, radius, and orbital distance."
+      },
+      "orbitalPeriod": {
+        "title": "Orbital Period",
+        "description": "The orbital period is how long a planet takes to complete one orbit around its star—essentially, the length of its year. Earth's period is 365.25 days. Some exoplanets orbit in mere hours, while others take thousands of years.",
+        "example": "Mercury: 88 days, Earth: 365 days, Hot Jupiter: 1-10 days, Distant planet: 1,000+ days",
+        "technicalNote": "Measured in Earth days. Derived from repeated transit or radial velocity observations.",
+        "funFact": "Some 'ultra-short period' planets orbit their stars faster than Earth rotates!"
+      },
+      "insolationFlux": {
+        "title": "Insolation Flux",
+        "description": "Insolation flux is the amount of stellar energy received by a planet per unit area. It's compared to Earth's insolation (1 S⊕). Planets with very high insolation are extremely hot, while those with low insolation are frigid. This determines the planet's equilibrium temperature and climate.",
+        "example": "Earth: 1.0 S⊕, Venus: 2.6 S⊕ (much hotter), Mercury: 6.9 S⊕ (extremely hot), Mars: 0.43 S⊕ (much colder)",
+        "technicalNote": "Measured in Earth insolation units (S⊕). Calculated from stellar luminosity and orbital distance.",
+        "funFact": "Hot Jupiters can receive 1,000+ times Earth's insolation, making them far hotter than Venus!"
+      },
+      "planetType": {
+        "title": "Planet Type",
+        "description": "Planet type is a classification based on size and composition. Sub-Earth planets are smaller than Earth (rocky), Super-Earths are 1-10 Earth masses (rocky), Neptune-like are smaller gas giants, and Gas Giants are massive hydrogen/helium worlds. Type helps predict what the planet might be like.",
+        "example": "Earth: Earth-sized, Super-Earth: 2-5 Earth masses, Hot Jupiter: Gas giant in short orbit, Neptune-like: Ice giant",
+        "technicalNote": "Classification based on radius and mass. Sub-Earth < 1.25 R⊕, Super-Earth 1.25-2 R⊕, Neptune-like 2-6 R⊕, Gas Giant > 6 R⊕"
+      },
+      "hostStar": {
+        "title": "Host Star",
+        "description": "The host star is the star that the planet orbits. The properties of the host star—its size, temperature, and age—dramatically affect the planet's climate and potential habitability. The star's name often becomes part of the planet's name.",
+        "example": "Our Sun hosts Earth, TRAPPIST-1 hosts 7 Earth-sized planets, Proxima Centauri hosts Proxima Centauri b",
+        "technicalNote": "From the Exoplanet Archive hostname field."
+      }
+    },
+    "star": {
+      "starTemperature": {
+        "title": "Star Temperature",
+        "description": "A star's surface temperature determines its color and the type of light it emits. Cooler red dwarfs burn at 2,500-3,500 K, while our Sun is 5,778 K, and hot blue stars exceed 30,000 K. Stellar temperature directly affects the habitable zone—the region where planets could have liquid water.",
+        "example": "Red dwarf (M-type): 3,000 K (red glow), Sun (G-type): 5,778 K (yellow), Hot blue star (O-type): 40,000 K",
+        "technicalNote": "Measured in Kelvin (K). Determined from spectral analysis.",
+        "funFact": "Red dwarfs are the most common stars in the galaxy and can burn for trillions of years!"
+      },
+      "starRadius": {
+        "title": "Star Radius",
+        "description": "The radius of a star determines how large it appears in the sky and affects the size of its habitable zone. Our Sun has a radius of about 700,000 km. Red dwarfs are much smaller (0.1 R☉), while red giants can be 1,000 times larger.",
+        "example": "Sun: 1.0 R☉, Red dwarf: 0.1 R☉, Red giant Betelgeuse: ~900 R☉",
+        "technicalNote": "Measured in solar radii (R☉). Determined from stellar models and eclipsing binary measurements."
+      },
+      "starMass": {
+        "title": "Star Mass",
+        "description": "A star's mass determines how long it will live and how bright it will be. More massive stars burn hotter and brighter but die younger. The Sun has a mass of 1 M☉. The most massive stars are about 150 M☉, while the smallest are about 0.08 M☉.",
+        "example": "Sun: 1.0 M☉, Red dwarf: 0.08-0.5 M☉, Blue giant: 5-10 M☉",
+        "technicalNote": "Measured in solar masses (M☉). Determined from orbital mechanics and stellar models."
+      },
+      "starLuminosity": {
+        "title": "Star Luminosity",
+        "description": "Luminosity is the total amount of energy a star emits per second. It's the primary factor in determining the size and location of a star's habitable zone. Our Sun has a luminosity of 1 L☉. Luminosity increases dramatically with temperature and size.",
+        "example": "Sun: 1.0 L☉, Sirius: 26 L☉ (much brighter), Red dwarf: 0.001-0.1 L☉ (much dimmer)",
+        "technicalNote": "Measured in solar luminosities (L☉). Calculated from stellar models or observational data."
+      },
+      "starSurfaceGravity": {
+        "title": "Surface Gravity",
+        "description": "Surface gravity determines how strong the pull is on the star's surface. It depends on both the star's mass and radius. A more massive, compact star has higher surface gravity. Surface gravity affects how hydrogen and helium behave in a star's atmosphere.",
+        "example": "Sun: log g = 4.83, White dwarf: log g > 8 (extreme compression), Red giant: log g = 1-2 (weak gravity)",
+        "technicalNote": "Measured as log g (logarithm of surface gravity in cm/s²). Values range from 0-10."
+      },
+      "starMetallicity": {
+        "title": "Star Metallicity",
+        "description": "In astronomy, 'metallicity' means the abundance of elements heavier than helium (called 'metals'). Stars with higher metallicity tend to have more planets and are less likely to be on the main sequence. Our Sun has a metallicity of 0 dex by definition.",
+        "example": "Sun: 0.0 dex, Metal-rich star: +0.5 dex (twice as much heavy elements), Metal-poor star: -1.0 dex (10x less)",
+        "technicalNote": "Measured in dex (decimal magnitudes). Calculated by comparing spectral lines to solar values.",
+        "funFact": "Stars with higher metallicity are more likely to have planets, especially gas giants!"
+      },
+      "starAge": {
+        "title": "Star Age",
+        "description": "The age of a star indicates how much of its life it has already lived. Young stars (< 1 billion years) can have unstable planetary systems, while old stars (> 10 billion years) have stable, mature systems. Age is estimated from stellar models and chemical composition.",
+        "example": "Sun: 4.6 billion years old, Young star: < 100 million years, Old star: > 10 billion years",
+        "technicalNote": "Measured in Gyr (billions of years). Age estimates have significant uncertainties."
+      },
+      "starRotationPeriod": {
+        "title": "Rotation Period",
+        "description": "This is how long it takes for a star to complete one rotation on its axis. Younger stars rotate faster while older stars slow down due to magnetic braking. Rotation period affects stellar activity and can influence planets through stellar radiation.",
+        "example": "Sun: ~25 days (equator) to 35 days (poles), Young star: < 5 days, Old star: > 50 days",
+        "technicalNote": "Measured in days. Determined from photometric variations or spectroscopic measurements."
+      },
+      "starSpectralType": {
+        "title": "Spectral Type",
+        "description": "Spectral type is determined by a star's temperature and color. The main types are O, B, A, F, G, K, M (from hottest to coolest), with subdivisions 0-9. Our Sun is a G2V star. Spectral type quickly tells astronomers a star's temperature and composition.",
+        "example": "O5: 50,000 K (blue), A0: 10,000 K (blue-white), G2: 5,778 K (yellow), M5: 3,200 K (red)",
+        "technicalNote": "From spectroscopic analysis. Format: Letter (temperature class) + Number (subclass 0-9) + Roman numeral (luminosity class)"
+      },
+      "starClass": {
+        "title": "Star Class",
+        "description": "Star class is a simplified classification of spectral type. Main classes are O, B, A, F, G, K, M from hottest (blue) to coolest (red). Most stars in the galaxy are K or M type red dwarfs. The Sun is a G-type star.",
+        "example": "O-type: Hot, bright, short-lived, M-type: Cool, dim, long-lived (most common)",
+        "technicalNote": "Derived from spectral type. The letter designation indicates temperature class."
+      }
+    },
+    "discovery": {
+      "discoveryYear": {
+        "title": "Discovery Year",
+        "description": "The year the exoplanet was first confirmed and announced to the scientific community. The first exoplanet was discovered in 1992 orbiting a pulsar, and the first around a Sun-like star in 1995. Discovery dates tell us about the history of exoplanet research.",
+        "example": "First exoplanet: 1992, First Sun-like star: 1995, Most recent: 2024",
+        "technicalNote": "Year of discovery announcement in the Exoplanet Archive."
+      },
+      "discoveryMethod": {
+        "title": "Discovery Method",
+        "description": "The technique used to detect the exoplanet. Transit method (planet blocks starlight) has discovered most exoplanets. Radial Velocity (star wobbles) found the first exoplanet. Direct Imaging (photograph the planet), Microlensing, and Timing Variations are other methods. Each method has strengths and biases.",
+        "example": "Transit: ~70% of exoplanets, Radial Velocity: ~20%, Timing: ~3%, Microlensing: ~3%",
+        "technicalNote": "Different methods detect different types of planets. Transit works best for close-in planets; RV works best for massive planets.",
+        "funFact": "The Kepler mission discovered over 2,600 exoplanets using the transit method!"
+      },
+      "facility": {
+        "title": "Discovery Facility",
+        "description": "The observatory, telescope, or mission that made the initial discovery. Famous discoverers include the Kepler Space Telescope, TESS, and ground-based observatories. The facility tells you about the state of technology when the discovery was made.",
+        "example": "Kepler Space Telescope, TESS, Keck Observatory, VLT (Very Large Telescope), Gaia mission",
+        "technicalNote": "The observatory or mission listed in the Exoplanet Archive."
+      }
+    },
+    "orbital": {
+      "semiMajorAxis": {
+        "title": "Semi-Major Axis",
+        "description": "The semi-major axis is the average distance from a planet to its star. It's measured in astronomical units (AU)—the distance from Earth to the Sun. This distance determines how much energy the planet receives and whether it's in the habitable zone.",
+        "example": "Mercury: 0.39 AU, Earth: 1.0 AU, Mars: 1.52 AU, Jupiter: 5.2 AU",
+        "technicalNote": "Measured in AU. For circular orbits, it's the orbital radius; for elliptical orbits, it's the average."
+      },
+      "orbitalEccentricity": {
+        "title": "Orbital Eccentricity",
+        "description": "Eccentricity measures how elongated an orbit is. A value of 0 means a perfect circle, while values close to 1 mean a highly elongated ellipse. High eccentricity can cause extreme temperature swings on a planet as it moves closer and farther from its star.",
+        "example": "Earth: 0.017 (nearly circular), Mercury: 0.206 (noticeably elliptical), Some exoplanets: >0.9 (very elongated)",
+        "technicalNote": "Dimensionless value between 0 and 1. Measured through orbital variations in radial velocity or transit timing."
+      }
+    },
+    "detection": {
+      "transitDepth": {
+        "title": "Transit Depth",
+        "description": "When a planet passes in front of its star, it blocks a tiny fraction of starlight. This dip in brightness is the transit depth, directly revealing the planet's size relative to its star. Jupiter-sized planets block about 1% of light, while Earth-sized planets block only 0.008%.",
+        "example": "Jupiter transit: ~1% depth, Earth transit: ~0.008% depth, Hot Jupiter: 1-3%",
+        "technicalNote": "Measured as percentage or parts-per-million (ppm). Proportional to (R_planet / R_star)²",
+        "funFact": "The Kepler space telescope could detect brightness changes as small as 0.001%!"
+      },
+      "transitDuration": {
+        "title": "Transit Duration",
+        "description": "Transit duration is how long it takes for a planet to completely cross its star's disk. It depends on the planet's orbital velocity and the size of the star. Longer transits occur for planets orbiting slower or around larger stars. This helps confirm detections and measure planet-to-star size ratios.",
+        "example": "Earth transiting the Sun: ~13 hours, Hot Jupiter: 2-4 hours, Neptune-like: 5-8 hours",
+        "technicalNote": "Measured in hours. Related to orbital period and semi-major axis."
+      },
+      "transitRatio": {
+        "title": "Planet-to-Star Radius Ratio",
+        "description": "This is the ratio of the planet's radius to the star's radius. It directly affects the transit depth. A planet orbiting a small star can block more light relative to the star's size. This ratio helps characterize the planet and is essential for atmospheric analysis.",
+        "example": "Jupiter/Sun: 0.1, Earth/Sun: 0.009, Hot Jupiter/Small star: 0.15",
+        "technicalNote": "Dimensionless ratio. Calculated as R_planet / R_star."
+      },
+      "orbitalRatio": {
+        "title": "Orbital Distance-to-Stellar Radius Ratio",
+        "description": "This is the ratio of the semi-major axis to the star's radius. It tells us how close the planet orbits relative to the star's size. Small values mean the planet is very close to its star (close-in planets), while large values mean distant orbits.",
+        "example": "Mercury (Sun): 11.7, Hot Jupiter (small star): 2-5, Earth (Sun): 215",
+        "technicalNote": "Dimensionless ratio. Also called 'a/R★'. Smaller ratios indicate closer orbits."
+      },
+      "impactParameter": {
+        "title": "Impact Parameter",
+        "description": "The impact parameter describes where the planet's path crosses the star's disk. A value of 0 means the planet passes through the center, while values near 1 mean grazing transits. This determines how much light the planet blocks and helps understand the planetary system's geometry.",
+        "example": "Central transit: b = 0, Grazing transit: b > 0.9, Missed transit: b > 1",
+        "technicalNote": "Dimensionless value between 0 and 1. Determined from transit light curves."
+      },
+      "rvAmplitude": {
+        "title": "Radial Velocity Amplitude",
+        "description": "Radial velocity (RV) amplitude is the maximum velocity at which a star 'wobbles' due to the gravitational pull of an orbiting planet. Larger amplitude means a more massive planet or shorter orbital period. RV was the first method to discover exoplanets.",
+        "example": "Jupiter's effect on the Sun: 12.5 m/s, Hot Jupiter: 50-500 m/s, Earth's effect on the Sun: 0.09 m/s",
+        "technicalNote": "Measured in meters per second (m/s). Proportional to planet mass and orbital velocity.",
+        "funFact": "To detect Earth's pull on the Sun from afar would require precision beyond current technology!"
+      },
+      "stellar RV": {
+        "title": "Stellar Radial Velocity",
+        "description": "This is the star's motion toward or away from Earth due to its orbit around the galaxy and local stellar motions. It's different from the RV caused by planets. Subtracting this 'baseline' RV is necessary to identify planets from RV measurements.",
+        "example": "Sun: ~7 km/s (toward solar apex), Typical star: -50 to +50 km/s",
+        "technicalNote": "Measured in km/s. Determined from spectroscopic analysis."
+      },
+      "stellar Vsin": {
+        "title": "Stellar Rotation Velocity",
+        "description": "This is the rotation speed of the star at its equator as seen from Earth (it's the sine of the inclination, so we can't see the true speed). Fast-rotating stars make it harder to detect planets via radial velocity because rotation creates noise in the measurements.",
+        "example": "Non-rotating star: < 1 km/s, Sun: 2 km/s, Fast rotator: > 10 km/s",
+        "technicalNote": "Measured in km/s. Determined from spectroscopic line broadening. True velocity is v_rot / sin(i)."
+      }
+    },
+    "flag": {
+      "habitableZone": {
+        "title": "Habitable Zone",
+        "description": "The habitable zone (or 'Goldilocks zone') is the region around a star where temperatures allow liquid water to exist on a planet's surface—not too hot, not too cold. For our Sun, this zone extends from roughly Venus's orbit to Mars's orbit. Being in the habitable zone doesn't guarantee life, but it's a promising sign.",
+        "example": "Sun's habitable zone: 0.95-1.67 AU, Red dwarf: 0.1-0.3 AU (much closer), Hot star: 2-10 AU (much farther)",
+        "technicalNote": "Boundaries depend on stellar luminosity and atmospheric models.",
+        "funFact": "Earth is right in the middle of the Sun's habitable zone, sometimes called the 'perfect distance'!"
+      },
+      "earthLike": {
+        "title": "Earth-like",
+        "description": "An 'Earth-like' planet is one that shares significant similarities with Earth. This typically means it's a rocky planet in the habitable zone of a Sun-like star. However, being Earth-like doesn't mean it's actually habitable—it just has conditions similar to Earth's.",
+        "example": "Proxima Centauri b is one of the closest potentially Earth-like exoplanets, though it orbits a red dwarf.",
+        "technicalNote": "Definition varies by source. This app uses radius (0.8-1.25 R⊕), habitable zone location, and rocky composition.",
+        "funFact": "Only a few dozen confirmed exoplanets are considered Earth-like based on current criteria!"
+      },
+      "topCandidate": {
+        "title": "Top Habitable Candidate",
+        "description": "A top habitable candidate is a planet that ranks highly in the likelihood of being able to support life. This considers multiple factors including habitable zone location, size, composition, stellar type, and age. These are the planets most worth studying for potential habitability.",
+        "example": "Gliese 667Cc, TRAPPIST-1e, Kepler-452b",
+        "technicalNote": "Based on habitability scoring algorithms that weight multiple factors."
+      },
+      "potentiallyRocky": {
+        "title": "Potentially Rocky",
+        "description": "A potentially rocky planet is estimated to have a rocky (terrestrial) composition rather than being a gas or ice giant. Rocky planets are more likely to have solid surfaces where life could exist. This classification is based on radius and mass estimates.",
+        "example": "Small Earth-like planets, Super-Earths, most planets < 2 Earth radii",
+        "technicalNote": "Classification based on radius and mass. Rocky if R < 1.5 R⊕ typically, or if density suggests rocky composition."
+      },
+      "earthLikeInsolation": {
+        "title": "Earth-like Insolation",
+        "description": "Earth-like insolation means the planet receives approximately the same amount of stellar energy as Earth does from the Sun. This is a key factor in habitability because it determines surface temperature. Planets with Earth-like insolation are more likely to have liquid water.",
+        "example": "Earth: 1.0 S⊕, Kepler-186f: 0.32 S⊕ (cool but habitable), Hot Jupiters: > 100 S⊕",
+        "technicalNote": "Similar to Earth's insolation (1 S⊕). Typically defined as 0.25-4 S⊕."
+      },
+      "hotJupiter": {
+        "title": "Hot Jupiter",
+        "description": "A hot Jupiter is a gas giant planet orbiting very close to its star—much closer than Mercury orbits the Sun. This was surprising when first discovered because our solar system's gas giants are distant. Hot Jupiters are easy to detect via transit method because they're large and frequently eclipse their stars.",
+        "example": "51 Pegasi b, WASP-12b, HD 209458b",
+        "technicalNote": "Typically defined as Jupiter-mass planets with orbital periods < 10 days."
+      },
+      "hotNeptune": {
+        "title": "Hot Neptune",
+        "description": "A hot Neptune is a Neptune-sized ice giant orbiting close to its star. These planets are thought to be primordial gas giants that migrated inward and lost their outer hydrogen/helium atmospheres due to stellar radiation. They're intermediate between gas giants and rocky planets.",
+        "example": "GJ 436b, HAT-P-11b",
+        "technicalNote": "Typically defined as Neptune-mass planets (4-10 M⊕) with orbital periods < 10 days."
+      },
+      "ultraHot": {
+        "title": "Ultra-Hot Planet",
+        "description": "An ultra-hot planet is one with an exceptionally high equilibrium temperature, typically > 2,000 K. These planets orbit extremely close to their stars and experience intense radiation. Their atmospheres may be partially stripped away, and they may have molten surfaces.",
+        "example": "KELT-9b (4,600 K), WASP-103b, KELT-7b",
+        "technicalNote": "Typically defined as planets with Teq > 2,000 K or orbital period < 1 day."
+      },
+      "frozenWorld": {
+        "title": "Frozen World",
+        "description": "A frozen world is a planet with a very low equilibrium temperature, typically < 200 K (-73°C). These planets orbit far from their stars and receive minimal stellar energy. Their surfaces would be covered in ice and frozen gases unless heated by internal processes.",
+        "example": "Distant planets around low-luminosity stars, some ice giants",
+        "technicalNote": "Typically defined as planets with Teq < 200 K."
+      },
+      "ultraDense": {
+        "title": "Ultra-Dense Planet",
+        "description": "An ultra-dense planet has exceptionally high density, suggesting an iron core or extreme compression. These planets may have experienced core accretion and planetary migration, or lost their atmospheres. Ultra-dense worlds are fundamentally different from anything in our solar system.",
+        "example": "55 Cancri e (density ~ 12 g/cm³), Corot-7b",
+        "technicalNote": "Defined by high density relative to size. Typically > 8-10 g/cm³."
+      },
+      "puffy": {
+        "title": "Puffy Planet",
+        "description": "A puffy planet is surprisingly large for its mass—it has lower density than expected. These planets may have thick hydrogen/helium atmospheres or be heated so intensely by their stars that their atmospheres puff up. Some are so light they'd float in water!",
+        "example": "WASP-17b, HAT-P-18b, some hot Jupiters",
+        "technicalNote": "Defined by low density relative to size. Density < 0.5 g/cm³ (less dense than water)."
+      },
+      "superMassive": {
+        "title": "Super-Massive Planet",
+        "description": "A super-massive planet is exceptionally large, typically > 13 Jupiter masses. At this mass, planets approach the deuterium-burning limit and may be considered brown dwarfs. These are the most massive planets known.",
+        "example": "Some massive planets at tens of Jupiter masses",
+        "technicalNote": "Defined as having mass > ~13 M_J, near the hydrogen-burning limit."
+      },
+      "lightweight": {
+        "title": "Lightweight Planet",
+        "description": "A lightweight planet has unusually low mass for its size, or small size for its type. These planets are interesting because their low density and/or mass provide clues about formation and atmospheric escape. Some lightweight planets may have lost their atmospheres over time.",
+        "example": "Ultra-light Super-Earths, low-density ice giants",
+        "technicalNote": "Defined by mass < 3 M⊕ for Super-Earths, or density lower than expected."
+      },
+      "ultraShortPeriod": {
+        "title": "Ultra-Short Period",
+        "description": "An ultra-short period planet orbits its star extremely quickly, typically with a period < 1 day. These planets are so close to their stars that they experience intense heat and tidal forces. Some may even be spiraling into their stars.",
+        "example": "KELT-9b (0.45 day period), Kepler-1657b (0.36 days)",
+        "technicalNote": "Defined as orbital period < 1 day. Some have periods of just a few hours!"
+      },
+      "longPeriod": {
+        "title": "Long-Period Planet",
+        "description": "A long-period planet takes more than a year to orbit its star, placing it far from its star. These planets receive little stellar energy and are cold. Long-period planets are often harder to detect because we need years of observations to confirm the orbit.",
+        "example": "Planets with periods > 1 year or > 365 days",
+        "technicalNote": "Defined as orbital period > 365 days (Earth years)."
+      },
+      "eccentricOrbit": {
+        "title": "Eccentric Orbit",
+        "description": "An eccentric orbit is elongated rather than circular. Planets with eccentric orbits experience extreme temperature variations as they move closer and farther from their star. This is unusual because orbital interactions tend to circularize orbits over time.",
+        "example": "Some exoplanets with e > 0.2 or higher",
+        "technicalNote": "Defined by orbital eccentricity > ~0.1-0.2."
+      },
+      "circularOrbit": {
+        "title": "Circular Orbit",
+        "description": "A circular orbit is nearly perfectly round, providing stable, consistent conditions for planets. Our Earth has one of the most circular orbits (e = 0.017). Circular orbits suggest the system is old and stable.",
+        "example": "Earth: e = 0.017, Venus: e = 0.007 (nearly perfect circles)",
+        "technicalNote": "Defined by orbital eccentricity < ~0.05."
+      },
+      "tidallyLocked": {
+        "title": "Likely Tidally Locked",
+        "description": "A tidally locked planet always shows the same face to its star—one side perpetually faces the star while the other faces away. This happens for planets very close to their stars. The day side is extremely hot while the night side is freezing cold.",
+        "example": "Most hot Jupiters, many ultra-hot planets, Mercury-like close-in planets",
+        "technicalNote": "Likely if orbital period and semi-major axis suggest tidal locking is complete."
+      },
+      "circumbinary": {
+        "title": "Circumbinary",
+        "description": "A circumbinary planet orbits two stars instead of one. These are rare and fascinating—planets must orbit far enough out to avoid destabilizing interactions with the binary pair. They have more complex dynamics but could potentially have two suns in their sky.",
+        "example": "Kepler-16b, Kepler-34b, Kepler-35b",
+        "technicalNote": "Binary stars with planets orbiting both. Requires careful orbital calculations."
+      },
+      "multiPlanet": {
+        "title": "Multi-Planet System",
+        "description": "A multi-planet system has more than one confirmed exoplanet orbiting the same star. These systems are valuable because we can study planet interactions and formation. Most known exoplanets are in systems with multiple planets.",
+        "example": "TRAPPIST-1 (7 planets), Kepler-90 (8 planets), Our solar system (8 planets)",
+        "technicalNote": "Simply means sy_pnum > 1 in the data."
+      },
+      "richSystem": {
+        "title": "Rich System",
+        "description": "A rich system has many planets orbiting the same star, typically 5 or more. These systems are treasure troves for understanding planetary formation. Compact systems with many planets packed close together are especially interesting.",
+        "example": "TRAPPIST-1 (7), Kepler-90 (8), Gliese 667 (at least 5 visible planets)",
+        "technicalNote": "Defined as sy_pnum ≥ 5."
+      },
+      "multiStar": {
+        "title": "Multi-Star System",
+        "description": "A multi-star system has planets orbiting around multiple stars rather than just one. This includes both circumbinary planets and planets in wide binary systems. Planets in these systems experience more complex gravitational dynamics.",
+        "example": "Alpha Centauri, Sirius system, many multiple star systems",
+        "technicalNote": "Indicated by sy_snum > 1 (more than one stellar component)."
+      },
+      "veryNearby": {
+        "title": "Very Nearby",
+        "description": "A very nearby planet orbits a star within 10 light-years of Earth. These are the closest exoplanets and are prime targets for future observation and potential interstellar missions. Proxima Centauri b is our nearest exoplanet neighbor.",
+        "example": "Proxima Centauri b (4.2 ly), TRAPPIST-1e (12 ly)",
+        "technicalNote": "Defined as distance < 10 light-years."
+      },
+      "nearby": {
+        "title": "Nearby",
+        "description": "A nearby planet orbits a star between 10 and 50 light-years away. These planets are close enough for detailed study with current and near-future telescopes. Many important exoplanet discoveries are in nearby systems.",
+        "example": "Epsilon Eridani (10.5 ly), Tau Ceti (12 ly), Vega (25 ly)",
+        "technicalNote": "Defined as distance 10-50 light-years (approximately)."
+      },
+      "solarAnalog": {
+        "title": "Solar Analog",
+        "description": "A solar analog is a star very similar to our Sun—same temperature, size, mass, and age. Planets orbiting solar analogs are especially interesting because we can compare their systems to our own. Finding Earth analogs around solar analogs is a major goal.",
+        "example": "Sun-like stars with similar T_eff, radius, and age as our 4.6 billion-year-old Sun",
+        "technicalNote": "Defined by similar stellar parameters to the Sun."
+      },
+      "redDwarfHost": {
+        "title": "Red Dwarf Host",
+        "description": "A red dwarf host is a small, cool M-type star hosting exoplanet(s). Red dwarfs are the most common stars and live for trillions of years. Their habitable zones are much closer than for Sun-like stars, making their planets easier to detect.",
+        "example": "Proxima Centauri, TRAPPIST-1, Gliese 667",
+        "technicalNote": "M-type stars with Teff < ~4000 K."
+      },
+      "youngSystem": {
+        "title": "Young System",
+        "description": "A young system has an age < 500 million years or so. Young planetary systems are still forming and evolving—planets may be migrating, and residual dust and debris are common. These systems help us understand planetary formation.",
+        "example": "Systems around young stars in star-forming regions",
+        "technicalNote": "Age < ~500-1000 million years."
+      },
+      "ancientSystem": {
+        "title": "Ancient System",
+        "description": "An ancient system has an age > 10 billion years—it's older than our solar system. Ancient systems are stable and settled. Finding planets around ancient stars tells us about long-term system stability.",
+        "example": "Some systems with M-type stars or in globular clusters",
+        "technicalNote": "Age > ~10 billion years."
+      },
+      "metalRich": {
+        "title": "Metal-Rich Star",
+        "description": "A metal-rich star has higher abundance of elements heavier than helium than our Sun does. Metal-rich stars are more likely to host planets, especially gas giants. This suggests that metallicity correlates with planet formation efficiency.",
+        "example": "Stars with [Fe/H] > 0.1 dex",
+        "technicalNote": "Metallicity [Fe/H] > 0 (our Sun is 0 by definition).",
+        "funFact": "Exoplanet host stars are statistically more metal-rich than average stars!"
+      },
+      "metalPoor": {
+        "title": "Metal-Poor Star",
+        "description": "A metal-poor star has lower abundance of heavy elements than our Sun. Metal-poor stars are less likely to host planets. These ancient stars are often found in globular clusters and tell us about the early universe.",
+        "example": "Stars with [Fe/H] < -0.5 dex",
+        "technicalNote": "Metallicity [Fe/H] < -0.3 or -0.5 (below solar)."
+      },
+      "transiting": {
+        "title": "Transiting",
+        "description": "A transiting planet passes in front of its star from our perspective, causing a measurable dip in starlight. These planets are ideal for study because we can observe their transits repeatedly and measure their size, composition, and atmospheric properties.",
+        "example": "Most Kepler discoveries, TESS discoveries",
+        "technicalNote": "Directly observed to transit based on light curve data."
+      },
+      "hasRvData": {
+        "title": "Has Radial Velocity Data",
+        "description": "This planet has radial velocity measurements showing the star's wobble caused by the planet's gravity. RV data allows us to measure the planet's minimum mass. Combined with transit data, RV gives us the true mass.",
+        "example": "Planets discovered via or confirmed by RV method",
+        "technicalNote": "RV amplitude (pl_rvamp) is measured and available."
+      },
+      "hasTtv": {
+        "title": "Has Transit Timing Variations",
+        "description": "Transit timing variations (TTVs) occur when planets gravitationally interact with each other, causing slight variations in transit times. TTV can reveal the masses of planets and detect non-transiting planets in multi-planet systems.",
+        "example": "Planets in Kepler multi-planet systems showing TTV signals",
+        "technicalNote": "Statistical significance required for confirmation."
+      },
+      "controversial": {
+        "title": "Controversial",
+        "description": "A controversial planet's existence is debated or not fully confirmed. This might be due to weak signals, conflicting data, or alternative explanations for observations. These planets require additional follow-up observations.",
+        "example": "Some marginal detections or claims requiring confirmation",
+        "technicalNote": "Marked in the Exoplanet Archive as controversial or unconfirmed."
       }
     }
   }
