@@ -431,18 +431,20 @@
      ============================================================================= */
 
   .welcome-card-container {
-    @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40;
+    @apply fixed inset-0 z-40 flex items-center justify-center;
     @apply pointer-events-none;
-    animation: welcome-appear 0.4s ease-out forwards;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    animation: fade-in 0.4s ease-out forwards;
   }
 
   .welcome-card {
     @apply relative pointer-events-auto;
-    @apply p-6 rounded-xl;
-    @apply w-11/12 max-w-sm;
+    @apply p-8 rounded-xl;
+    @apply w-11/12 max-w-lg;
     @apply border border-white/[0.08] backdrop-blur-xl;
-    background: rgba(12, 12, 18, 0.9);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    background: rgba(12, 12, 18, 0.95);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
   }
 
   .welcome-title {
@@ -576,7 +578,7 @@
   .starsystem-planets-panel {
     @apply absolute bottom-4 left-4 z-40;
     @apply bg-black/70 border border-white/20 rounded-lg;
-    @apply p-4 min-w-56 max-h-64 overflow-y-auto backdrop-blur-sm;
+    @apply p-4 min-w-56 backdrop-blur-sm;
     animation: fade-in 0.5s ease-out 0.2s both;
   }
 
@@ -2023,7 +2025,14 @@
   }
 
   .orbital-legend {
-    @apply flex justify-center gap-4 text-xs;
+    @apply flex flex-wrap justify-center gap-4 mt-4 pt-4;
+    @apply border-t border-white/[0.06];
+  }
+
+  @media (max-width: 768px) {
+    .orbital-legend {
+      @apply justify-start;
+    }
   }
 
   .orbital-legend-item {
@@ -2097,7 +2106,7 @@
 
   /* Real-time Data Display - Dashboard Style */
   .rv-data-display {
-    @apply grid grid-cols-3 gap-3 mb-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4;
   }
 
   .rv-data-item {
@@ -2122,12 +2131,12 @@
 
   /* Synchronized Visualizations Grid */
   .rv-visualizations-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 gap-4 mb-6;
+    @apply grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6;
   }
 
   .rv-orbital-views-card,
   .rv-spectrum-card {
-    @apply bg-black/20 rounded-lg p-5 border border-white/10;
+    @apply bg-black/20 rounded-lg p-5 border border-white/10 overflow-hidden;
   }
 
   .rv-viz-subtitle {
@@ -2137,7 +2146,7 @@
   .rv-orbital-diagram,
   .rv-side-view,
   .rv-spectrum {
-    @apply flex justify-center items-center;
+    @apply flex justify-center items-center w-full;
   }
 
   .rv-orbital-views {
@@ -2162,7 +2171,7 @@
   }
 
   .rv-comparison-legend {
-    @apply flex items-center justify-center gap-6 mt-4 text-xs text-white/60;
+    @apply flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4 text-xs text-white/60;
   }
 
   .rv-comparison-legend-item {
@@ -2232,7 +2241,7 @@
 
   /* Technical Details */
   .rv-technical-details {
-    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
     @apply p-4 bg-black/20 rounded-lg mt-6;
   }
 
@@ -2323,7 +2332,7 @@
   }
 
   .travel-time-chart {
-    @apply w-full overflow-x-auto;
+    @apply w-full;
   }
 
   .travel-time-details {
@@ -2534,22 +2543,22 @@
 @keyframes welcome-appear {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) translateY(8px);
+    backdrop-filter: blur(0px);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) translateY(0);
+    backdrop-filter: blur(4px);
   }
 }
 
 @keyframes welcome-disappear {
   0% {
     opacity: 1;
-    transform: translate(-50%, -50%) translateY(0);
+    backdrop-filter: blur(4px);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) translateY(-8px);
+    backdrop-filter: blur(0px);
   }
 }
 
@@ -4264,6 +4273,12 @@
   @apply border-t border-white/[0.06];
 }
 
+@media (max-width: 768px) {
+  .orbital-legend {
+    @apply justify-start;
+  }
+}
+
 .orbital-legend-item {
   @apply flex items-center gap-2 text-xs text-white/50;
 }
@@ -4310,6 +4325,12 @@
 .temp-size-legend {
   @apply flex flex-wrap justify-center gap-4 mt-4 pt-4;
   @apply border-t border-white/[0.06];
+}
+
+@media (max-width: 768px) {
+  .temp-size-legend {
+    @apply justify-start;
+  }
 }
 
 .temp-size-legend-item {
@@ -4366,7 +4387,7 @@
 }
 
 .transit-data-display {
-  @apply grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-black/30 rounded-lg;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-black/30 rounded-lg;
 }
 
 .transit-data-item {
@@ -4391,7 +4412,7 @@
 
 /* Visualizations Grid */
 .transit-visualizations-grid {
-  @apply grid md:grid-cols-2 gap-4;
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4;
 }
 
 .transit-orbital-card,
@@ -4419,19 +4440,19 @@
 
 /* Comparison Chart */
 .transit-comparison-container {
-  @apply mt-6;
+  @apply mt-6 max-w-full overflow-hidden;
 }
 
 .transit-comparison-title {
-  @apply text-lg font-semibold text-white/90 mb-2;
+  @apply text-lg font-semibold text-white/90 mb-2 pl-[120px];
 }
 
 .transit-comparison-description {
-  @apply text-sm text-white/70 mb-3;
+  @apply text-sm text-white/70 mb-3 pl-[120px];
 }
 
 .transit-comparison-chart {
-  @apply w-full overflow-visible;
+  @apply w-full overflow-hidden;
 }
 
 .transit-comparison-legend {
@@ -4485,7 +4506,7 @@
 
 /* Technical Details */
 .transit-technical-details {
-  @apply grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-black/20 rounded-lg mt-4;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-black/20 rounded-lg mt-4;
 }
 
 .transit-detail-item {

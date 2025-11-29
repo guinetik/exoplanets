@@ -634,6 +634,15 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     skipIntro,
   } = useIntroSequence();
 
+  // Disable body scroll on starfield (prevents interference with 3D drag)
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
   // Show welcome card when intro completes (only once)
   useEffect(() => {
     if (

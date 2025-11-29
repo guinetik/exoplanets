@@ -135,9 +135,10 @@ export function RadialVelocitySection({
     if (!hasRvData || !curveChartRef.current || !curveContainerRef.current) return;
 
     const containerWidth = curveContainerRef.current.clientWidth;
+    const isMobile = containerWidth < 500;
     const width = Math.min(containerWidth - 20, 1200); // Cap max width, subtract padding to avoid scroll
-    const height = 300;
-    const margin = { top: 20, right: 30, bottom: 50, left: 70 };
+    const height = 380; // Increased to accommodate legend below
+    const margin = { top: 20, right: 30, bottom: isMobile ? 120 : 90, left: 70 }; // Increased bottom margin for legend
 
     const svg = d3.select(curveChartRef.current);
     svg.selectAll('*').remove();
@@ -245,67 +246,110 @@ export function RadialVelocitySection({
       .attr('stroke-width', 2)
       .attr('opacity', 0.9);
 
-    // Legend
-    const legendX = width - margin.right - 130;
-    const legendY = margin.top + 10;
+    // Legend - placed below the chart to avoid overlapping data
+    const legendGroup = svg.append('g').attr('class', 'rv-curve-legend');
 
-    // Legend background
-    svg.append('rect')
-      .attr('x', legendX - 5)
-      .attr('y', legendY - 5)
-      .attr('width', 135)
-      .attr('height', 60)
-      .attr('fill', 'rgba(0, 0, 0, 0.6)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.3)')
-      .attr('stroke-width', 1)
-      .attr('rx', 4);
+    const legendItems = [
+      { color: 'rgba(255, 100, 100, 0.4)', text: t('pages.planet.rv.legendRedshift'), type: 'rect' },
+      { color: 'rgba(100, 150, 255, 0.4)', text: t('pages.planet.rv.legendBlueshift'), type: 'rect' },
+      { color: 'rgba(255, 255, 255, 0.5)', text: t('pages.planet.rv.legendBaseline'), type: 'line' },
+    ];
 
-    // Redshift legend item
-    svg.append('rect')
-      .attr('x', legendX)
-      .attr('y', legendY)
-      .attr('width', 20)
-      .attr('height', 12)
-      .attr('fill', 'rgba(255, 100, 100, 0.4)');
+    const itemPadding = 25;
+    const legendRowHeight = 20;
 
-    svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 9)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
-      .text('Redshift (away)');
+    const legendNodes = legendItems.map((item) => {
+      const g = legendGroup.append('g');
+      let elementWidth = 0;
 
-    // Blueshift legend item
-    svg.append('rect')
-      .attr('x', legendX)
-      .attr('y', legendY + 20)
-      .attr('width', 20)
-      .attr('height', 12)
-      .attr('fill', 'rgba(100, 150, 255, 0.4)');
+      if (item.type === 'rect') {
+        g.append('rect')
+          .attr('width', 20)
+          .attr('height', 12)
+          .attr('fill', item.color);
+        elementWidth += 20;
+      } else {
+        g.append('line')
+          .attr('x1', 0)
+          .attr('x2', 20)
+          .attr('y1', 6)
+          .attr('y2', 6)
+          .attr('stroke', item.color)
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '4,2');
+        elementWidth += 20;
+      }
 
-    svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 29)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
-      .text('Blueshift (toward)');
+      const text = g.append('text')
+        .attr('x', 25)
+        .attr('y', 9)
+        .attr('fill', 'rgba(255, 255, 255, 0.9)')
+        .attr('font-size', '10px')
+        .text(item.text);
 
-    // Baseline legend item
-    svg.append('line')
-      .attr('x1', legendX)
-      .attr('x2', legendX + 20)
-      .attr('y1', legendY + 46)
-      .attr('y2', legendY + 46)
-      .attr('stroke', 'rgba(255, 255, 255, 0.5)')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '4,2');
+      elementWidth += text.node()?.getBBox().width || 0;
+      return { g, width: elementWidth + itemPadding };
+    });
 
-    svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 49)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
-      .text('Baseline');
+    if (isMobile) {
+      // Mobile layout: 1 item per row, left-aligned
+      let maxItemWidth = 0;
+      legendNodes.forEach((node, i) => {
+        node.g.attr('transform', `translate(0, ${i * legendRowHeight})`);
+        if (node.width > maxItemWidth) {
+          maxItemWidth = node.width;
+        }
+      });
+
+      const legendWidth = maxItemWidth - itemPadding;
+      const legendHeight = legendNodes.length * legendRowHeight;
+      const legendX = margin.left;
+      legendGroup.attr('transform', `translate(${legendX}, ${height - margin.bottom + 50})`);
+
+      svg.insert('rect', '.rv-curve-legend')
+        .attr('x', legendX - 10)
+        .attr('y', height - margin.bottom + 45)
+        .attr('width', legendWidth + 20)
+        .attr('height', legendHeight + 5)
+        .attr('fill', 'rgba(0, 0, 0, 0.6)')
+        .attr('stroke', 'rgba(255, 255, 255, 0.3)')
+        .attr('stroke-width', 1)
+        .attr('rx', 4);
+    } else {
+      // Desktop layout: wrap and center
+      let currentX = 0;
+      let currentY = 0;
+      let totalWidth = 0;
+      let maxYinRow = 0;
+
+      legendNodes.forEach(node => {
+        if (currentX > 0 && currentX + node.width > width - margin.left - margin.right) {
+          currentX = 0;
+          currentY += legendRowHeight;
+        }
+        node.g.attr('transform', `translate(${currentX}, ${currentY})`);
+        currentX += node.width;
+        if (currentX > totalWidth) {
+          totalWidth = currentX;
+        }
+        maxYinRow = currentY;
+      });
+
+      const legendWidth = totalWidth - itemPadding;
+      const legendHeight = maxYinRow + legendRowHeight;
+      const legendX = (width - legendWidth) / 2;
+      legendGroup.attr('transform', `translate(${legendX}, ${height - margin.bottom + 50})`);
+      
+      svg.insert('rect', '.rv-curve-legend')
+        .attr('x', legendX - 10)
+        .attr('y', height - margin.bottom + 45)
+        .attr('width', legendWidth + 20)
+        .attr('height', legendHeight + 5)
+        .attr('fill', 'rgba(0, 0, 0, 0.6)')
+        .attr('stroke', 'rgba(255, 255, 255, 0.3)')
+        .attr('stroke-width', 1)
+        .attr('rx', 4);
+    }
 
     // Animated marker (positioned by currentPhase in separate useEffect)
     svg.append('circle')
@@ -331,7 +375,7 @@ export function RadialVelocitySection({
     // X-axis label
     svg.append('text')
       .attr('x', width / 2)
-      .attr('y', height - 5)
+      .attr('y', height - margin.bottom + 30)
       .attr('text-anchor', 'middle')
       .attr('fill', 'rgba(255, 255, 255, 0.7)')
       .attr('font-size', '12px')
@@ -687,7 +731,7 @@ export function RadialVelocitySection({
         .attr('y', labelY)
         .attr('text-anchor', 'middle')
         .attr('fill', 'rgba(255, 255, 255, 0.6)')
-        .attr('font-size', '8px')
+        .attr('font-size', width < 500 ? '6px' : '8px')
         .text(line.label);
     });
 
@@ -701,7 +745,7 @@ export function RadialVelocitySection({
       .attr('y', 110)
       .attr('text-anchor', 'middle')
       .attr('fill', 'rgba(255, 255, 255, 0.7)')
-      .attr('font-size', '10px')
+      .attr('font-size', width < 500 ? '8px' : '10px')
       .text(velocityText);
 
     // Educational summary - expanded to fill space
@@ -727,19 +771,25 @@ export function RadialVelocitySection({
       { text: '  • Spectrum: Black lines align with dashed reference lines', y: 351 },
     ];
 
+    // Responsive font sizing based on container width
+    const baseFontSize = width < 500 ? 10 : 12;
+    const boldFontSize = width < 500 ? 11 : 13;
+
     summaryData.forEach((item) => {
       if (!item.text) return; // Skip spacers
 
       const text = svg.append('text')
-        .attr('x', 20)
+        .attr('x', width < 500 ? 15 : 20)
         .attr('y', item.y)
         .attr('text-anchor', 'start')
         .attr('fill', 'rgba(255, 255, 255, 0.6)')
-        .attr('font-size', item.size ? `${item.size}px` : '10px')
+        .attr('font-size', item.size ? `${item.size * (baseFontSize / 10)}px` : `${baseFontSize}px`)
         .text(item.text);
 
       if (item.bold) {
-        text.attr('font-weight', 'bold').attr('fill', 'rgba(255, 255, 255, 0.8)');
+        text.attr('font-weight', 'bold')
+          .attr('fill', 'rgba(255, 255, 255, 0.8)')
+          .attr('font-size', `${boldFontSize}px`);
       }
     });
 
@@ -760,9 +810,15 @@ export function RadialVelocitySection({
     if (rvPlanets.length <= 1) return; // Need at least 2 planets for comparison
 
     const containerWidth = comparisonContainerRef.current.clientWidth;
-    const width = Math.max(400, containerWidth - 40); // Account for container padding
-    const height = Math.max(200, rvPlanets.length * 40);
-    const margin = { top: 20, right: 30, bottom: 40, left: 150 };
+    const isMobile = containerWidth < 500;
+    const width = Math.max(isMobile ? 320 : 400, containerWidth - (isMobile ? 20 : 40));
+    const height = Math.max(200, rvPlanets.length * (isMobile ? 30 : 40));
+    const margin = {
+      top: 20,
+      right: isMobile ? 15 : 30,
+      bottom: isMobile ? 30 : 40,
+      left: isMobile ? 80 : 150,
+    };
 
     const svg = d3.select(comparisonChartRef.current);
     svg.selectAll('*').remove();
@@ -821,7 +877,7 @@ export function RadialVelocitySection({
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(
         d3.axisBottom(xScale)
-          .ticks(5, '~s')
+          .ticks(isMobile ? 3 : 5, '~s')
           .tickFormat(d => `${d} m/s`)
       );
 
@@ -837,6 +893,7 @@ export function RadialVelocitySection({
       .call(d3.axisLeft(yScale));
 
     yAxis.selectAll('text')
+      .attr('font-size', isMobile ? '10px' : '12px')
       .attr('fill', (d) => {
         const planetName = rvPlanets.find(p =>
           (p.pl_name.split(' ').pop() || p.pl_name) === d

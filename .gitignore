@@ -3,6 +3,11 @@ node_modules/
 
 # Build output
 dist/
+*.tsbuildinfo
+*.tsbuildinfo.map
+tsconfig.*.tsbuildinfo
+vite.config.d.ts
+vite.config.d.ts.map
 
 # Environment
 .env

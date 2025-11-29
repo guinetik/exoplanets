@@ -90,8 +90,8 @@ export function TransitSection({
 
     const containerWidth = curveContainerRef.current.clientWidth;
     const width = Math.min(containerWidth - 20, 1200);
-    const height = 300;
-    const margin = { top: 20, right: 30, bottom: 50, left: 70 };
+    const height = 380; // Increased to accommodate legend below
+    const margin = { top: 20, right: 30, bottom: 80, left: 70 }; // Increased bottom margin for legend
 
     const svg = d3.select(curveChartRef.current);
     svg.selectAll('*').remove();
@@ -135,7 +135,7 @@ export function TransitSection({
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(
         d3.axisBottom(xScale)
-          .ticks(10)
+          .ticks(5)
           .tickSize(-(height - margin.top - margin.bottom))
           .tickFormat(() => '')
       )
@@ -225,15 +225,16 @@ export function TransitSection({
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
 
-    // Legend
-    const legendX = width - margin.right - 130;
-    const legendY = margin.top + 10;
+    // Legend - placed below the chart to avoid overlapping data
+    const legendItemHeight = 16;
+    const legendX = margin.left;
+    const legendY = height - margin.bottom + 10;
 
     svg.append('rect')
       .attr('x', legendX - 5)
       .attr('y', legendY - 5)
-      .attr('width', 135)
-      .attr('height', 55)
+      .attr('width', 340)
+      .attr('height', legendItemHeight + 10)
       .attr('fill', 'rgba(0, 0, 0, 0.6)')
       .attr('stroke', 'rgba(255, 255, 255, 0.3)')
       .attr('stroke-width', 1)
@@ -243,54 +244,56 @@ export function TransitSection({
     svg.append('line')
       .attr('x1', legendX)
       .attr('x2', legendX + 20)
-      .attr('y1', legendY + 9)
-      .attr('y2', legendY + 9)
+      .attr('y1', legendY + 6)
+      .attr('y2', legendY + 6)
       .attr('stroke', '#00e5ff')
       .attr('stroke-width', 2);
 
     svg.append('text')
       .attr('x', legendX + 25)
-      .attr('y', legendY + 13)
+      .attr('y', legendY + 9)
       .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
+      .attr('font-size', '10px')
       .text('Model');
 
     // Baseline legend
+    const baselineX = legendX + 100;
     svg.append('line')
-      .attr('x1', legendX)
-      .attr('x2', legendX + 20)
-      .attr('y1', legendY + 29)
-      .attr('y2', legendY + 29)
+      .attr('x1', baselineX)
+      .attr('x2', baselineX + 20)
+      .attr('y1', legendY + 6)
+      .attr('y2', legendY + 6)
       .attr('stroke', '#ff9500')
       .attr('stroke-width', 2)
       .attr('stroke-dasharray', '4,2');
 
     svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 33)
+      .attr('x', baselineX + 25)
+      .attr('y', legendY + 9)
       .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
+      .attr('font-size', '10px')
       .text('Baseline');
 
     // Observations legend
+    const dataX = legendX + 210;
     svg.append('circle')
-      .attr('cx', legendX + 10)
-      .attr('cy', legendY + 49)
+      .attr('cx', dataX + 10)
+      .attr('cy', legendY + 6)
       .attr('r', 2)
       .attr('fill', '#00e5ff')
       .attr('opacity', 0.25);
 
     svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 53)
+      .attr('x', dataX + 25)
+      .attr('y', legendY + 9)
       .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '11px')
+      .attr('font-size', '10px')
       .text('Data');
 
     // Axes
     const xAxis = g.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(xScale).ticks(10));
+      .call(d3.axisBottom(xScale).ticks(5));
 
     xAxis.selectAll('text')
       .attr('fill', 'rgba(255, 255, 255, 0.7)');
@@ -547,9 +550,9 @@ export function TransitSection({
     if (transitPlanets.length <= 1) return;
 
     const containerWidth = comparisonContainerRef.current.clientWidth;
-    const width = Math.max(400, containerWidth - 40);
+    const width = Math.max(400, Math.min(containerWidth - 40, 900)); // Cap max width to prevent overflow
     const height = Math.max(200, transitPlanets.length * 40);
-    const margin = { top: 20, right: 30, bottom: 40, left: 150 };
+    const margin = { top: 20, right: 20, bottom: 40, left: 120 }; // Reduced left margin
 
     const svg = d3.select(comparisonChartRef.current);
     svg.selectAll('*').remove();

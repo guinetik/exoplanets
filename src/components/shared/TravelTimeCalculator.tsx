@@ -145,8 +145,14 @@ export function TravelTimeCalculator({
     if (!svgRef.current || !containerRef.current || !distanceLy) return;
 
     const width = containerRef.current.clientWidth;
-    const height = compact ? 300 : 400;
-    const margin = { top: 20, right: 120, bottom: 30, left: compact ? 100 : 140 };
+    const isMobile = width < 600;
+
+    // Mobile: vertical chart, Desktop: horizontal chart
+    const height = isMobile ? Math.max(300, speedData.length * 35 + 80) : (compact ? 300 : 400);
+    const margin = isMobile
+      ? { top: 20, right: 30, bottom: 60, left: 30 }
+      : { top: 20, right: 120, bottom: 30, left: compact ? 100 : 140 };
+
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -162,55 +168,132 @@ export function TravelTimeCalculator({
     const maxSpeed = Math.max(...speedData.map((d) => d.speedKms));
     const minSpeed = Math.min(...speedData.map((d) => d.speedKms));
 
-    const x = d3
-      .scaleLog()
-      .domain([minSpeed * 0.5, maxSpeed * 2])
-      .range([0, innerWidth]);
+    // Mobile: swap x/y - bars grow vertically
+    // Desktop: bars grow horizontally (original layout)
+    let x, y;
+    if (isMobile) {
+      // Vertical chart: x is band scale (positions), y is log scale (bar height)
+      x = d3
+        .scaleBand()
+        .domain(speedData.map((d) => d.key))
+        .range([0, innerWidth])
+        .padding(0.4);
 
-    const y = d3
-      .scaleBand()
-      .domain(speedData.map((d) => d.key))
-      .range([0, innerHeight])
-      .padding(0.3);
+      y = d3
+        .scaleLog()
+        .domain([minSpeed * 0.5, maxSpeed * 2])
+        .range([innerHeight, 0]); // Inverted for SVG coordinates
+    } else {
+      // Horizontal chart: original layout
+      x = d3
+        .scaleLog()
+        .domain([minSpeed * 0.5, maxSpeed * 2])
+        .range([0, innerWidth]);
+
+      y = d3
+        .scaleBand()
+        .domain(speedData.map((d) => d.key))
+        .range([0, innerHeight])
+        .padding(0.3);
+    }
 
     // Background track for each bar
-    g.selectAll('.bar-track')
-      .data(speedData)
-      .join('rect')
-      .attr('class', 'bar-track')
-      .attr('x', 0)
-      .attr('y', (d) => y(d.key) || 0)
-      .attr('width', innerWidth)
-      .attr('height', y.bandwidth())
-      .attr('fill', 'rgba(255, 255, 255, 0.03)')
-      .attr('rx', 4);
+    if (isMobile) {
+      // Vertical bars
+      const xBand = x as d3.ScaleBand<string>;
+      g.selectAll('.bar-track')
+        .data(speedData)
+        .join('rect')
+        .attr('class', 'bar-track')
+        .attr('x', (d) => xBand(d.key) || 0)
+        .attr('y', 0)
+        .attr('width', xBand.bandwidth())
+        .attr('height', innerHeight)
+        .attr('fill', 'rgba(255, 255, 255, 0.03)')
+        .attr('rx', 4);
+    } else {
+      // Horizontal bars
+      const yBand = y as d3.ScaleBand<string>;
+      g.selectAll('.bar-track')
+        .data(speedData)
+        .join('rect')
+        .attr('class', 'bar-track')
+        .attr('x', 0)
+        .attr('y', (d) => yBand(d.key) || 0)
+        .attr('width', innerWidth)
+        .attr('height', yBand.bandwidth())
+        .attr('fill', 'rgba(255, 255, 255, 0.03)')
+        .attr('rx', 4);
+    }
 
     // Speed bars with animation
-    const bars = g
-      .selectAll('.speed-bar')
-      .data(speedData)
-      .join('rect')
-      .attr('class', 'speed-bar')
-      .attr('x', 0)
-      .attr('y', (d) => y(d.key) || 0)
-      .attr('height', y.bandwidth())
-      .attr('fill', (d) => d.color)
-      .attr('rx', 4)
-      .attr('opacity', 0.8)
-      .attr('cursor', 'pointer')
-      .attr('width', 0);
+    let bars;
+    if (isMobile) {
+      // Vertical bars
+      const xBand = x as d3.ScaleBand<string>;
+      bars = g
+        .selectAll('.speed-bar')
+        .data(speedData)
+        .join('rect')
+        .attr('class', 'speed-bar')
+        .attr('x', (d) => xBand(d.key) || 0)
+        .attr('width', xBand.bandwidth())
+        .attr('fill', (d) => d.color)
+        .attr('rx', 4)
+        .attr('opacity', 0.8)
+        .attr('cursor', 'pointer')
+        .attr('y', innerHeight)
+        .attr('height', 0);
+    } else {
+      // Horizontal bars
+      const yBand = y as d3.ScaleBand<string>;
+      bars = g
+        .selectAll('.speed-bar')
+        .data(speedData)
+        .join('rect')
+        .attr('class', 'speed-bar')
+        .attr('x', 0)
+        .attr('y', (d) => yBand(d.key) || 0)
+        .attr('height', yBand.bandwidth())
+        .attr('fill', (d) => d.color)
+        .attr('rx', 4)
+        .attr('opacity', 0.8)
+        .attr('cursor', 'pointer')
+        .attr('width', 0);
+    }
 
     // Animate bars growing
     if (!hasAnimated) {
-      bars
-        .transition()
-        .duration(RACE_ANIMATION_DURATION)
-        .delay((_, i) => i * 100)
-        .ease(d3.easeCubicOut)
-        .attr('width', (d) => x(d.speedKms))
-        .on('end', () => setHasAnimated(true));
+      if (isMobile) {
+        const yScale = y as d3.ScaleLogarithmic<number, number>;
+        bars
+          .transition()
+          .duration(RACE_ANIMATION_DURATION)
+          .delay((_, i) => i * 100)
+          .ease(d3.easeCubicOut)
+          .attr('y', (d) => yScale(d.speedKms))
+          .attr('height', (d) => innerHeight - yScale(d.speedKms))
+          .on('end', () => setHasAnimated(true));
+      } else {
+        const xScale = x as d3.ScaleLogarithmic<number, number>;
+        bars
+          .transition()
+          .duration(RACE_ANIMATION_DURATION)
+          .delay((_, i) => i * 100)
+          .ease(d3.easeCubicOut)
+          .attr('width', (d) => xScale(d.speedKms))
+          .on('end', () => setHasAnimated(true));
+      }
     } else {
-      bars.attr('width', (d) => x(d.speedKms));
+      if (isMobile) {
+        const yScale = y as d3.ScaleLogarithmic<number, number>;
+        bars
+          .attr('y', (d) => yScale(d.speedKms))
+          .attr('height', (d) => innerHeight - yScale(d.speedKms));
+      } else {
+        const xScale = x as d3.ScaleLogarithmic<number, number>;
+        bars.attr('width', (d) => xScale(d.speedKms));
+      }
     }
 
     // Hover effects
@@ -224,81 +307,164 @@ export function TravelTimeCalculator({
         setSelectedSpeed(null);
       });
 
-    // Icons on the left
-    g.selectAll('.speed-icon')
-      .data(speedData)
-      .join('text')
-      .attr('class', 'speed-icon')
-      .attr('x', -35)
-      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'middle')
-      .attr('font-size', compact ? '16px' : '20px')
-      .text((d) => d.icon);
+    // Icons and labels
+    if (isMobile) {
+      // Mobile: icons and labels below bars
+      const xBandMobile = x as d3.ScaleBand<string>;
+      g.selectAll('.speed-icon')
+        .data(speedData)
+        .join('text')
+        .attr('class', 'speed-icon')
+        .attr('x', (d) => (xBandMobile(d.key) || 0) + xBandMobile.bandwidth() / 2)
+        .attr('y', innerHeight + 15)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '14px')
+        .text((d) => d.icon);
 
-    // Labels on the left
-    g.selectAll('.speed-label')
-      .data(speedData)
-      .join('text')
-      .attr('class', 'speed-label')
-      .attr('x', -45)
-      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', 'end')
-      .attr('fill', 'rgba(255, 255, 255, 0.7)')
-      .attr('font-size', compact ? '9px' : '11px')
-      .text((d) => t(`components.travelTime.speeds.${d.key}`));
+      g.selectAll('.speed-label')
+        .data(speedData)
+        .join('text')
+        .attr('class', 'speed-label')
+        .attr('x', (d) => (xBandMobile(d.key) || 0) + xBandMobile.bandwidth() / 2)
+        .attr('y', innerHeight + 30)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'rgba(255, 255, 255, 0.6)')
+        .attr('font-size', '7px')
+        .text((d) => t(`components.travelTime.speeds.${d.key}`));
+    } else {
+      // Desktop: icons and labels on the left
+      const yBandDesktop = y as d3.ScaleBand<string>;
+      g.selectAll('.speed-icon')
+        .data(speedData)
+        .join('text')
+        .attr('class', 'speed-icon')
+        .attr('x', -35)
+        .attr('y', (d) => (yBandDesktop(d.key) || 0) + yBandDesktop.bandwidth() / 2)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', compact ? '16px' : '20px')
+        .text((d) => d.icon);
 
-    // Travel time labels on the right
+      g.selectAll('.speed-label')
+        .data(speedData)
+        .join('text')
+        .attr('class', 'speed-label')
+        .attr('x', -45)
+        .attr('y', (d) => (yBandDesktop(d.key) || 0) + yBandDesktop.bandwidth() / 2)
+        .attr('dy', '0.35em')
+        .attr('text-anchor', 'end')
+        .attr('fill', 'rgba(255, 255, 255, 0.7)')
+        .attr('font-size', compact ? '9px' : '11px')
+        .text((d) => t(`components.travelTime.speeds.${d.key}`));
+    }
+
+    // Travel time labels
     const timeLabels = g
       .selectAll('.time-label')
       .data(speedData)
       .join('text')
       .attr('class', 'time-label')
-      .attr('y', (d) => (y(d.key) || 0) + y.bandwidth() / 2)
-      .attr('dy', '0.35em')
       .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', compact ? '9px' : '11px')
+      .attr('font-size', isMobile ? '8px' : (compact ? '9px' : '11px'))
       .attr('font-family', 'monospace')
       .attr('opacity', 0);
 
-    // Animate time labels appearing
-    if (!hasAnimated) {
-      timeLabels
-        .transition()
-        .duration(300)
-        .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
-        .attr('x', (d) => x(d.speedKms) + 8)
-        .attr('opacity', 1)
-        .text((d) => formatTravelTime(d.years));
+    // Position and animate time labels
+    if (isMobile) {
+      // Mobile: labels above bars
+      const xBand = x as d3.ScaleBand<string>;
+      const yLog = y as d3.ScaleLogarithmic<number, number>;
+      if (!hasAnimated) {
+        timeLabels
+          .attr('x', (d) => (xBand(d.key) || 0) + xBand.bandwidth() / 2)
+          .attr('y', (d) => yLog(d.speedKms) - 5)
+          .attr('text-anchor', 'middle')
+          .transition()
+          .duration(300)
+          .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
+          .attr('opacity', 1)
+          .text((d) => formatTravelTime(d.years));
+      } else {
+        timeLabels
+          .attr('x', (d) => (xBand(d.key) || 0) + xBand.bandwidth() / 2)
+          .attr('y', (d) => yLog(d.speedKms) - 5)
+          .attr('text-anchor', 'middle')
+          .attr('opacity', 1)
+          .text((d) => formatTravelTime(d.years));
+      }
     } else {
-      timeLabels
-        .attr('x', (d) => x(d.speedKms) + 8)
-        .attr('opacity', 1)
-        .text((d) => formatTravelTime(d.years));
+      // Desktop: labels to the right of bars
+      const xLog = x as d3.ScaleLogarithmic<number, number>;
+      const yBand = y as d3.ScaleBand<string>;
+      if (!hasAnimated) {
+        timeLabels
+          .attr('y', (d) => (yBand(d.key) || 0) + yBand.bandwidth() / 2)
+          .attr('dy', '0.35em')
+          .transition()
+          .duration(300)
+          .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
+          .attr('x', (d) => xLog(d.speedKms) + 8)
+          .attr('opacity', 1)
+          .text((d) => formatTravelTime(d.years));
+      } else {
+        timeLabels
+          .attr('x', (d) => xLog(d.speedKms) + 8)
+          .attr('y', (d) => (yBand(d.key) || 0) + yBand.bandwidth() / 2)
+          .attr('dy', '0.35em')
+          .attr('opacity', 1)
+          .text((d) => formatTravelTime(d.years));
+      }
     }
 
     // "Reachable in lifetime" indicator
     const reachableData = speedData.filter((d) => d.withinLifetime);
     if (reachableData.length > 0) {
       const firstReachable = reachableData[reachableData.length - 1];
-      g.append('line')
-        .attr('x1', x(firstReachable.speedKms))
-        .attr('x2', x(firstReachable.speedKms))
-        .attr('y1', -10)
-        .attr('y2', innerHeight + 10)
-        .attr('stroke', '#00ff88')
-        .attr('stroke-width', 2)
-        .attr('stroke-dasharray', '4,4')
-        .attr('opacity', 0.6);
 
-      g.append('text')
-        .attr('x', x(firstReachable.speedKms))
-        .attr('y', -15)
-        .attr('text-anchor', 'middle')
-        .attr('fill', '#00ff88')
-        .attr('font-size', '10px')
-        .text(t('components.travelTime.reachableInLifetime'));
+      if (isMobile) {
+        // Mobile: horizontal line at the reachable speed threshold
+        const yScale = y as d3.ScaleLogarithmic<number, number>;
+        const yPos = yScale(firstReachable.speedKms) || 0;
+        g.append('line')
+          .attr('x1', -10)
+          .attr('x2', innerWidth + 10)
+          .attr('y1', yPos)
+          .attr('y2', yPos)
+          .attr('stroke', '#00ff88')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '4,4')
+          .attr('opacity', 0.6);
+
+        g.append('text')
+          .attr('x', -15)
+          .attr('y', yPos)
+          .attr('text-anchor', 'end')
+          .attr('dy', '0.35em')
+          .attr('fill', '#00ff88')
+          .attr('font-size', '8px')
+          .text('✓ Lifetime');
+      } else {
+        // Desktop: vertical line at the reachable speed threshold
+        const xScale = x as d3.ScaleLogarithmic<number, number>;
+        const xPos = xScale(firstReachable.speedKms) || 0;
+        g.append('line')
+          .attr('x1', xPos)
+          .attr('x2', xPos)
+          .attr('y1', -10)
+          .attr('y2', innerHeight + 10)
+          .attr('stroke', '#00ff88')
+          .attr('stroke-width', 2)
+          .attr('stroke-dasharray', '4,4')
+          .attr('opacity', 0.6);
+
+        g.append('text')
+          .attr('x', xPos)
+          .attr('y', -15)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#00ff88')
+          .attr('font-size', '10px')
+          .text(t('components.travelTime.reachableInLifetime'));
+      }
     }
 
   }, [distanceLy, speedData, t, hasAnimated, compact]);

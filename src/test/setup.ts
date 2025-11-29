@@ -20,6 +20,14 @@ jest.mock('../utils/solarSystem', () => {
   };
 });
 
+// Mock firebase service (uses import.meta which Jest doesn't support)
+jest.mock('../services/firebase', () => ({
+  getFirebaseStorage: jest.fn().mockReturnValue(null),
+  isFirebaseConfigured: jest.fn().mockReturnValue(false),
+  uploadFileToFirebase: jest.fn(),
+  downloadFileFromFirebase: jest.fn(),
+}));
+
 // Mock i18next
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({

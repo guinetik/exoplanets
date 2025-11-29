@@ -4,7 +4,6 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
-    '^@guinetik/logger$': '<rootDir>/src/test/__mocks__/@guinetik/logger.ts',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   transform: {
