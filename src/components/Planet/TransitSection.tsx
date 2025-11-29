@@ -8,6 +8,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import type { Exoplanet } from '../../types';
+import { renderLegend, type LegendItem } from '../Habitability/charts/ChartLegend';
 import {
   generateTransitCurve,
   formatTransitDepth,
@@ -89,9 +90,10 @@ export function TransitSection({
     if (!hasTransitData || !curveChartRef.current || !curveContainerRef.current) return;
 
     const containerWidth = curveContainerRef.current.clientWidth;
+    const isMobile = containerWidth < 500;
     const width = Math.min(containerWidth - 20, 1200);
     const height = 380; // Increased to accommodate legend below
-    const margin = { top: 20, right: 30, bottom: 80, left: 70 }; // Increased bottom margin for legend
+    const margin = { top: 20, right: 30, bottom: isMobile ? 120 : 90, left: 70 }; // Increased bottom margin for legend
 
     const svg = d3.select(curveChartRef.current);
     svg.selectAll('*').remove();
@@ -226,69 +228,18 @@ export function TransitSection({
       .attr('stroke-width', 2);
 
     // Legend - placed below the chart to avoid overlapping data
-    const legendItemHeight = 16;
-    const legendX = margin.left;
-    const legendY = height - margin.bottom + 10;
+    const legendItems: LegendItem[] = [
+      { color: '#00e5ff', text: 'Model', type: 'line' },
+      { color: '#ff9500', text: 'Baseline', type: 'line', lineStyle: 'dashed' },
+      { color: '#00e5ff', text: 'Data', type: 'circle', size: 6 }
+    ];
 
-    svg.append('rect')
-      .attr('x', legendX - 5)
-      .attr('y', legendY - 5)
-      .attr('width', 340)
-      .attr('height', legendItemHeight + 10)
-      .attr('fill', 'rgba(0, 0, 0, 0.6)')
-      .attr('stroke', 'rgba(255, 255, 255, 0.3)')
-      .attr('stroke-width', 1)
-      .attr('rx', 4);
-
-    // Model curve legend
-    svg.append('line')
-      .attr('x1', legendX)
-      .attr('x2', legendX + 20)
-      .attr('y1', legendY + 6)
-      .attr('y2', legendY + 6)
-      .attr('stroke', '#00e5ff')
-      .attr('stroke-width', 2);
-
-    svg.append('text')
-      .attr('x', legendX + 25)
-      .attr('y', legendY + 9)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '10px')
-      .text('Model');
-
-    // Baseline legend
-    const baselineX = legendX + 100;
-    svg.append('line')
-      .attr('x1', baselineX)
-      .attr('x2', baselineX + 20)
-      .attr('y1', legendY + 6)
-      .attr('y2', legendY + 6)
-      .attr('stroke', '#ff9500')
-      .attr('stroke-width', 2)
-      .attr('stroke-dasharray', '4,2');
-
-    svg.append('text')
-      .attr('x', baselineX + 25)
-      .attr('y', legendY + 9)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '10px')
-      .text('Baseline');
-
-    // Observations legend
-    const dataX = legendX + 210;
-    svg.append('circle')
-      .attr('cx', dataX + 10)
-      .attr('cy', legendY + 6)
-      .attr('r', 2)
-      .attr('fill', '#00e5ff')
-      .attr('opacity', 0.25);
-
-    svg.append('text')
-      .attr('x', dataX + 25)
-      .attr('y', legendY + 9)
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', '10px')
-      .text('Data');
+    renderLegend(svg, legendItems, {
+      x: margin.left,
+      y: height - margin.bottom + 50,
+      width: width - margin.left - margin.right,
+      isMobile,
+    });
 
     // Axes
     const xAxis = g.append('g')
@@ -303,7 +254,7 @@ export function TransitSection({
 
     svg.append('text')
       .attr('x', width / 2)
-      .attr('y', height - 5)
+      .attr('y', height - margin.bottom + 30) // Adjusted Y
       .attr('text-anchor', 'middle')
       .attr('fill', 'rgba(255, 255, 255, 0.7)')
       .attr('font-size', '12px')
@@ -550,9 +501,15 @@ export function TransitSection({
     if (transitPlanets.length <= 1) return;
 
     const containerWidth = comparisonContainerRef.current.clientWidth;
-    const width = Math.max(400, Math.min(containerWidth - 40, 900)); // Cap max width to prevent overflow
-    const height = Math.max(200, transitPlanets.length * 40);
-    const margin = { top: 20, right: 20, bottom: 40, left: 120 }; // Reduced left margin
+    const isMobile = containerWidth < 500;
+    const width = Math.max(isMobile ? 320 : 400, containerWidth - (isMobile ? 20 : 40));
+    const height = Math.max(200, transitPlanets.length * (isMobile ? 30 : 40));
+    const margin = { 
+      top: 20, 
+      right: isMobile ? 15 : 20, 
+      bottom: isMobile ? 30 : 40, 
+      left: isMobile ? 80 : 120 
+    };
 
     const svg = d3.select(comparisonChartRef.current);
     svg.selectAll('*').remove();
@@ -611,11 +568,17 @@ export function TransitSection({
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(
         d3.axisBottom(xScale)
-          .ticks(5, '~s')
+          .ticks(Math.max(2, Math.floor(width / 160))) // Aggressively reduce ticks
           .tickFormat(d => `${d}%`)
       );
 
-    xAxis.selectAll('text').attr('fill', 'rgba(255, 255, 255, 0.7)');
+    xAxis.selectAll('text')
+      .attr('fill', 'rgba(255, 255, 255, 0.7)')
+      .style('text-anchor', isMobile ? 'end' : 'middle')
+      .attr('transform', isMobile ? 'rotate(-30)' : null)
+      .attr('dy', isMobile ? '0.5em' : '0.71em')
+      .attr('dx', isMobile ? '-0.5em' : '0');
+
     xAxis.selectAll('line, path').attr('stroke', 'rgba(255, 255, 255, 0.3)');
 
     const yAxis = svg.append('g')
@@ -623,6 +586,7 @@ export function TransitSection({
       .call(d3.axisLeft(yScale));
 
     yAxis.selectAll('text')
+      .attr('font-size', isMobile ? '10px' : '12px')
       .attr('fill', (d) => {
         const planetName = transitPlanets.find(p =>
           (p.pl_name.split(' ').pop() || p.pl_name) === d

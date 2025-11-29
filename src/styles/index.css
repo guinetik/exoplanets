@@ -183,14 +183,13 @@
   }
 
   .spinner-content {
-    @apply flex flex-col items-center gap-8;
+    @apply flex flex-col items-center justify-center gap-8 text-center;
     position: relative;
   }
 
   .spinner-orbit {
-    @apply relative w-24 h-24;
+    @apply relative w-24 h-24 mx-auto;
     animation: spin 3s linear infinite;
-    margin-left: 30px;
   }
 
   .spinner-orbit::before {
@@ -4444,11 +4443,11 @@
 }
 
 .transit-comparison-title {
-  @apply text-lg font-semibold text-white/90 mb-2 pl-[120px];
+  @apply text-lg font-semibold text-white/90 mb-2;
 }
 
 .transit-comparison-description {
-  @apply text-sm text-white/70 mb-3 pl-[120px];
+  @apply text-sm text-white/70 mb-3;
 }
 
 .transit-comparison-chart {

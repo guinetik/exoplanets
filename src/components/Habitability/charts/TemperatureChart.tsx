@@ -26,7 +26,7 @@ export default function TemperatureChart({ data }: TemperatureChartProps) {
         {t('pages.habitability.insights.temperature.description')}
       </p>
       <D3Chart aspectRatio={2}>
-        {(dimensions) => <TempScatter data={data} {...dimensions} />}
+        {({ width, height }) => <TempScatter data={data} width={width} height={height} isMobile={false} />}
       </D3Chart>
     </div>
   );
@@ -36,6 +36,7 @@ interface TempScatterProps {
   data: TemperatureScoreData[];
   width: number;
   height: number;
+  isMobile: boolean;
 }
 
 function TempScatter({ data, width, height }: TempScatterProps) {

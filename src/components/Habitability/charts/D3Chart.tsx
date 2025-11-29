@@ -6,10 +6,11 @@
 import { useRef, useEffect, useState, ReactNode } from 'react';
 
 interface D3ChartProps {
-  children: (dimensions: { width: number; height: number }) => ReactNode;
+  children: (dimensions: { width: number; height: number; isMobile: boolean }) => ReactNode;
   aspectRatio?: number;
   minHeight?: number;
   className?: string;
+  mobileBreakpoint?: number;
 }
 
 export default function D3Chart({
@@ -17,9 +18,10 @@ export default function D3Chart({
   aspectRatio = 16 / 9,
   minHeight = 200,
   className = '',
+  mobileBreakpoint = 600,
 }: D3ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, isMobile: false });
 
   useEffect(() => {
     const container = containerRef.current;
@@ -28,7 +30,8 @@ export default function D3Chart({
     const updateDimensions = () => {
       const width = container.clientWidth;
       const height = Math.max(width / aspectRatio, minHeight);
-      setDimensions({ width, height });
+      const isMobile = width < mobileBreakpoint;
+      setDimensions({ width, height, isMobile });
     };
 
     // Initial measurement
@@ -41,7 +44,7 @@ export default function D3Chart({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [aspectRatio, minHeight]);
+  }, [aspectRatio, minHeight, mobileBreakpoint]);
 
   return (
     <div ref={containerRef} className={`d3-chart-container ${className}`}>

@@ -8,6 +8,7 @@ import { useRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import type { Exoplanet } from '../../types';
+import { renderLegend, type LegendItem } from '../Habitability/charts/ChartLegend';
 
 // =============================================================================
 // TYPES
@@ -247,109 +248,18 @@ export function RadialVelocitySection({
       .attr('opacity', 0.9);
 
     // Legend - placed below the chart to avoid overlapping data
-    const legendGroup = svg.append('g').attr('class', 'rv-curve-legend');
-
-    const legendItems = [
+    const legendItems: LegendItem[] = [
       { color: 'rgba(255, 100, 100, 0.4)', text: t('pages.planet.rv.legendRedshift'), type: 'rect' },
       { color: 'rgba(100, 150, 255, 0.4)', text: t('pages.planet.rv.legendBlueshift'), type: 'rect' },
-      { color: 'rgba(255, 255, 255, 0.5)', text: t('pages.planet.rv.legendBaseline'), type: 'line' },
+      { color: 'rgba(255, 255, 255, 0.5)', text: t('pages.planet.rv.legendBaseline'), type: 'line', lineStyle: 'dashed' },
     ];
 
-    const itemPadding = 25;
-    const legendRowHeight = 20;
-
-    const legendNodes = legendItems.map((item) => {
-      const g = legendGroup.append('g');
-      let elementWidth = 0;
-
-      if (item.type === 'rect') {
-        g.append('rect')
-          .attr('width', 20)
-          .attr('height', 12)
-          .attr('fill', item.color);
-        elementWidth += 20;
-      } else {
-        g.append('line')
-          .attr('x1', 0)
-          .attr('x2', 20)
-          .attr('y1', 6)
-          .attr('y2', 6)
-          .attr('stroke', item.color)
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '4,2');
-        elementWidth += 20;
-      }
-
-      const text = g.append('text')
-        .attr('x', 25)
-        .attr('y', 9)
-        .attr('fill', 'rgba(255, 255, 255, 0.9)')
-        .attr('font-size', '10px')
-        .text(item.text);
-
-      elementWidth += text.node()?.getBBox().width || 0;
-      return { g, width: elementWidth + itemPadding };
+    renderLegend(svg, legendItems, {
+      x: margin.left,
+      y: height - margin.bottom + 50,
+      width: width - margin.left - margin.right,
+      isMobile,
     });
-
-    if (isMobile) {
-      // Mobile layout: 1 item per row, left-aligned
-      let maxItemWidth = 0;
-      legendNodes.forEach((node, i) => {
-        node.g.attr('transform', `translate(0, ${i * legendRowHeight})`);
-        if (node.width > maxItemWidth) {
-          maxItemWidth = node.width;
-        }
-      });
-
-      const legendWidth = maxItemWidth - itemPadding;
-      const legendHeight = legendNodes.length * legendRowHeight;
-      const legendX = margin.left;
-      legendGroup.attr('transform', `translate(${legendX}, ${height - margin.bottom + 50})`);
-
-      svg.insert('rect', '.rv-curve-legend')
-        .attr('x', legendX - 10)
-        .attr('y', height - margin.bottom + 45)
-        .attr('width', legendWidth + 20)
-        .attr('height', legendHeight + 5)
-        .attr('fill', 'rgba(0, 0, 0, 0.6)')
-        .attr('stroke', 'rgba(255, 255, 255, 0.3)')
-        .attr('stroke-width', 1)
-        .attr('rx', 4);
-    } else {
-      // Desktop layout: wrap and center
-      let currentX = 0;
-      let currentY = 0;
-      let totalWidth = 0;
-      let maxYinRow = 0;
-
-      legendNodes.forEach(node => {
-        if (currentX > 0 && currentX + node.width > width - margin.left - margin.right) {
-          currentX = 0;
-          currentY += legendRowHeight;
-        }
-        node.g.attr('transform', `translate(${currentX}, ${currentY})`);
-        currentX += node.width;
-        if (currentX > totalWidth) {
-          totalWidth = currentX;
-        }
-        maxYinRow = currentY;
-      });
-
-      const legendWidth = totalWidth - itemPadding;
-      const legendHeight = maxYinRow + legendRowHeight;
-      const legendX = (width - legendWidth) / 2;
-      legendGroup.attr('transform', `translate(${legendX}, ${height - margin.bottom + 50})`);
-      
-      svg.insert('rect', '.rv-curve-legend')
-        .attr('x', legendX - 10)
-        .attr('y', height - margin.bottom + 45)
-        .attr('width', legendWidth + 20)
-        .attr('height', legendHeight + 5)
-        .attr('fill', 'rgba(0, 0, 0, 0.6)')
-        .attr('stroke', 'rgba(255, 255, 255, 0.3)')
-        .attr('stroke-width', 1)
-        .attr('rx', 4);
-    }
 
     // Animated marker (positioned by currentPhase in separate useEffect)
     svg.append('circle')
