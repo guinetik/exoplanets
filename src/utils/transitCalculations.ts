@@ -127,7 +127,13 @@ export function generateTransitCurve(
   // Cap maximum depth to keep visualization readable (0.25 = 25% dip)
   depth = Math.min(depth, 0.25);
 
-  const transitDurationFrac = calculateDurationFraction(planet);
+  let transitDurationFrac = calculateDurationFraction(planet);
+  
+  // EDUCATIONAL EXAGGERATION: Ensure minimum width for visibility
+  // If the transit is too short relative to period, it disappears on screen
+  // We ensure it occupies at least 5% of the chart width so the "U" shape is visible
+  transitDurationFrac = Math.max(transitDurationFrac, 0.05);
+
   const ingressFrac = calculateIngressFraction(transitDurationFrac);
 
   // Center of transit at phase 0.5

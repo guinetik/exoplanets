@@ -320,39 +320,93 @@ function calculateRocheLimit(
 }
 
 /**
- * Calculate physics-based ring probability score
- * Based on DeepSeek research heuristic combining multiple factors:
- * - Giantness: Larger planets more likely to have rings
- * - Hill/Roche ratio: Must have stable ring zone (R_H >> R_Roche)
- * - Temperature: Cold planets favor icy rings
+ * Calculate physics-based ring probability score (STRICT)
+ *
+ * Ring statistics from solar system + observations:
+ * - Gas Giants (>6 R⊕): ~60-80% have rings (major systems like Jupiter, Saturn)
+ * - Neptune-like (4-6 R⊕): ~20-40% have rings (Neptune, Uranus have rings)
+ * - Sub-Neptune (2-4 R⊕): <5% (extreme edge case - no known examples)
+ * - Everything smaller: essentially 0% (hard cutoff at 2 R⊕)
+ *
+ * Factors considered:
+ * - Size (giantness): Hard cutoff + exponential dependence on radius
+ * - Hill/Roche ratio: Must have stable ring zone
+ * - Temperature: Cold favors icy rings
  * - Youth: Young systems have more debris
  *
  * @param planet - Exoplanet data
  * @returns Ring probability score (0-1)
  */
 export function calculateRingProbability(planet: Exoplanet): number {
-  // ==========================================================================
-  // 1. GIANTNESS SCORE (S_G) - larger planets more likely to have rings
-  // ==========================================================================
   const radiusEarth = planet.pl_rade ?? 1.0;
+
+  // ==========================================================================
+  // HARD CUTOFFS: Only giant planets can have rings
+  // ==========================================================================
+  // Rocky worlds (< 2 R⊕) - essentially no rings
+  if (radiusEarth < 2.0) {
+    return 0.0;
+  }
+
+  // Sub-Neptune region (2-4 R⊕) - rings are extreme edge case (< 1%)
+  // Only pass if physics is exceptional AND planet is very old/young/cold
+  if (radiusEarth < 4.0) {
+    const semiMajorAxisAU = planet.pl_orbsmax ?? 1.0;
+    const starMassSolar = planet.st_mass ?? 1.0;
+    const planetMassEarth = planet.pl_bmasse ?? estimateMassFromRadius(radiusEarth);
+    let planetDensity = planet.pl_dens;
+    if (!planetDensity) {
+      const planetType = planet.planet_type || 'Terrestrial';
+      if (planetType === 'Gas Giant') planetDensity = 1.3;
+      else if (planetType === 'Neptune-like' || planetType === 'Sub-Neptune') planetDensity = 1.6;
+      else planetDensity = 5.5;
+    }
+
+    const hillRadiusKm = calculateHillRadius(semiMajorAxisAU, planetMassEarth, starMassSolar);
+    const rocheKm = calculateRocheLimit(radiusEarth, planetDensity);
+    const hillRocheRatio = hillRadiusKm / rocheKm;
+
+    // Sub-Neptunes need BOTH exceptional Hill/Roche AND one of: cold, young
+    const hasExceptionalPhysics = hillRocheRatio > 8;
+    const equilibriumTemp = planet.pl_eqt ?? (planet.pl_insol ? 255 * Math.pow(planet.pl_insol, 0.25) : 300);
+    const isCold = equilibriumTemp < 200;
+    const isYoung = planet.st_age ? planet.st_age < 0.5 : false;
+
+    // Must have great physics AND (cold OR young) - otherwise no rings
+    if (!hasExceptionalPhysics || (!isCold && !isYoung)) {
+      return 0.0;
+    }
+
+    // If we get here, return very low probability (< 2%)
+    return 0.02;
+  }
+
+  // ==========================================================================
+  // 1. GIANTNESS SCORE (S_G) - exponential dependence on size
+  // ==========================================================================
+  // Only gas giants and large Neptune-like planets can sustain rings
   let giantnessScore: number;
 
   if (radiusEarth > 8) {
     // Large gas giants (Jupiter-sized and above)
+    // ~60-80% have rings
     giantnessScore = 1.0;
+  } else if (radiusEarth > 6) {
+    // Large Neptune-like (6-8 R⊕)
+    // ~40-50% have rings
+    giantnessScore = 0.5;
   } else if (radiusEarth > 4) {
-    // Saturn-sized, Neptune-sized
-    giantnessScore = 0.6;
-  } else if (radiusEarth > 2) {
-    // Sub-Neptunes, mini-Neptunes
-    giantnessScore = 0.2;
+    // Neptune-like (4-6 R⊕)
+    // ~20-30% have rings
+    giantnessScore = 0.25;
   } else {
-    // Rocky worlds - very unlikely to have rings
-    giantnessScore = 0.05;
+    // Sub-Neptune (2-4 R⊕)
+    // <5% have rings (extreme edge case only)
+    giantnessScore = 0.005;
   }
 
   // ==========================================================================
-  // 2. HILL/ROCHE AVAILABILITY SCORE (S_HR) - can rings exist?
+  // 2. HILL/ROCHE AVAILABILITY SCORE (S_HR) - can rings physically exist?
   // ==========================================================================
   const semiMajorAxisAU = planet.pl_orbsmax ?? 1.0;
   const starMassSolar = planet.st_mass ?? 1.0;
@@ -379,13 +433,13 @@ export function calculateRingProbability(planet: Exoplanet): number {
 
   let hillRocheScore: number;
   if (hillRocheRatio > 10) {
-    // Huge ring zone available (like Saturn at 9.5 AU)
+    // Excellent ring zone (like Saturn at 9.5 AU)
     hillRocheScore = 1.0;
-  } else if (hillRocheRatio > 3) {
+  } else if (hillRocheRatio > 5) {
     // Good ring zone
     hillRocheScore = 0.8;
-  } else if (hillRocheRatio > 1.5) {
-    // Marginal ring zone
+  } else if (hillRocheRatio > 2) {
+    // Marginal ring zone (rings possible but less stable)
     hillRocheScore = 0.4;
   } else {
     // Ring zone too small or non-existent
@@ -408,10 +462,10 @@ export function calculateRingProbability(planet: Exoplanet): number {
     // Very cold - icy rings stable (like Saturn's)
     temperatureScore = 1.0;
   } else if (equilibriumTemp < 250) {
-    // Cold - mixed ice/rock possible
-    temperatureScore = 0.5;
+    // Cold - ice/rock mix possible
+    temperatureScore = 0.7;
   } else if (equilibriumTemp < 400) {
-    // Warm - only rocky/dusty rings, less stable
+    // Warm - rocky/dusty rings, less stable
     temperatureScore = 0.2;
   } else {
     // Hot - rings would sublimate quickly
@@ -431,29 +485,31 @@ export function calculateRingProbability(planet: Exoplanet): number {
     youthScore = 1.0;
   } else if (planet.st_age !== null && planet.st_age < 1.0) {
     // Young system (300 Myr - 1 Gyr)
-    youthScore = 0.7;
+    youthScore = 0.8;
   } else if (planet.st_age !== null && planet.st_age < 3.0) {
     // Middle-aged
     youthScore = 0.4;
   } else {
     // Old or unknown age (most Kepler targets)
-    youthScore = 0.3;
+    youthScore = 0.2;
   }
 
   // ==========================================================================
-  // COMBINE SCORES WITH WEIGHTS
+  // COMBINE SCORES WITH STRICT WEIGHTS
   // ==========================================================================
-  // Weights prioritize physical possibility (Hill/Roche) and size (Giantness)
+  // Giantness dominates - size is the primary predictor
+  // Hill/Roche gates physical feasibility
+  // Temperature and youth are minimal modifiers
   const weights = {
-    hillRoche: 0.35,    // Most important - can rings physically exist?
-    giantness: 0.30,    // Large planets capture/retain ring material
-    temperature: 0.20,  // Temperature affects ring composition/stability
-    youth: 0.15,        // Young systems have more debris
+    giantness: 0.50,    // Most important - only giants get rings
+    hillRoche: 0.35,    // Physical feasibility
+    temperature: 0.10,  // Cold favors rings slightly
+    youth: 0.05,        // Very minor factor
   };
 
   const totalScore =
-    weights.hillRoche * hillRocheScore +
     weights.giantness * giantnessScore +
+    weights.hillRoche * hillRocheScore +
     weights.temperature * temperatureScore +
     weights.youth * youthScore;
 
