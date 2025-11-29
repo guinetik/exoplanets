@@ -137,9 +137,9 @@ export function RadialVelocitySection({
 
     const containerWidth = curveContainerRef.current.clientWidth;
     const isMobile = containerWidth < 500;
-    const width = Math.min(containerWidth - 20, 1200); // Cap max width, subtract padding to avoid scroll
-    const height = 380; // Increased to accommodate legend below
-    const margin = { top: 20, right: 30, bottom: isMobile ? 120 : 90, left: 70 }; // Increased bottom margin for legend
+    const width = Math.min(containerWidth - 20, 1200);
+    const height = 420;
+    const margin = { top: 20, right: 30, bottom: isMobile ? 120 : 100, left: 70 };
 
     const svg = d3.select(curveChartRef.current);
     svg.selectAll('*').remove();
@@ -259,6 +259,8 @@ export function RadialVelocitySection({
       y: height - margin.bottom + 50,
       width: width - margin.left - margin.right,
       isMobile,
+      itemPadding: 10,
+      forceHorizontal: false,
     });
 
     // Animated marker (positioned by currentPhase in separate useEffect)

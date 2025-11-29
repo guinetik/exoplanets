@@ -36,7 +36,8 @@ export function renderLegend(
     width: number;
     isMobile: boolean;
     fontSize?: number;
-    padding?: number;
+    itemPadding?: number;
+    forceHorizontal?: boolean;
   }
 ): { width: number; height: number } {
   const {
@@ -45,62 +46,68 @@ export function renderLegend(
     width: availableWidth,
     isMobile,
     fontSize = 10,
-    padding = 25,
+    itemPadding = 20,
+    forceHorizontal = false,
   } = options;
 
   const legendGroup = svg.append('g').attr('class', 'chart-legend');
 
   const itemSize = 12;
-  const itemPadding = 8;
   const rowHeight = 18;
 
-  // Create individual legend items
+  // Create individual legend items - use fixed width for consistency
+  const fixedItemWidth = 70; // Fixed width for all items to ensure uniform spacing
+
   const legendNodes = items.map((item) => {
     const g = d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'g'));
 
-    // Draw shape
+    const shapeSize = item.size ?? itemSize;
+    const centerY = rowHeight / 2;
+
+    // Draw shape - centered vertically
     if (item.type === 'rect') {
       g.append('rect')
-        .attr('width', item.size ?? itemSize)
-        .attr('height', item.size ?? itemSize)
+        .attr('width', shapeSize)
+        .attr('height', shapeSize)
+        .attr('x', 0)
+        .attr('y', centerY - shapeSize / 2)
         .attr('fill', item.color)
         .attr('rx', 2);
     } else if (item.type === 'circle') {
       g.append('circle')
-        .attr('r', (item.size ?? itemSize) / 2)
+        .attr('cx', shapeSize / 2)
+        .attr('cy', centerY)
+        .attr('r', shapeSize / 2)
         .attr('fill', item.color);
     } else if (item.type === 'line') {
       g.append('line')
         .attr('x1', 0)
-        .attr('x2', item.size ?? itemSize)
-        .attr('y1', (item.size ?? itemSize) / 2)
-        .attr('y2', (item.size ?? itemSize) / 2)
+        .attr('x2', shapeSize)
+        .attr('y1', centerY)
+        .attr('y2', centerY)
         .attr('stroke', item.color)
         .attr('stroke-width', 2)
         .attr('stroke-dasharray', item.lineStyle === 'dashed' ? '4,2' : 'none');
     }
 
-    // Add text label
-    const text = g
+    // Add text label - vertically centered
+    g
       .append('text')
-      .attr('x', itemPadding + itemSize)
-      .attr('y', (item.size ?? itemSize) / 2 + 4)
+      .attr('x', itemPadding + shapeSize)
+      .attr('y', centerY)
       .attr('fill', 'rgba(255, 255, 255, 0.9)')
       .attr('font-size', `${fontSize}px`)
       .attr('dominant-baseline', 'middle')
       .text(item.text);
 
-    const bbox = (text.node() as SVGTextElement).getBBox();
-    const itemWidth = itemSize + itemPadding + bbox.width + padding;
-
-    return { g, width: itemWidth, height: rowHeight };
+    return { g, width: fixedItemWidth, height: rowHeight };
   });
 
   // Layout items
   let totalWidth = 0;
   let totalHeight = rowHeight;
 
-  if (isMobile) {
+  if (isMobile && !forceHorizontal) {
     // Mobile: one per row, left-aligned
     legendNodes.forEach((node, i) => {
       legendGroup.append(() => node.g.attr('transform', `translate(0, ${i * rowHeight})`).node()!);
@@ -108,21 +115,13 @@ export function renderLegend(
     });
     totalHeight = legendNodes.length * rowHeight;
   } else {
-    // Desktop: wrap horizontally
+    // Desktop or forceHorizontal: always try horizontal layout on one line
     let currentX = 0;
-    let currentY = 0;
     let maxWidth = 0;
 
     legendNodes.forEach((node) => {
-      // Check if item fits on current row
-      if (currentX > 0 && currentX + node.width > availableWidth) {
-        // Wrap to next row
-        currentX = 0;
-        currentY += rowHeight;
-      }
-
       legendGroup.append(() =>
-        node.g.attr('transform', `translate(${currentX}, ${currentY})`).node()!
+        node.g.attr('transform', `translate(${currentX}, 0)`).node()!
       );
 
       currentX += node.width;
@@ -130,7 +129,7 @@ export function renderLegend(
     });
 
     totalWidth = maxWidth;
-    totalHeight = currentY + rowHeight;
+    totalHeight = rowHeight;
   }
 
   // Position the legend group

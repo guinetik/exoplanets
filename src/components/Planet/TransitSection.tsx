@@ -92,8 +92,8 @@ export function TransitSection({
     const containerWidth = curveContainerRef.current.clientWidth;
     const isMobile = containerWidth < 500;
     const width = Math.min(containerWidth - 20, 1200);
-    const height = 380; // Increased to accommodate legend below
-    const margin = { top: 20, right: 30, bottom: isMobile ? 120 : 90, left: 70 }; // Increased bottom margin for legend
+    const height = 380;
+    const margin = { top: 20, right: 30, bottom: isMobile ? 100 : 70, left: 70 };
 
     const svg = d3.select(curveChartRef.current);
     svg.selectAll('*').remove();
@@ -239,6 +239,8 @@ export function TransitSection({
       y: height - margin.bottom + 50,
       width: width - margin.left - margin.right,
       isMobile,
+      itemPadding: 10,
+      forceHorizontal: true,
     });
 
     // Axes
@@ -504,11 +506,11 @@ export function TransitSection({
     const isMobile = containerWidth < 500;
     const width = Math.max(isMobile ? 320 : 400, containerWidth - (isMobile ? 20 : 40));
     const height = Math.max(200, transitPlanets.length * (isMobile ? 30 : 40));
-    const margin = { 
-      top: 20, 
-      right: isMobile ? 15 : 20, 
-      bottom: isMobile ? 30 : 40, 
-      left: isMobile ? 80 : 120 
+    const margin = {
+      top: 20,
+      right: isMobile ? 15 : 20,
+      bottom: isMobile ? 60 : 80,  // Increased for rotated labels
+      left: isMobile ? 80 : 120
     };
 
     const svg = d3.select(comparisonChartRef.current);
@@ -574,10 +576,10 @@ export function TransitSection({
 
     xAxis.selectAll('text')
       .attr('fill', 'rgba(255, 255, 255, 0.7)')
-      .style('text-anchor', isMobile ? 'end' : 'middle')
-      .attr('transform', isMobile ? 'rotate(-30)' : null)
-      .attr('dy', isMobile ? '0.5em' : '0.71em')
-      .attr('dx', isMobile ? '-0.5em' : '0');
+      .style('text-anchor', 'end')
+      .attr('transform', 'rotate(-45)')
+      .attr('dy', '0.5em')
+      .attr('dx', '-0.5em');
 
     xAxis.selectAll('line, path').attr('stroke', 'rgba(255, 255, 255, 0.3)');
 
@@ -601,6 +603,29 @@ export function TransitSection({
       });
 
     yAxis.selectAll('line, path').attr('stroke', 'rgba(255, 255, 255, 0.3)');
+
+    // X-axis label
+    svg.append('text')
+      .attr('x', width / 2)
+      .attr('y', height - 5)
+      .attr('text-anchor', 'middle')
+      .attr('fill', 'rgba(255, 255, 255, 0.7)')
+      .attr('font-size', '12px')
+      .text('Transit Depth (%)');
+
+    // Legend for comparison chart
+    const comparisonLegendItems: LegendItem[] = [
+      { color: '#4caf50', text: planet.pl_name, type: 'rect' },
+      { color: '#00ccff', text: 'Sibling planets', type: 'rect' },
+      { color: '#ff6b6b', text: 'Detection threshold', type: 'line', lineStyle: 'dashed' },
+    ];
+
+    renderLegend(svg, comparisonLegendItems, {
+      x: margin.left,
+      y: height + 20,
+      width: width - margin.left - margin.right,
+      isMobile,
+    });
 
   }, [planet, siblings, hasTransitData]);
 
@@ -882,21 +907,6 @@ export function TransitSection({
           </p>
           <div ref={comparisonContainerRef} className="transit-comparison-chart">
             <svg ref={comparisonChartRef} />
-          </div>
-
-          <div className="transit-comparison-legend">
-            <div className="transit-comparison-legend-item">
-              <div className="transit-legend-dot current" />
-              <span>{planet.pl_name}</span>
-            </div>
-            <div className="transit-comparison-legend-item">
-              <div className="transit-legend-dot sibling" />
-              <span>Sibling planets</span>
-            </div>
-            <div className="transit-comparison-legend-item">
-              <div className="transit-legend-dot threshold" />
-              <span>Detection threshold</span>
-            </div>
           </div>
         </div>
       )}
