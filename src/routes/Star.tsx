@@ -28,6 +28,7 @@ export default function Star() {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [focusedBody, setFocusedBody] = useState<StellarBody | null>(null);
+  const [isSceneReady, setIsSceneReady] = useState(false);
 
   // Get star and its planets by slug
   const star = starId ? getStarBySlug(starId) : undefined;
@@ -92,6 +93,13 @@ export default function Star() {
     setFocusedBody(null);
   }, []);
 
+  /**
+   * Handle scene ready - called when 3D scene renders first frame
+   */
+  const handleSceneReady = useCallback(() => {
+    setIsSceneReady(true);
+  }, []);
+
   // Check if this is a binary system
   const isBinarySystem = star ? star.sy_snum > 1 : false;
 
@@ -149,7 +157,15 @@ export default function Star() {
           onBodyHover={handleBodyHover}
           onBodyClick={handleBodyClick}
           onBackgroundClick={handleBackgroundClick}
+          onReady={handleSceneReady}
         />
+
+        {/* Loading overlay while 3D scene initializes */}
+        {!isSceneReady && (
+          <div className="starsystem-loading-overlay">
+            <p className="starsystem-loading-text">{t('pages.star.loadingScene')}</p>
+          </div>
+        )}
 
         {/* Planetary Bodies Panel - always visible on desktop, toggleable on mobile */}
         {(isDesktop || showBodiesPanel) && (

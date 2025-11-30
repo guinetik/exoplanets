@@ -58,6 +58,24 @@ interface StarSystemProps {
   onBodyClick?: (body: StellarBody) => void;
   /** Callback when clicking empty space (background) */
   onBackgroundClick?: () => void;
+  /** Callback when 3D scene is ready and rendering */
+  onReady?: () => void;
+}
+
+/**
+ * Component that signals when the scene has rendered its first frame
+ */
+function SceneReadyDetector({ onReady }: { onReady?: () => void }) {
+  const hasSignaled = useRef(false);
+
+  useFrame(() => {
+    if (!hasSignaled.current && onReady) {
+      hasSignaled.current = true;
+      onReady();
+    }
+  });
+
+  return null;
 }
 
 /**
@@ -300,6 +318,7 @@ export function StarSystem({
   onBodyHover,
   onBodyClick,
   onBackgroundClick,
+  onReady,
 }: StarSystemProps) {
   // Detect device capabilities for performance scaling
   const { quality: deviceQuality } = useDeviceCapability();
@@ -382,6 +401,9 @@ export function StarSystem({
         <CameraContext.Provider value={cameraContextValue}>
           <BodyPositionsContext.Provider value={positionsContextValue}>
             <Suspense fallback={null}>
+            {/* Signal when scene is ready */}
+            <SceneReadyDetector onReady={onReady} />
+
             {/* Ambient light for base visibility */}
             <ambientLight intensity={SCENE_LIGHTING.AMBIENT_INTENSITY} />
 

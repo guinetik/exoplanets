@@ -9,7 +9,7 @@ import { nameToSlug } from '../utils/urlSlug';
 
 const logger = createLogger({ prefix: 'DataService' });
 
-const DATA_URL = './data/exoplanets.csv';
+const DATA_URL = '/data/exoplanets.csv';
 
 class DataService {
   private planets: Exoplanet[] = [];

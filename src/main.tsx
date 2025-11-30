@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import './i18n';
 import './styles/index.css';
@@ -14,7 +14,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
       <DataProvider>
-        <HashRouter>
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />}>
             {routes.map((route) => (
@@ -26,7 +26,7 @@ createRoot(document.getElementById('root')!).render(
             ))}
           </Route>
         </Routes>
-        </HashRouter>
+        </BrowserRouter>
       </DataProvider>
     </AuthProvider>
   </StrictMode>

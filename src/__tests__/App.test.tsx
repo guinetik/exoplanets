@@ -3,7 +3,7 @@
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
-import { HashRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 import { DataProvider } from '../context/DataContext';
 import { resetDataService } from '../services/dataService';
@@ -16,9 +16,9 @@ global.fetch = mockFetch;
 // Wrapper component with all providers
 const AppWithProviders = () => (
   <DataProvider>
-    <HashRouter>
+    <MemoryRouter>
       <App />
-    </HashRouter>
+    </MemoryRouter>
   </DataProvider>
 );
 

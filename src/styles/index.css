@@ -582,6 +582,12 @@
     @apply relative w-full h-full;
   }
 
+  .starsystem-loading-overlay {
+    @apply fixed top-0 left-0 w-screen h-screen z-50;
+    @apply flex items-center justify-center;
+    @apply bg-black text-white/70 text-sm;
+  }
+
   .starsystem-back-button {
     @apply absolute top-4 left-4 z-50;
     @apply px-4 py-2 text-sm text-white/70;

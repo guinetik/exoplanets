@@ -68,6 +68,7 @@
     "star": {
       "title": "Star Details",
       "loading": "Loading...",
+      "loadingScene": "Initializing star system...",
       "notFound": {
         "title": "Star Not Found",
         "message": "The star \"{{starId}}\" could not be found.",

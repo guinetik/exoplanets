@@ -68,6 +68,7 @@
     "star": {
       "title": "Detalhes da Estrela",
       "loading": "Carregando...",
+      "loadingScene": "Inicializando sistema estelar...",
       "notFound": {
         "title": "Estrela Não Encontrada",
         "message": "A estrela \"{{starId}}\" não foi encontrada.",
