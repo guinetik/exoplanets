@@ -319,8 +319,8 @@ export function StarThumbnail({ star, size = 64, className }: StarThumbnailProps
   }, []);
 
   const generateFn = useCallback(
-    () => renderStarToBlob(star.st_teff || 5778, star.hostname),
-    [star.st_teff, star.hostname]
+    () => renderStarToBlob(star.st_teff || 5778, star.hostname, star.st_spectype ?? undefined),
+    [star.st_teff, star.hostname, star.st_spectype]
   );
 
   const { state, imageUrl } = useThumbnail(

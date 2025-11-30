@@ -202,110 +202,176 @@ export function PlanetInfo({ planet }: PlanetInfoProps) {
             </ExplainableProperty>
           )}
           {planet.is_top_habitable_candidate && (
-            <FlagTag flagKey="topCandidate" className="flag-top-candidate" />
+            <ExplainableProperty propertyKey="topCandidate" category="flag">
+              <FlagTag flagKey="topCandidate" className="flag-top-candidate" />
+            </ExplainableProperty>
           )}
           {planet.is_potentially_rocky && (
-            <FlagTag flagKey="potentiallyRocky" className="flag-rocky" />
+            <ExplainableProperty propertyKey="potentiallyRocky" category="flag">
+              <FlagTag flagKey="potentiallyRocky" className="flag-rocky" />
+            </ExplainableProperty>
           )}
           {planet.has_earth_like_insolation && (
-            <FlagTag flagKey="earthLikeInsolation" className="flag-habitable" />
+            <ExplainableProperty propertyKey="earthLikeInsolation" category="flag">
+              <FlagTag flagKey="earthLikeInsolation" className="flag-habitable" />
+            </ExplainableProperty>
           )}
 
           {/* Extreme world flags */}
           {planet.is_hot_jupiter && (
-            <FlagTag flagKey="hotJupiter" className="flag-hot-jupiter" />
+            <ExplainableProperty propertyKey="hotJupiter" category="flag">
+              <FlagTag flagKey="hotJupiter" className="flag-hot-jupiter" />
+            </ExplainableProperty>
           )}
           {planet.is_hot_neptune && (
-            <FlagTag flagKey="hotNeptune" className="flag-hot-neptune" />
+            <ExplainableProperty propertyKey="hotNeptune" category="flag">
+              <FlagTag flagKey="hotNeptune" className="flag-hot-neptune" />
+            </ExplainableProperty>
           )}
           {planet.is_ultra_hot && (
-            <FlagTag flagKey="ultraHot" className="flag-ultra-hot" />
+            <ExplainableProperty propertyKey="ultraHot" category="flag">
+              <FlagTag flagKey="ultraHot" className="flag-ultra-hot" />
+            </ExplainableProperty>
           )}
           {planet.is_frozen_world && (
-            <FlagTag flagKey="frozenWorld" className="flag-frozen" />
+            <ExplainableProperty propertyKey="frozenWorld" category="flag">
+              <FlagTag flagKey="frozenWorld" className="flag-frozen" />
+            </ExplainableProperty>
           )}
           {planet.is_ultra_dense && (
-            <FlagTag flagKey="ultraDense" className="flag-ultra-dense" />
+            <ExplainableProperty propertyKey="ultraDense" category="flag">
+              <FlagTag flagKey="ultraDense" className="flag-ultra-dense" />
+            </ExplainableProperty>
           )}
           {planet.is_puffy && (
-            <FlagTag flagKey="puffy" className="flag-puffy" />
+            <ExplainableProperty propertyKey="puffy" category="flag">
+              <FlagTag flagKey="puffy" className="flag-puffy" />
+            </ExplainableProperty>
           )}
           {planet.is_super_massive && (
-            <FlagTag flagKey="superMassive" className="flag-super-massive" />
+            <ExplainableProperty propertyKey="superMassive" category="flag">
+              <FlagTag flagKey="superMassive" className="flag-super-massive" />
+            </ExplainableProperty>
           )}
           {planet.is_lightweight && (
-            <FlagTag flagKey="lightweight" className="flag-lightweight" />
+            <ExplainableProperty propertyKey="lightweight" category="flag">
+              <FlagTag flagKey="lightweight" className="flag-lightweight" />
+            </ExplainableProperty>
           )}
 
           {/* Orbital flags */}
           {planet.is_ultra_short_period && (
-            <FlagTag flagKey="ultraShortPeriod" className="flag-ultra-short" />
+            <ExplainableProperty propertyKey="ultraShortPeriod" category="flag">
+              <FlagTag flagKey="ultraShortPeriod" className="flag-ultra-short" />
+            </ExplainableProperty>
           )}
           {planet.is_long_period && (
-            <FlagTag flagKey="longPeriod" className="flag-long-period" />
+            <ExplainableProperty propertyKey="longPeriod" category="flag">
+              <FlagTag flagKey="longPeriod" className="flag-long-period" />
+            </ExplainableProperty>
           )}
           {planet.is_eccentric_orbit && (
-            <FlagTag flagKey="eccentricOrbit" className="flag-eccentric" />
+            <ExplainableProperty propertyKey="eccentricOrbit" category="flag">
+              <FlagTag flagKey="eccentricOrbit" className="flag-eccentric" />
+            </ExplainableProperty>
           )}
           {planet.is_circular_orbit && (
-            <FlagTag flagKey="circularOrbit" className="flag-circular" />
+            <ExplainableProperty propertyKey="circularOrbit" category="flag">
+              <FlagTag flagKey="circularOrbit" className="flag-circular" />
+            </ExplainableProperty>
           )}
           {planet.is_likely_tidally_locked && (
-            <FlagTag flagKey="tidallyLocked" className="flag-tidally-locked" />
+            <ExplainableProperty propertyKey="tidallyLocked" category="flag">
+              <FlagTag flagKey="tidallyLocked" className="flag-tidally-locked" />
+            </ExplainableProperty>
           )}
 
           {/* System flags */}
           {planet.is_circumbinary && (
-            <FlagTag flagKey="circumbinary" className="flag-circumbinary" />
+            <ExplainableProperty propertyKey="circumbinary" category="flag">
+              <FlagTag flagKey="circumbinary" className="flag-circumbinary" />
+            </ExplainableProperty>
           )}
           {planet.is_multi_planet_system && (
-            <FlagTag flagKey="multiPlanet" className="flag-multi-planet" />
+            <ExplainableProperty propertyKey="multiPlanet" category="flag">
+              <FlagTag flagKey="multiPlanet" className="flag-multi-planet" />
+            </ExplainableProperty>
           )}
           {planet.is_rich_system && (
-            <FlagTag flagKey="richSystem" className="flag-rich-system" />
+            <ExplainableProperty propertyKey="richSystem" category="flag">
+              <FlagTag flagKey="richSystem" className="flag-rich-system" />
+            </ExplainableProperty>
           )}
           {planet.is_multi_star_system && (
-            <FlagTag flagKey="multiStar" className="flag-multi-star" />
+            <ExplainableProperty propertyKey="multiStar" category="flag">
+              <FlagTag flagKey="multiStar" className="flag-multi-star" />
+            </ExplainableProperty>
           )}
 
           {/* Proximity flags */}
           {planet.is_very_nearby && (
-            <FlagTag flagKey="veryNearby" className="flag-very-nearby" />
+            <ExplainableProperty propertyKey="veryNearby" category="flag">
+              <FlagTag flagKey="veryNearby" className="flag-very-nearby" />
+            </ExplainableProperty>
           )}
           {planet.is_nearby && !planet.is_very_nearby && (
-            <FlagTag flagKey="nearby" className="flag-nearby" />
+            <ExplainableProperty propertyKey="nearby" category="flag">
+              <FlagTag flagKey="nearby" className="flag-nearby" />
+            </ExplainableProperty>
           )}
 
           {/* Star characteristics */}
           {planet.is_solar_analog && (
-            <FlagTag flagKey="solarAnalog" className="flag-solar-analog" />
+            <ExplainableProperty propertyKey="solarAnalog" category="flag">
+              <FlagTag flagKey="solarAnalog" className="flag-solar-analog" />
+            </ExplainableProperty>
           )}
           {planet.is_red_dwarf_host && (
-            <FlagTag flagKey="redDwarfHost" className="flag-red-dwarf" />
+            <ExplainableProperty propertyKey="redDwarfHost" category="flag">
+              <FlagTag flagKey="redDwarfHost" className="flag-red-dwarf" />
+            </ExplainableProperty>
           )}
           {planet.is_young_system && (
-            <FlagTag flagKey="youngSystem" className="flag-young" />
+            <ExplainableProperty propertyKey="youngSystem" category="flag">
+              <FlagTag flagKey="youngSystem" className="flag-young" />
+            </ExplainableProperty>
           )}
           {planet.is_ancient_system && (
-            <FlagTag flagKey="ancientSystem" className="flag-ancient" />
+            <ExplainableProperty propertyKey="ancientSystem" category="flag">
+              <FlagTag flagKey="ancientSystem" className="flag-ancient" />
+            </ExplainableProperty>
           )}
           {planet.is_metal_rich_star && (
-            <FlagTag flagKey="metalRich" className="flag-metal-rich" />
+            <ExplainableProperty propertyKey="metalRich" category="flag">
+              <FlagTag flagKey="metalRich" className="flag-metal-rich" />
+            </ExplainableProperty>
           )}
           {planet.is_metal_poor_star && (
-            <FlagTag flagKey="metalPoor" className="flag-metal-poor" />
+            <ExplainableProperty propertyKey="metalPoor" category="flag">
+              <FlagTag flagKey="metalPoor" className="flag-metal-poor" />
+            </ExplainableProperty>
           )}
 
           {/* Detection flags */}
           {planet.is_transiting && (
-            <FlagTag flagKey="transiting" className="flag-transiting" />
+            <ExplainableProperty propertyKey="transiting" category="flag">
+              <FlagTag flagKey="transiting" className="flag-transiting" />
+            </ExplainableProperty>
           )}
           {planet.has_rv_data && (
-            <FlagTag flagKey="hasRvData" className="flag-rv" />
+            <ExplainableProperty propertyKey="hasRvData" category="flag">
+              <FlagTag flagKey="hasRvData" className="flag-rv" />
+            </ExplainableProperty>
           )}
-          {planet.has_ttv && <FlagTag flagKey="hasTtv" className="flag-ttv" />}
+          {planet.has_ttv && (
+            <ExplainableProperty propertyKey="hasTtv" category="flag">
+              <FlagTag flagKey="hasTtv" className="flag-ttv" />
+            </ExplainableProperty>
+          )}
           {planet.is_controversial && (
-            <FlagTag flagKey="controversial" className="flag-controversial" />
+            <ExplainableProperty propertyKey="controversial" category="flag">
+              <FlagTag flagKey="controversial" className="flag-controversial" />
+            </ExplainableProperty>
           )}
         </div>
       </section>

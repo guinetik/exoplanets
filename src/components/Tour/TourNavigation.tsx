@@ -13,26 +13,30 @@ export default function TourNavigation({ sections }: TourNavigationProps) {
   const [activeSection, setActiveSection] = useState<string>('');
 
   useEffect(() => {
-    const observers: IntersectionObserver[] = [];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        // Trigger when the element intersects the middle 10% of the viewport
+        // This creates a "spy" effect that highlights the section currently in the center
+        rootMargin: '-45% 0px -45% 0px',
+        threshold: 0,
+      }
+    );
 
     sections.forEach(({ id }) => {
       const element = document.getElementById(id);
-      if (!element) return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setActiveSection(id);
-          }
-        },
-        { threshold: 0.3, rootMargin: '-20% 0px -60% 0px' }
-      );
-
-      observer.observe(element);
-      observers.push(observer);
+      if (element) {
+        observer.observe(element);
+      }
     });
 
-    return () => observers.forEach((o) => o.disconnect());
+    return () => observer.disconnect();
   }, [sections]);
 
   const scrollToSection = (id: string) => {

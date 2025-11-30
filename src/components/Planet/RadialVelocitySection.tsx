@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import * as d3 from 'd3';
 import type { Exoplanet } from '../../types';
 import { renderLegend, type LegendItem } from '../Habitability/charts/ChartLegend';
+import useResizeObserver from '../../utils/useResizeObserver';
 
 // =============================================================================
 // TYPES
@@ -95,6 +96,9 @@ export function RadialVelocitySection({
   const spectrumRef = useRef<SVGSVGElement>(null);
   const spectrumContainerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
+
+  // Resize observer for responsive comparison chart
+  const { width: comparisonWidth } = useResizeObserver(comparisonContainerRef);
 
   // Check if we have RV data
   const hasRvData = planet.pl_rvamp !== null && planet.pl_orbper !== null;
@@ -712,7 +716,7 @@ export function RadialVelocitySection({
   // =============================================================================
 
   useEffect(() => {
-    if (!hasRvData || siblings.length === 0 || !comparisonChartRef.current || !comparisonContainerRef.current) return;
+    if (!hasRvData || siblings.length === 0 || !comparisonChartRef.current || !comparisonContainerRef.current || comparisonWidth === 0) return;
 
     // Get all planets with RV data
     const rvPlanets = [planet, ...siblings]
@@ -721,10 +725,9 @@ export function RadialVelocitySection({
 
     if (rvPlanets.length <= 1) return; // Need at least 2 planets for comparison
 
-    const containerWidth = comparisonContainerRef.current.clientWidth;
-    const isMobile = containerWidth < 500;
-    const width = containerWidth - (isMobile ? 0 : 40);
-    const height = Math.max(200, rvPlanets.length * (isMobile ? 30 : 40));
+    const isMobile = comparisonWidth < 500;
+    const width = comparisonWidth;
+    const height = Math.max(200, rvPlanets.length * (isMobile ? 35 : 45));
     const margin = {
       top: 20,
       right: isMobile ? 15 : 30,
@@ -822,7 +825,7 @@ export function RadialVelocitySection({
     yAxis.selectAll('line, path')
       .attr('stroke', 'rgba(255, 255, 255, 0.3)');
 
-  }, [planet, siblings, hasRvData, t]);
+  }, [planet, siblings, hasRvData, comparisonWidth, t]);
 
   // =============================================================================
   // RENDER: NO DATA VIEW

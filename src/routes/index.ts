@@ -18,6 +18,13 @@ export interface RouteConfig {
   showInNav: boolean;
 }
 
+/** Navigation item - can be a link or a dropdown with children */
+export interface NavItem {
+  labelKey: string;
+  path?: string;
+  children?: { labelKey: string; path: string }[];
+}
+
 export const routes: RouteConfig[] = [
   {
     path: '/',
@@ -35,7 +42,7 @@ export const routes: RouteConfig[] = [
     path: '/stars',
     element: Stars,
     labelKey: 'nav.stars',
-    showInNav: true,
+    showInNav: false, // Now part of Explore dropdown
   },
   {
     path: '/stars/:starId',
@@ -47,7 +54,7 @@ export const routes: RouteConfig[] = [
     path: '/planets',
     element: Planets,
     labelKey: 'nav.planets',
-    showInNav: true,
+    showInNav: false, // Now part of Explore dropdown
   },
   {
     path: '/planets/:planetId',
@@ -59,7 +66,7 @@ export const routes: RouteConfig[] = [
     path: '/habitability',
     element: Habitability,
     labelKey: 'nav.habitability',
-    showInNav: true,
+    showInNav: false, // Now part of Explore dropdown
   },
   {
     path: '/vote',
@@ -79,6 +86,23 @@ export const routes: RouteConfig[] = [
     labelKey: 'nav.about',
     showInNav: true,
   },
+];
+
+/** Navigation structure with dropdowns */
+export const navItems: NavItem[] = [
+  { labelKey: 'nav.home', path: '/' },
+  { labelKey: 'nav.tour', path: '/tour' },
+  {
+    labelKey: 'nav.explore',
+    children: [
+      { labelKey: 'nav.stars', path: '/stars' },
+      { labelKey: 'nav.planets', path: '/planets' },
+      { labelKey: 'nav.habitability', path: '/habitability' },
+    ],
+  },
+  { labelKey: 'nav.vote', path: '/vote' },
+  { labelKey: 'nav.apod', path: '/apod' },
+  { labelKey: 'nav.about', path: '/about' },
 ];
 
 export const navRoutes = routes.filter((route) => route.showInNav);

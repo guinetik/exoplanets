@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
 interface PropertyExplanationDialogProps {
@@ -58,7 +59,7 @@ export function PropertyExplanationDialog({
     !description.includes(basePath);
 
   if (!translationExists) {
-    return (
+    return createPortal(
       <div className="property-dialog-overlay" onClick={onClose}>
         <div className="property-dialog" onClick={(e) => e.stopPropagation()}>
           <button className="property-dialog-close" onClick={onClose}>
@@ -73,11 +74,12 @@ export function PropertyExplanationDialog({
             </p>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
+  return createPortal(
     <div className="property-dialog-overlay" onClick={onClose}>
       <div className="property-dialog" onClick={(e) => e.stopPropagation()}>
         <button
@@ -112,6 +114,7 @@ export function PropertyExplanationDialog({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
