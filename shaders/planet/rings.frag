@@ -1,6 +1,6 @@
 /**
  * Planetary Rings Fragment Shader
- * Creates thin, sharp concentric ring bands
+ * Creates dusty, particle-like ring bands with visible grain
  */
 
 uniform vec3 uBaseColor;
@@ -20,125 +20,132 @@ varying float vAngle;      // 0 to 2PI around ring
 const float PI = 3.14159265359;
 const float TAU = 6.28318530718;
 
+// Fast hash functions for particle generation
 float hash1(float p) {
     return fract(sin(p * 127.1) * 43758.5453);
 }
 
+float hash2(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// Standard noise
 float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
-    float a = fract(sin(dot(i, vec2(127.1, 311.7))) * 43758.5453);
-    float b = fract(sin(dot(i + vec2(1.0, 0.0), vec2(127.1, 311.7))) * 43758.5453);
-    float c = fract(sin(dot(i + vec2(0.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
-    float d = fract(sin(dot(i + vec2(1.0, 1.0), vec2(127.1, 311.7))) * 43758.5453);
+    float a = hash2(i);
+    float b = hash2(i + vec2(1.0, 0.0));
+    float c = hash2(i + vec2(0.0, 1.0));
+    float d = hash2(i + vec2(1.0, 1.0));
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Sharp step function - creates hard edges
-float sharpStep(float edge, float x, float sharpness) {
-    return clamp((x - edge) * sharpness, 0.0, 1.0);
-}
-
 void main() {
-    // Use properly calculated radial position (0 = inner, 1 = outer)
     float r = clamp(vRadialPos, 0.0, 1.0);
-    float angle = vAngle + uTime * 0.01;
-
-    // === GENERATE MANY THIN CONCENTRIC RING BANDS ===
-    float ringDensity = 0.0;
-
-    // More rings! 8-15 thin bands
-    float numRings = 8.0 + floor(uSeed * 8.0);
+    float angle = vAngle;
     float seedBase = uSeed * 100.0;
 
-    // Evenly distribute rings across the radial space
-    float margin = 0.05;
+    // === RING BAND STRUCTURE ===
+    // Create broad ring zones (like Saturn's A, B, C rings)
+    float ringDensity = 0.0;
+    float numRings = 5.0 + floor(uSeed * 4.0);  // 5-8 main ring bands
+    float margin = 0.03;
     float availableSpace = 1.0 - 2.0 * margin;
-    float spacing = availableSpace / numRings;
 
-    for (float i = 0.0; i < 16.0; i++) {
+    for (float i = 0.0; i < 9.0; i++) {
         if (i >= numRings) break;
 
-        // Place ring in its designated slot with small random offset
-        float slotCenter = margin + spacing * (i + 0.5);
-        float randomOffset = (hash1(seedBase + i * 7.1) - 0.5) * spacing * 0.4;
-        float ringCenter = slotCenter + randomOffset;
+        // Ring position and width
+        float ringPos = margin + (i + 0.5) / numRings * availableSpace;
+        ringPos += (hash1(seedBase + i * 7.1) - 0.5) * 0.08;
+        float ringWidth = 0.04 + hash1(seedBase + i * 13.3) * 0.08;
 
-        // Very thin rings! 0.01-0.04
-        float ringWidth = 0.01 + hash1(seedBase + i * 13.3) * 0.03;
+        // Soft gaussian-ish falloff instead of hard edges
+        float dist = abs(r - ringPos);
+        float ring = exp(-dist * dist / (ringWidth * ringWidth * 0.5));
 
-        // Sharp edges
-        float innerEdge = sharpStep(ringCenter - ringWidth * 0.5, r, 300.0);
-        float outerEdge = 1.0 - sharpStep(ringCenter + ringWidth * 0.5, r, 300.0);
-
-        float ring = innerEdge * outerEdge;
-
-        // Vary opacity per ring
-        float ringOpacity = 0.5 + hash1(seedBase + i * 19.7) * 0.5;
-        ringDensity = max(ringDensity, ring * ringOpacity);
+        // Vary intensity per ring
+        float ringIntensity = 0.4 + hash1(seedBase + i * 19.7) * 0.6;
+        ringDensity = max(ringDensity, ring * ringIntensity);
     }
 
-    // === SANDY PARTICLE TEXTURE ===
-    // Large scale clumping
-    float clumps = noise(vec2(r * 50.0 + uSeed * 10.0, angle * 8.0));
-    clumps = smoothstep(0.2, 0.6, clumps);
+    // === PARTICLE/DUST TEXTURE ===
+    // Layer 1: Large particle clumps - noise based
+    float clumpScale = 60.0;
+    float clumps = noise(vec2(r * clumpScale + seedBase, angle * clumpScale * 0.3));
+    clumps = 0.5 + clumps * 0.5;  // Range 0.5-1.0
 
-    // Medium grain - creates visible gaps
-    float medGrain = noise(vec2(r * 200.0 + uSeed * 30.0, angle * 40.0));
-    medGrain = smoothstep(0.35, 0.65, medGrain);
+    // Layer 2: Medium debris/rocks
+    float medScale = 200.0;
+    float medDebris = noise(vec2(r * medScale + seedBase * 2.0, angle * medScale * 0.4));
+    medDebris = 0.4 + medDebris * 0.6;  // Range 0.4-1.0
 
-    // Fine sand particles
-    float fineGrain = noise(vec2(r * 500.0, angle * 100.0 + uSeed * 70.0));
-    fineGrain = smoothstep(0.3, 0.7, fineGrain);
+    // Layer 3: Fine dust particles - higher frequency for grainy look
+    float dustScale = 600.0;
+    float dust = noise(vec2(r * dustScale, angle * dustScale * 0.3 + seedBase * 3.0));
+    dust = 0.3 + dust * 0.7;  // Range 0.3-1.0
 
-    // Combine all layers for sandy porous look
-    float sandy = clumps * medGrain * (0.5 + fineGrain * 0.5);
-    ringDensity *= sandy;
+    // Layer 4: Micro grain - very high frequency
+    float microScale = 1500.0;
+    float micro = noise(vec2(r * microScale + seedBase * 4.0, angle * microScale * 0.25));
+    micro = 0.5 + micro * 0.5;  // Range 0.5-1.0
 
-    // === ANGULAR VARIATION ===
-    float angularVar = noise(vec2(sin(angle) * 5.0 + uSeed * 30.0, r * 10.0));
-    ringDensity *= 0.9 + angularVar * 0.1;
+    // Combine particle layers
+    float particleField = clumps * medDebris * dust * micro;
 
-    // === EDGE CLEANUP ===
-    float edgeFade = smoothstep(0.0, 0.02, r) * (1.0 - smoothstep(0.98, 1.0, r));
-    ringDensity *= edgeFade;
+    // Add sparkle for ice particles
+    float sparkleNoise = noise(vec2(r * 2000.0 + uTime * 0.5, angle * 500.0));
+    float sparkle = pow(sparkleNoise, 6.0);
+
+    // === RADIAL GAPS (Cassini division style) ===
+    // Occasional gaps between rings
+    float gapNoise = noise(vec2(r * 80.0 + seedBase * 5.0, 0.0));
+    float gaps = smoothstep(0.2, 0.35, gapNoise);  // Most areas have rings
+
+    // === ANGULAR STREAKS ===
+    float streak = noise(vec2(angle * 3.0 + seedBase, r * 20.0));
+    streak = 0.9 + streak * 0.2;
+
+    // === COMBINE EVERYTHING ===
+    float finalDensity = ringDensity * particleField * gaps * streak;
+
+    // === EDGE FADE ===
+    float edgeFade = smoothstep(0.0, 0.04, r) * (1.0 - smoothstep(0.96, 1.0, r));
+    finalDensity *= edgeFade;
 
     // === COLOR ===
     vec3 col = uRingColor;
 
-    // Radial color variation - inner rings slightly warmer, outer cooler
-    col.r += (r - 0.5) * 0.2;
-    col.g += (r - 0.5) * 0.05;
-    col.b -= (r - 0.5) * 0.15;
+    // Radial color gradient (inner warmer, outer cooler like real rings)
+    float radialTint = r - 0.5;
+    col.r += radialTint * 0.15;
+    col.g += radialTint * 0.05;
+    col.b -= radialTint * 0.1;
 
-    // Per-ring color tint variation
-    float colorVar = noise(vec2(r * 30.0 + uSeed * 50.0, 0.0));
-    col.r *= 0.85 + colorVar * 0.3;
-    col.b *= 0.9 + (1.0 - colorVar) * 0.2;
+    // Per-particle color variation (some brighter, some darker)
+    float colorNoise = noise(vec2(r * 400.0 + seedBase * 7.0, angle * 100.0));
+    col *= 0.7 + colorNoise * 0.5;
 
-    // Brightness variation from sandy texture
-    col *= 0.8 + sandy * 0.4;
+    // Ice sparkle highlights
+    col += vec3(1.0, 0.98, 0.95) * sparkle * 0.8;
 
-    // Angular brightness variation
-    col *= 0.9 + angularVar * 0.15;
+    // Dust reddening in dense areas
+    float dustTint = (1.0 - particleField) * 0.15;
+    col.r += dustTint;
+    col.b -= dustTint * 0.5;
 
-    // Ice/dust sparkle
-    float sparkle = pow(noise(vec2(r * 300.0, angle * 60.0)), 5.0);
-    col += uRingColor * sparkle * 0.4;
-
-    // Insolation brightness
-    col *= 0.6 + uInsolation * 0.6;
+    // Insolation (light from star)
+    col *= 0.5 + uInsolation * 0.7;
 
     // === FINAL OUTPUT ===
-    // More transparent rings
-    float opacity = ringDensity * (0.3 + uDensity * 0.25);
-    opacity = clamp(opacity, 0.0, 0.6); // Max 60% opacity
+    float opacity = finalDensity * (0.4 + uDensity * 0.4);
+    opacity = clamp(opacity, 0.0, 0.75);
 
-    // Hard cutoff for gaps
-    if (ringDensity < 0.1) {
+    // Hard cutoff for true gaps
+    if (finalDensity < 0.05) {
         opacity = 0.0;
     }
 
-    gl_FragColor = vec4(clamp(col, 0.0, 1.2), opacity);
+    gl_FragColor = vec4(clamp(col, 0.0, 1.5), opacity);
 }

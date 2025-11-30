@@ -73,7 +73,7 @@ void main() {
 
     // === COLOR ===
     vec3 baseColor = uStarColor * 1.5 + vec3(0.2);
-    vec3 hotColor = vec3(1.8, 1.6, 1.2);      // White-hot
+    vec3 hotColor = uStarColor * 2.0 + vec3(0.3);  // Star color, brightened
     vec3 warmColor = baseColor * vec3(1.3, 0.9, 0.6);
 
     // Stays hot/bright, simple color
