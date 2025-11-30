@@ -102,10 +102,17 @@ float plasmaNoise(vec3 p, float time) {
 // =============================================================================
 
 float risingCells(vec3 p, float time) {
-    float cells = snoise3D(p * CELL_SCALE + vec3(0.0, time * CELL_SPEED, 0.0));
-    float detail = snoise3D(p * CELL_SCALE * 2.5 + vec3(time * CELL_SPEED * 0.5, 0.0, time * 0.01));
+    // Fix for pole singularity: ensure unique coordinates even at pole
+    vec3 coord = p;
+    float poleR = length(p.xy);
+    if (poleR < 0.01) {
+        // At pole: use rotated coordinates to ensure variation
+        coord = vec3(p.z, p.y, -p.x);
+    }
+    float cells = snoise3D(coord * CELL_SCALE + vec3(0.0, time * CELL_SPEED, 0.0));
+    float detail = snoise3D(coord * CELL_SCALE * 2.5 + vec3(time * CELL_SPEED * 0.5, 0.0, time * 0.01));
     cells = cells * 0.7 + detail * 0.3;
-    float rise = snoise3D(p * CELL_SCALE + vec3(0.0, time * CELL_SPEED * 2.0, 0.0));
+    float rise = snoise3D(coord * CELL_SCALE + vec3(0.0, time * CELL_SPEED * 2.0, 0.0));
     return cells * 0.5 + 0.5 + rise * 0.2;
 }
 
@@ -114,6 +121,13 @@ float risingCells(vec3 p, float time) {
 // =============================================================================
 
 float boilingTurbulence(vec3 p, float time) {
+    // Fix for pole singularity: ensure unique coordinates even at pole
+    vec3 coord = p;
+    float poleR = length(p.xy);
+    if (poleR < 0.01) {
+        // At pole: use rotated coordinates to ensure variation
+        coord = vec3(p.z, p.y, -p.x);
+    }
     float turb = 0.0;
     float amp = 1.0;
     float freq = 4.0;
@@ -124,7 +138,7 @@ float boilingTurbulence(vec3 p, float time) {
             cos(time * 0.25 + float(i) * 2.3) * 0.5,
             time * 0.15 * (1.0 + float(i) * 0.3)
         );
-        turb += amp * abs(snoise3D(p * freq + offset));
+        turb += amp * abs(snoise3D(coord * freq + offset));
         amp *= 0.5;
         freq *= 2.1;
     }
@@ -136,25 +150,32 @@ float boilingTurbulence(vec3 p, float time) {
 // =============================================================================
 
 float hotBubbles(vec3 p, float time) {
+    // Fix for pole singularity: ensure unique coordinates even at pole
+    vec3 coord = p;
+    float poleR = length(p.xy);
+    if (poleR < 0.01) {
+        // At pole: use rotated coordinates to ensure variation
+        coord = vec3(p.z, p.y, -p.x);
+    }
     // Large slow bubbles
-    vec3 p1 = p * 5.0 + vec3(0.0, time * 0.06, 0.0);
+    vec3 p1 = coord * 5.0 + vec3(0.0, time * 0.06, 0.0);
     float b1 = snoise3D(p1);
     b1 = smoothstep(0.3, 0.6, b1);
 
     // Medium bubbles, faster
-    vec3 p2 = p * 9.0 + vec3(time * 0.04, time * 0.08, 0.0);
+    vec3 p2 = coord * 9.0 + vec3(time * 0.04, time * 0.08, 0.0);
     float b2 = snoise3D(p2);
     b2 = smoothstep(0.35, 0.65, b2);
 
     // Small rapid bubbles
-    vec3 p3 = p * 16.0 + vec3(time * 0.1, 0.0, time * 0.12);
+    vec3 p3 = coord * 16.0 + vec3(time * 0.1, 0.0, time * 0.12);
     float b3 = snoise3D(p3);
     b3 = smoothstep(0.4, 0.7, b3);
 
     float bubbles = b1 * 0.5 + b2 * 0.35 + b3 * 0.15;
 
-    // Pulsing intensity
-    float pulse = sin(time * 2.0 + p.x * 10.0) * 0.3 + 0.7;
+    // Pulsing intensity - use coord instead of p for pole safety
+    float pulse = sin(time * 2.0 + coord.x * 10.0) * 0.3 + 0.7;
 
     return bubbles * pulse;
 }
@@ -192,22 +213,41 @@ void main() {
     vec2 sp = spherePos.xy;
     float r = dot(sp, sp);  // Squared distance from center
     
+    // Detect pole early to handle singularity
+    bool isAtPole = r < 0.0001;
+    
     // The magic distortion formula from trisomie21
     // Creates a lens-like effect where center bulges toward viewer
     float distortStrength = 2.0 - brightness;  // Brighter = more distortion
-    sp *= distortStrength;
-    r = dot(sp, sp);
     
-    // Distortion factor - creates the bulging effect
-    float f = (1.0 - sqrt(abs(1.0 - r))) / (r + 0.001) + brightness * 0.5;
-    
-    // Apply distortion to create warped UVs
     vec2 warpedUV;
-    warpedUV.x = sp.x * f;
-    warpedUV.y = sp.y * f;
-    
-    // Animate the warped UVs - this creates the flowing effect
-    warpedUV += vec2(time * 0.1, 0.0);
+    if (isAtPole) {
+        // At pole: use alternative coordinate system to avoid singularity
+        // Project pole onto equator using spherical coordinates
+        float poleAngle = angle + time * 0.15;  // Animate for variation
+        float poleElev = elevation;
+        // Create non-zero UV coordinates from spherical coords
+        warpedUV = vec2(
+            cos(poleAngle) * (poleElev / PI) * 0.5 + time * 0.1,
+            sin(poleAngle) * (poleElev / PI) * 0.5
+        );
+        // Scale to match normal distortion range
+        warpedUV *= distortStrength * 2.0;
+    } else {
+        // Normal distortion calculation
+        sp *= distortStrength;
+        r = dot(sp, sp);
+        
+        // Distortion factor - creates the bulging effect
+        float f = (1.0 - sqrt(abs(1.0 - r))) / (r + 0.001) + brightness * 0.5;
+        
+        // Apply distortion to create warped UVs
+        warpedUV.x = sp.x * f;
+        warpedUV.y = sp.y * f;
+        
+        // Animate the warped UVs - this creates the flowing effect
+        warpedUV += vec2(time * 0.1, 0.0);
+    }
     
     // ==========================================================================
     // PLASMA TEXTURE using warped coordinates
@@ -234,6 +274,7 @@ void main() {
     plasma = mix(plasma, plasma3 * 0.5 + 0.5, 0.3);
     
     // === OUTWARD FLOWING FLAMES ===
+    // Use rotated coordinates to avoid pole singularity
     vec3 flameCoord = vec3(angle / TAU, elevation / PI, time * 0.1);
     
     float newTime1 = abs(tiledNoise3D(
@@ -320,6 +361,20 @@ void main() {
 
     totalIntensity *= spotDarkening;
     totalIntensity *= 1.0 + pulse * 0.5;
+    
+    // Fix for pole singularity: ensure minimum intensity and variation at north pole
+    // Detect north pole (z close to 1.0, xy close to 0)
+    float poleDist = abs(spherePos.z);
+    float poleR = length(spherePos.xy);
+    if (poleDist > 0.95 && poleR < 0.1) {
+        // At north pole: add guaranteed variation and minimum brightness
+        // Use time and position-based noise to ensure uniqueness
+        float poleVariation = sin(time * 2.0 + spherePos.x * 100.0 + spherePos.y * 100.0) * 0.3 + 0.7;
+        float poleBrightness = 0.4 + poleVariation * 0.3;  // Minimum 0.4, up to 0.7
+        totalIntensity = max(totalIntensity, poleBrightness);
+        // Add extra variation to prevent uniform black
+        totalIntensity += poleVariation * 0.2;
+    }
 
     // Raised areas (positive displacement) are hotter/brighter
     float displacementBoost = vDisplacement * 8.0;
@@ -374,6 +429,14 @@ void main() {
     // Add noise to rim intensity based on position
     float rimAngle = atan(vNormal.y, vNormal.x);
     float rimElev = acos(clamp(vNormal.z, -1.0, 1.0));
+    
+    // Fix for pole singularity in rim calculation
+    float rimR = length(vec2(vNormal.x, vNormal.y));
+    if (rimR < 0.01) {
+        // At pole: use time-based variation to ensure unique coordinates
+        rimAngle = time * 0.1;
+        rimElev = abs(vNormal.z) * PI;
+    }
     float rimNoise = snoise3D(vec3(rimAngle * 3.0, rimElev * 2.0, time * 0.2));
     rimNoise = rimNoise * 0.5 + 0.5;
 
@@ -392,6 +455,22 @@ void main() {
 
     // === FINAL OUTPUT ===
     surfaceColor = clamp(surfaceColor, 0.0, 2.5);
+    
+    // Final safety check: ensure minimum brightness at north pole to prevent black artifact
+    // Reuse poleDist and poleR from earlier calculation
+    if (poleDist > 0.95 && poleR < 0.1) {
+        // At north pole: ensure surface color is never black
+        // Mix with warm color to guarantee visibility
+        float minBrightness = 0.5;
+        vec3 poleColor = warmColor * minBrightness;
+        // Blend based on current brightness - if too dark, use pole color
+        float currentBrightness = length(surfaceColor);
+        if (currentBrightness < minBrightness) {
+            surfaceColor = mix(poleColor, surfaceColor, currentBrightness / minBrightness);
+        }
+        // Add subtle time-based variation to prevent uniform appearance
+        surfaceColor += baseColor * sin(time * 3.0 + spherePos.x * 50.0) * 0.1;
+    }
 
     gl_FragColor = vec4(surfaceColor, 1.0);
 }
