@@ -19,8 +19,11 @@ interface SolarFlaresProps {
 // Number of potential flare sites
 const NUM_FLARES = 4;
 
-// Flare cycle duration in seconds
-const FLARE_CYCLE_DURATION = 8;
+// Flare cycle duration in seconds (longer = less frequent)
+const FLARE_CYCLE_DURATION = 60;
+
+// Minimum flare size so small stars still have visible flares
+const MIN_FLARE_SIZE = 1.0314879;
 
 // Debug: expose flare controls on window
 declare global {
@@ -76,7 +79,7 @@ export function SolarFlares({ starRadius, starColor, starSeed, activityLevel }: 
       uStarColor: { value: new THREE.Color(starColor) },
       uTime: { value: 0 },
       uFlarePhase: { value: 0 },
-      uFlareLength: { value: starRadius * 0.8 * data.size },
+      uFlareLength: { value: Math.max(starRadius * 0.3 * data.size, MIN_FLARE_SIZE) },
       uFlareSeed: { value: data.phase },
     }));
   }, [starColor, starRadius, flareData]);
@@ -134,34 +137,34 @@ export function SolarFlares({ starRadius, starColor, starSeed, activityLevel }: 
     };
   }, [triggerFlare, triggerAllFlares, starRadius, activityLevel]);
 
-  // Animate flares
+  // Animate flares - they TRAVEL outward through space
   useFrame((state) => {
     const time = state.clock.elapsedTime;
     const currentTime = performance.now() / 1000;
 
     flareData.forEach((data, i) => {
       const material = materialRefs.current[i];
-      if (!material) return;
+      const mesh = flareRefs.current[i];
+      if (!material || !mesh) return;
 
       // Check for manual trigger
       const triggerTime = manualTriggers.current[i];
       const timeSinceTrigger = currentTime - triggerTime;
-      const manualDuration = 3.0; // Manual flares last 3 seconds
+      const manualDuration = 5.0; // Manual flares last 5 seconds
 
       let activePhase = 0;
 
       if (timeSinceTrigger >= 0 && timeSinceTrigger < manualDuration) {
         // Manual trigger active
         activePhase = timeSinceTrigger / manualDuration;
-        // Use sin curve for smooth in/out
-        activePhase = Math.sin(activePhase * Math.PI);
       } else {
         // Normal cycle-based animation
         const cycleTime = (time * data.speed + data.phase) % FLARE_CYCLE_DURATION;
         const phase = cycleTime / FLARE_CYCLE_DURATION;
 
         // Flares are only visible part of the time based on activity
-        const activeThreshold = 1.0 - currentActivityRef.current * 0.6;
+        // Lower multiplier = rarer flares (0.15 means max 15% of cycle is active)
+        const activeThreshold = 1.0 - currentActivityRef.current * 0.15;
         const isActive = phase > activeThreshold;
 
         // Remap phase to 0-1 within active window
@@ -169,6 +172,27 @@ export function SolarFlares({ starRadius, starColor, starSeed, activityLevel }: 
           ? (phase - activeThreshold) / (1.0 - activeThreshold)
           : 0;
       }
+
+      // === KEY CHANGE: Move the flare OUTWARD through space ===
+      // Get the base direction (normalized position on star surface)
+      const baseTransform = flareTransforms[i];
+      const direction = baseTransform.position.clone().normalize();
+
+      // Calculate how far the flare has traveled based on phase
+      // Forms/burns on star for 60%, then escapes rapidly
+      let travelDistance = 1.0;
+      if (activePhase < 0.6) {
+        // Forms and burns on star - barely moves (1.0 to 1.2)
+        travelDistance = 1.0 + activePhase * 0.33;
+      } else {
+        // Escapes! Accelerates outward rapidly
+        const escapePhase = (activePhase - 0.6) / 0.4;  // 0 to 1 for escape portion
+        travelDistance = 1.2 + escapePhase * escapePhase * 10.0;  // Fast escape
+      }
+      const currentDistance = starRadius * travelDistance;
+
+      // Update mesh position - it moves outward!
+      mesh.position.copy(direction.multiplyScalar(currentDistance));
 
       material.uniforms.uTime.value = time;
       material.uniforms.uFlarePhase.value = activePhase;
@@ -203,8 +227,11 @@ export function SolarFlares({ starRadius, starColor, starSeed, activityLevel }: 
           position={flareTransforms[i].position}
           quaternion={flareTransforms[i].quaternion}
         >
-          {/* Plane geometry - will be scaled by shader */}
-          <planeGeometry args={[starRadius * 0.3 * data.size, starRadius * 1.5 * data.size]} />
+          {/* Plasma flare - with minimum size for small stars */}
+          <planeGeometry args={[
+            Math.max(starRadius * 0.25 * data.size, MIN_FLARE_SIZE),
+            Math.max(starRadius * 0.35 * data.size, MIN_FLARE_SIZE * 1.4)
+          ]} />
           <shaderMaterial
             ref={(el) => (materialRefs.current[i] = el)}
             vertexShader={shaderService.get(flareShaders.vert)}

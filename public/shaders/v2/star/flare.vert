@@ -1,13 +1,17 @@
 /**
  * Solar Flare Vertex Shader
  *
- * Renders elongated billboard sprites for solar flares.
- * The flare extends outward from the star surface.
+ * Creates a plasma blob that travels outward through space.
+ * The mesh position is animated in JS - this just handles the shape.
+ * Features:
+ * - Blob-like shape (not a streak)
+ * - Slight elongation in travel direction
+ * - Fades as it travels (phase = distance)
  */
 
-uniform float uFlareLength;     // How far the flare extends
-uniform float uFlarePhase;      // Lifecycle phase (0-1)
-uniform vec3 uFlareDirection;   // Direction the flare points (normalized)
+uniform float uFlareLength;     // Base size
+uniform float uFlarePhase;      // 0 = at star, 1 = far away (fading)
+uniform float uFlareSeed;       // For variation
 
 varying vec2 vUv;
 varying float vPhase;
@@ -16,13 +20,19 @@ void main() {
     vUv = uv;
     vPhase = uFlarePhase;
 
-    // Scale the flare based on phase (grows then shrinks)
-    float scale = sin(uFlarePhase * 3.14159) * uFlareLength;
-
-    // Apply scaling to position
     vec3 scaledPos = position;
-    scaledPos.y *= scale;  // Stretch along Y (flare length)
-    scaledPos.x *= 0.3 + uFlarePhase * 0.2;  // Width varies with phase
+
+    // Size: starts small, grows as it launches, then stays consistent
+    float sizeRamp = smoothstep(0.0, 0.2, uFlarePhase);  // Quick grow at start
+    float baseSize = uFlareLength * sizeRamp;
+
+    // Slight elongation in Y (travel direction) - like a comet
+    scaledPos.y *= baseSize * 1.5;
+    scaledPos.x *= baseSize * 1.0;
+
+    // Add some wobble/variation based on seed
+    float wobble = sin(uFlareSeed * 20.0 + uFlarePhase * 6.28) * 0.1;
+    scaledPos.x += wobble * baseSize;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(scaledPos, 1.0);
 }
