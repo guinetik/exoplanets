@@ -5,7 +5,7 @@ import { nameToSlug } from '../utils/urlSlug';
 import { StarThumbnail } from './CelestialBodyThumbnail';
 
 interface StarCardProps {
-  star: Star;
+  star: Star & { tourDescription?: string };
 }
 
 export function StarCard({ star }: StarCardProps) {
@@ -19,7 +19,7 @@ export function StarCard({ star }: StarCardProps) {
       <div className="star-card">
         {/* Star visualization thumbnail */}
         <div className="star-card-visualization">
-          <StarThumbnail star={star} size={60} />
+          <StarThumbnail star={star} size={96} />
         </div>
 
         {/* Header */}
@@ -38,6 +38,11 @@ export function StarCard({ star }: StarCardProps) {
             )}
           </div>
         </div>
+
+        {/* Tour description (if available) */}
+        {star.tourDescription && (
+          <p className="star-card-description">{star.tourDescription}</p>
+        )}
 
         {/* Star properties grid */}
         <div className="star-card-properties">

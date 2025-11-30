@@ -851,6 +851,10 @@
     @apply flex items-center justify-between gap-3 mb-4;
   }
 
+  .star-card-description {
+    @apply text-sm text-gray-400 leading-relaxed mb-4;
+  }
+
   .star-card-dot {
     @apply w-4 h-4 rounded-full flex-shrink-0;
   }

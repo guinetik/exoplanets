@@ -9,12 +9,14 @@ import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import { TourSection, TourNavigation, useScrollAnimation } from '../components/Tour';
 import { PlanetCard } from '../components/PlanetCard';
+import { StarCard } from '../components/StarCard';
 import { getTourData } from '../utils/tourData';
 
 // Lazy load the 3D background to avoid blocking
 const TourHeroBackground = lazy(() => import('../components/Tour/TourHeroBackground'));
 
 const TOUR_SECTIONS = [
+  { id: 'stars', label: 'Famous Stars' },
   { id: 'famous', label: 'Famous Worlds' },
   { id: 'nearest', label: 'Nearest Neighbors' },
   { id: 'habitable', label: 'Most Habitable' },
@@ -24,13 +26,14 @@ const TOUR_SECTIONS = [
 
 export default function Tour() {
   const { t } = useTranslation();
-  const { getAllPlanets, isLoading } = useData();
+  const { getAllPlanets, getAllStars, isLoading } = useData();
 
   const tourData = useMemo(() => {
     if (isLoading) return null;
     const planets = getAllPlanets();
-    return getTourData(planets, t);
-  }, [isLoading, getAllPlanets, t]);
+    const stars = getAllStars();
+    return getTourData(planets, stars, t);
+  }, [isLoading, getAllPlanets, getAllStars, t]);
 
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation<HTMLElement>({
     threshold: 0.3,
@@ -69,7 +72,23 @@ export default function Tour() {
       {/* Navigation Dots */}
       <TourNavigation sections={TOUR_SECTIONS} />
 
-      {/* Chapter 1: Famous Worlds */}
+      {/* Stop 1: Famous Stars */}
+      <TourSection
+        id="stars"
+        chapter={t('pages.tour.sections.stars.chapter')}
+        title={t('pages.tour.sections.stars.title')}
+        intro={t('pages.tour.sections.stars.intro')}
+      >
+        <div className="tour-planets-grid">
+          {tourData.famousStars.map((star) => (
+            <div key={star.hostname} className="planets-grid-item">
+              <StarCard star={star} />
+            </div>
+          ))}
+        </div>
+      </TourSection>
+
+      {/* Stop 2: Famous Worlds */}
       <TourSection
         id="famous"
         chapter={t('pages.tour.sections.famous.chapter')}
@@ -85,7 +104,7 @@ export default function Tour() {
         </div>
       </TourSection>
 
-      {/* Chapter 2: Nearest Neighbors */}
+      {/* Stop 3: Nearest Neighbors */}
       <TourSection
         id="nearest"
         chapter={t('pages.tour.sections.nearest.chapter')}
@@ -101,7 +120,7 @@ export default function Tour() {
         </div>
       </TourSection>
 
-      {/* Chapter 3: Most Habitable */}
+      {/* Stop 4: Most Habitable */}
       <TourSection
         id="habitable"
         chapter={t('pages.tour.sections.habitable.chapter')}
@@ -117,7 +136,7 @@ export default function Tour() {
         </div>
       </TourSection>
 
-      {/* Chapter 4: Extreme Worlds */}
+      {/* Stop 5: Extreme Worlds */}
       <TourSection
         id="extreme"
         chapter={t('pages.tour.sections.extreme.chapter')}
@@ -133,7 +152,7 @@ export default function Tour() {
         </div>
       </TourSection>
 
-      {/* Chapter 5: Record Breakers */}
+      {/* Stop 6: Record Breakers */}
       <TourSection
         id="records"
         chapter={t('pages.tour.sections.records.chapter')}

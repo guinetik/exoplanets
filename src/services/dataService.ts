@@ -189,6 +189,11 @@ class DataService {
       this.stars.set(hostname, star);
       const slug = nameToSlug(hostname);
       this.starsBySlug.set(slug, hostname);
+
+      // Manual aliases for famous systems that might be known by other names
+      if (hostname === 'KOI-351') {
+        this.starsBySlug.set('kepler-90', hostname);
+      }
     }
   }
 

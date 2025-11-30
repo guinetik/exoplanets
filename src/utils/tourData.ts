@@ -5,13 +5,18 @@
  */
 
 import type { TFunction } from 'i18next';
-import type { Exoplanet } from '../types';
+import type { Exoplanet, Star } from '../types';
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 export interface TourPlanet extends Exoplanet {
+  tourCategory?: string;
+  tourDescription?: string;
+}
+
+export interface TourStar extends Star {
   tourCategory?: string;
   tourDescription?: string;
 }
@@ -61,6 +66,59 @@ export function getFamousPlanets(planets: Exoplanet[], t: TFunction): TourPlanet
         ...planet,
         tourCategory: 'famous',
         tourDescription: t(`pages.tour.descriptions.famous.${key}`),
+      });
+    }
+  });
+
+  return result;
+}
+
+// =============================================================================
+// FAMOUS STARS - Curated list
+// =============================================================================
+
+const FAMOUS_STAR_NAMES = [
+  'Proxima Cen',
+  'Barnard\'s star',
+  'Wolf 1069',
+  'TRAPPIST-1',
+  '51 Peg',
+  'iot Dra',
+  'Kepler-186',
+  'KOI-351', // Kepler-90
+  'Kepler-16',
+];
+
+const FAMOUS_STAR_KEYS: Record<string, string> = {
+  'Proxima Cen': 'proximaCen',
+  'Barnard\'s star': 'barnardsStar',
+  'Wolf 1069': 'wolf1069',
+  'TRAPPIST-1': 'trappist1',
+  '51 Peg': 'fiftyOnePeg',
+  'iot Dra': 'iotDra',
+  'Kepler-186': 'kepler186',
+  'KOI-351': 'kepler90',
+  'Kepler-16': 'kepler16',
+};
+
+export function getFamousStars(stars: Star[], t: TFunction): TourStar[] {
+  const starMap = new Map(stars.map((s) => [s.hostname, s]));
+  const result: TourStar[] = [];
+
+  FAMOUS_STAR_NAMES.forEach((name) => {
+    const star = starMap.get(name);
+    const key = FAMOUS_STAR_KEYS[name];
+    if (star && key) {
+      // Rename KOI-351 to its more famous name Kepler-90
+      const starData = { ...star };
+      if (starData.hostname === 'KOI-351') {
+        starData.hostname = 'Kepler-90';
+      }
+
+      result.push({
+        ...starData,
+        tourCategory: 'famousStar',
+        tourDescription: t(`pages.tour.descriptions.stars.${key}`),
       });
     }
   });
@@ -320,15 +378,17 @@ export function getRecordBreakers(planets: Exoplanet[], t: TFunction): RecordPla
 
 export interface TourData {
   famous: TourPlanet[];
+  famousStars: TourStar[];
   nearest: TourPlanet[];
   habitable: TourPlanet[];
   extreme: ExtremePlanet[];
   records: RecordPlanet[];
 }
 
-export function getTourData(planets: Exoplanet[], t: TFunction): TourData {
+export function getTourData(planets: Exoplanet[], stars: Star[], t: TFunction): TourData {
   return {
     famous: getFamousPlanets(planets, t),
+    famousStars: getFamousStars(stars, t),
     nearest: getNearestNeighbors(planets, t),
     habitable: getMostHabitable(planets, t),
     extreme: getExtremeWorlds(planets, t),

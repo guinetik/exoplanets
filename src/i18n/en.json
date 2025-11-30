@@ -132,7 +132,7 @@
         "similarToSun": "Similar in size to the Sun",
         "travelTime": {
           "title": "Interstellar Travel Time",
-          "unreachable": "Distance data not available",
+          "distanceUnavailable": "Distance data not available",
           "lightYearsAway": "light-years away",
           "reachableAt": "Reachable at",
           "orFaster": "or faster",
@@ -664,27 +664,32 @@
       "scrollHint": "Scroll to begin",
       "sections": {
         "famous": {
-          "chapter": "Chapter 1",
+          "chapter": "Stop 2",
           "title": "Famous Worlds",
           "intro": "Meet the celebrities of the exoplanet world. These are the planets that captured headlines, sparked our imagination, and changed how we think about our place in the cosmos."
         },
+        "stars": {
+          "chapter": "Stop 1",
+          "title": "Famous Stars",
+          "intro": "Every planet needs a sun. These stellar hosts are just as fascinating as the worlds they nurture, from ultra-cool red dwarfs to binary star systems."
+        },
         "nearest": {
-          "chapter": "Chapter 2",
+          "chapter": "Stop 3",
           "title": "Nearest Neighbors",
           "intro": "These worlds are practically next door in cosmic terms. Some lie within reach of potential future missions, making them prime candidates for detailed study."
         },
         "habitable": {
-          "chapter": "Chapter 3",
+          "chapter": "Stop 4",
           "title": "Most Habitable",
           "intro": "If humanity ever finds a second home among the stars, it might be one of these worlds. Our habitability algorithm ranks these planets as the most promising candidates for life as we know it."
         },
         "extreme": {
-          "chapter": "Chapter 4",
+          "chapter": "Stop 5",
           "title": "Extreme Worlds",
           "intro": "These planets push the boundaries of what we thought possible. From scorching hot worlds to gravitational oddballs, they challenge our understanding of planetary formation."
         },
         "records": {
-          "chapter": "Chapter 5",
+          "chapter": "Stop 6",
           "title": "Record Breakers",
           "intro": "The champions of the exoplanet Olympics. These worlds hold the records for being the hottest, coldest, fastest, largest, and most ancient among all known exoplanets."
         }
@@ -702,6 +707,7 @@
       },
       "badges": {
         "famous": "Famous",
+        "famousStar": "Famous Star",
         "nearby": "Nearby",
         "habitable": "Habitable",
         "record": "Record",
@@ -722,6 +728,17 @@
           "kepler16b": "A real-life Tatooine! This circumbinary planet orbits two stars, experiencing double sunsets. It proved that planets can form and survive in binary star systems.",
           "kepler186f": "The first Earth-sized planet discovered in the habitable zone of another star. This milestone world showed that rocky planets the size of Earth exist in regions where life could thrive."
         },
+      "stars": {
+        "proximaCen": "Our nearest stellar neighbor, a red dwarf star just 4.2 light-years away. It hosts at least two planets, including the potentially habitable Proxima b.",
+        "barnardsStar": "A very low-mass red dwarf star about 6 light-years away. It has the largest proper motion of any star, meaning it moves across our sky faster than any other.",
+        "wolf1069": "A red dwarf star located 31 light-years away. It hosts Wolf 1069 b, an Earth-mass planet in the habitable zone, making it a key target for habitability studies.",
+        "trappist1": "This ultra-cool dwarf star hosts seven Earth-sized planets, the largest batch of terrestrial planets ever found around a single star.",
+        "fiftyOnePeg": "A Sun-like star that made history. It hosts 51 Pegasi b, the first exoplanet discovered around a main-sequence star.",
+        "iotDra": "A giant star located 101 light-years away in the constellation Draco. It was the first giant star found to host a planet, Iota Draconis b.",
+        "kepler186": "An M-type dwarf star about 500 light-years away. It's famous for hosting the first Earth-sized planet found in the habitable zone.",
+        "kepler90": "A G-type star that rivals our Sun in family size. It hosts 8 known planets, tying with our Solar System for the most planets around a single star.",
+        "kepler16": "A binary star system consisting of a K-type dwarf and an M-type dwarf. It's the first system found with a circumbinary planet."
+      },
         "nearby": {
           "habitableZone": "At {{distance}} light-years, this {{type}} orbits in its star's habitable zone. Its proximity makes it an excellent target for future observations and potential atmospheric studies.",
           "multiPlanet": "Just {{distance}} light-years away in a system of {{count}} known planets. Being so close to Earth, this system offers unique opportunities for detailed study.",
