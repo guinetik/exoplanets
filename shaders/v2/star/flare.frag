@@ -1,12 +1,13 @@
 /**
  * Solar Flare Fragment Shader
  *
- * Creates a fiery streak effect for solar flares.
+ * Creates a volumetric plasma eruption connected to the star.
+ * Phase represents distance traveled (0 = at star, 1 = far away).
  * Features:
- * - Bright core fading to edges
- * - Color gradient from white-hot to orange/red
- * - Animated turbulence
- * - Lifecycle-based intensity
+ * - Volumetric layered glow appearance
+ * - Connected tendril to star surface
+ * - Turbulent plasma texture with depth
+ * - Color cools as it travels
  */
 
 #include "v2/common/noise.glsl"
@@ -15,67 +16,77 @@
 
 uniform vec3 uStarColor;
 uniform float uTime;
-uniform float uFlarePhase;      // 0 = start, 0.5 = peak, 1 = end
+uniform float uFlarePhase;      // 0 = at star, 1 = far away
 uniform float uFlareSeed;
 
 varying vec2 vUv;
 varying float vPhase;
 
 void main() {
-    // Wrap time for precision
     float wrappedTime = wrapTime(uTime);
 
-    // UV coordinates: x = width (-0.5 to 0.5), y = length (0 = base, 1 = tip)
+    // UV coordinates - center is at 0.5, 0.5
     vec2 uv = vUv - 0.5;
-    float lengthPos = vUv.y;      // 0 at base, 1 at tip
-    float widthPos = abs(uv.x);   // 0 at center, 0.5 at edge
+    float dist = length(uv);
 
-    // === FLARE SHAPE ===
-    // Flare is brightest at center and base, fades toward edges and tip
-    float centerFalloff = 1.0 - smoothstep(0.0, 0.4, widthPos);
-    float tipFalloff = 1.0 - pow(lengthPos, 1.5);
+    // === PHASE-BASED SHAPE TRANSITION ===
+    // Near star (low phase): volumetric with tendril
+    // Far from star (high phase): straight ray/beam of light
 
-    // Combine falloffs
-    float shape = centerFalloff * tipFalloff;
+    // Ray shape - stays wide while forming, thins when escaping
+    float targetThinness = 500.0;  // Final fixed thinness
+    float startThinness = 8.0;     // Wide at start (explosion)
+    // Only start thinning after escape (phase > 0.6)
+    float thinPhase = smoothstep(0.6, 1.0, vPhase);  // 0 until 0.6, then ramps to 1
+    float rayThinness = mix(startThinness, targetThinness, thinPhase);
+    float rayCore = exp(-uv.x * uv.x * rayThinness);       // Converges to same width
+    float rayGlow = exp(-uv.x * uv.x * rayThinness * 0.2); // Subtle glow
 
-    // === TURBULENCE (makes it look like fire) ===
-    vec2 noiseCoord = vec2(
-        uv.x * 5.0 + wrappedTime * 0.5,
-        lengthPos * 3.0 - wrappedTime * 2.0  // Flows outward
-    );
-    float turbulence = snoise2D(noiseCoord + uFlareSeed * 10.0);
-    turbulence = turbulence * 0.5 + 0.5;
+    // Tendril toward star (for when connected)
+    float tendril = exp(-uv.x * uv.x * 15.0) * smoothstep(0.5, -0.3, uv.y);
+    float softGlow = exp(-dist * dist * 8.0);
 
-    // Apply turbulence to shape
-    shape *= 0.7 + turbulence * 0.5;
+    // Light turbulence for organic feel (subtle)
+    vec3 noisePos = vec3(uv * 3.0, wrappedTime * 0.2 + uFlareSeed * 10.0);
+    float turbulence = snoise3D(noisePos) * 0.5 + 0.5;
 
-    // === LIFECYCLE INTENSITY ===
-    // Flare brightens quickly, fades slowly
-    float lifecycle = sin(vPhase * 3.14159);
-    lifecycle = pow(lifecycle, 0.7);  // Asymmetric - faster rise, slower fall
+    // Blend between connected look and traveling ray
+    // Forms on star for 60%, then transitions to ray as it escapes
+    float connectedPhase = 1.0 - smoothstep(0.55, 0.7, vPhase);
+
+    // Connected shape: tendril + soft glow
+    float connectedShape = tendril * 0.8 + softGlow * 0.6;
+    connectedShape *= 0.7 + turbulence * 0.4;
+
+    // Traveling shape: straight ray beam (more subtle)
+    float travelingShape = rayCore * 2.0 + rayGlow * 0.5;
+
+    // Blend based on phase
+    float shape = mix(travelingShape, connectedShape, connectedPhase);
+
+    // === FADE WITH DISTANCE TRAVELED ===
+    // Stays bright most of the journey, quick fade at very end
+    float distanceFade = 1.0 - smoothstep(0.75, 1.0, vPhase);  // Bright until 75%, then fade
+
+    float spawnFade = smoothstep(0.0, 0.08, vPhase);
+    float opacity = distanceFade * spawnFade;
 
     // === COLOR ===
-    vec3 baseColor = uStarColor * 1.5 + vec3(0.3);
+    vec3 baseColor = uStarColor * 1.5 + vec3(0.2);
+    vec3 hotColor = vec3(1.8, 1.6, 1.2);      // White-hot
+    vec3 warmColor = baseColor * vec3(1.3, 0.9, 0.6);
 
-    // Hot white at base, cooling to orange/red at tip
-    vec3 hotColor = vec3(1.5, 1.3, 1.0);  // White-hot
-    vec3 coolColor = baseColor * vec3(1.2, 0.6, 0.3);  // Orange-red
+    // Stays hot/bright, simple color
+    vec3 flareColor = mix(hotColor, warmColor, vPhase * 0.5);
 
-    vec3 flareColor = mix(hotColor, coolColor, lengthPos);
+    // Brighter at ray center
+    flareColor *= 1.0 + rayCore * 2.0;
 
-    // Add some color variation from turbulence
-    flareColor = mix(flareColor, baseColor * vec3(1.4, 0.8, 0.4), turbulence * 0.3);
+    // === CIRCULAR MASK ===
+    float edgeMask = 1.0 - smoothstep(0.35, 0.5, dist);
 
-    // Apply shape and lifecycle
-    float intensity = shape * lifecycle * 2.0;
-    flareColor *= intensity;
-
-    // === ALPHA ===
-    float alpha = shape * lifecycle;
+    float alpha = shape * opacity * edgeMask * 0.7;  // More transparent
     alpha = clamp(alpha, 0.0, 1.0);
-
-    // Fully transparent if phase is 0 or 1
-    alpha *= smoothstep(0.0, 0.1, vPhase) * smoothstep(1.0, 0.9, vPhase);
 
     gl_FragColor = vec4(flareColor, alpha);
 }

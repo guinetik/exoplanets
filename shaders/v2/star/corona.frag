@@ -28,10 +28,10 @@ uniform float uActivityLevel;           // Stellar activity level (0-1)
 // =============================================================================
 
 // --- Flame Intensity ---
-const float FLAME_BASE_INTENSITY = 2.0;             // Base flame brightness
+const float FLAME_BASE_INTENSITY = 1.2;             // Visible corona glow
 
 // --- Flare Structures (seed-based asymmetric) ---
-const float FLARE_BRIGHTNESS = 3.0;                 // Flare intensity (boosted for visibility)
+const float FLARE_BRIGHTNESS = 1.5;                 // Reduced flare intensity
 const float FLARE_TIME_SCALE = 0.4;                 // Flare pulsation speed (5x faster!)
 const int NUM_FLARES = 5;                           // Number of major flare sites
 const float FLARE_RADIAL_SPEED = 0.8;               // How fast flares shoot outward
@@ -59,7 +59,7 @@ const float EDGE_COLOR_SHIFT_GREEN = 0.8;           // Green reduction at edges
 const float EDGE_COLOR_SHIFT_BLUE = 0.5;            // Blue reduction at edges
 
 // --- Alpha/Transparency ---
-const float ALPHA_OUTER = 0.8;                      // Alpha at corona peak
+const float ALPHA_OUTER = 0.6;                      // Higher alpha for visibility
 const float ALPHA_FADE_POWER = 2.0;                 // Fade curve power
 
 // =============================================================================
@@ -96,19 +96,15 @@ void main() {
     float elevation = spherePos.z; // -1 to 1
 
     // === FLAME VISIBILITY ===
-    // Corona mesh is 1.5x star radius. Star surface is at 1/1.5 = 0.667 of corona radius.
-    // Flames should be visible where we're seeing "above" the star surface.
-    // At the visual rim (rimFactor high), we see more flame height.
-    // At the center (rimFactor low), flames are mostly hidden by the star in front.
+    // Pure smooth falloff - NO hard edges or boundaries
+    // rimFactor: 0 at center (facing camera), 1 at silhouette edge
 
-    // Smooth transition - flames fade in as we move toward the rim
-    float flameVisibility = smoothstep(0.15, 0.5, rimFactor);
+    // Gentle density that peaks at mid-rim and fades both ways
+    // No hard cutoffs - everything blends smoothly
+    float density = rimFactor * exp(-rimFactor * 2.0) * 3.0;
 
-    // Additional boost at the very edge (silhouette)
-    float edgeBoost = pow(rimFactor, 2.0);
-
-    // Combine for overall flame mask
-    float flameMask = flameVisibility + edgeBoost * 0.5;
+    // No edge boost - avoid any ring appearance
+    float flameMask = density;
 
     // === FLAME NOISE - determines flame intensity at each point ===
     float flameTime = wrappedTime * NOISE_TIME_SCALE;
@@ -120,11 +116,23 @@ void main() {
         flameTime * 2.0                        // Time animation
     );
 
-    // Flame intensity noise
+    // Primary flame noise layer
     float flameNoise = fbm3D(flameCoord, NOISE_OCTAVES);
-    flameNoise = flameNoise * 0.5 + 0.5; // 0 to 1
+    flameNoise = abs(flameNoise) * 0.6 + 0.4;
 
-    // Second layer of turbulence for detail and motion
+    // Secondary noise layer for more detail (dual noise from starstudy.glsl)
+    vec3 noiseCoord2 = vec3(
+        angle * 4.0 + wrappedTime * 0.1,
+        elevation * 3.0,
+        wrappedTime * 0.08
+    );
+    float flameNoise2 = fbm3D(noiseCoord2, NOISE_OCTAVES);
+    flameNoise2 = abs(flameNoise2) * 0.4 + 0.6;
+
+    // Multiply noise layers for richer detail
+    float combinedNoise = flameNoise * flameNoise2;
+
+    // Turbulence layer for motion
     vec3 turbCoord = vec3(
         angle * 6.0 + wrappedTime * TURBULENCE_TIME_SCALE,
         elevation * 4.0,
@@ -133,13 +141,10 @@ void main() {
     float flameTurbulence = fbm3D(turbCoord, TURBULENCE_OCTAVES);
 
     // === FLAME INTENSITY ===
-    // Base intensity from noise, modulated by rim factor
-    float flameIntensity = flameNoise * (0.5 + flameTurbulence * 0.5);
+    // Base intensity from combined dual noise layers
+    float flameIntensity = combinedNoise * (0.5 + flameTurbulence * 0.5);
     flameIntensity *= flameMask;  // Apply visibility mask
     flameIntensity *= uActivityLevel * 0.7 + 0.3;  // Activity level influence
-
-    // Boost flames at the very edge for dramatic silhouette
-    flameIntensity += edgeBoost * flameNoise * uActivityLevel;
 
     // === SOLAR PROMINENCES (large eruptions shooting outward) ===
     float prominenceTotal = 0.0;

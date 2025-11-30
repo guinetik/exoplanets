@@ -98,7 +98,7 @@ float plasmaNoise(vec3 p, float time) {
 }
 
 // =============================================================================
-// RISING PLASMA CELLS
+// RISING PLASMA CELLS - visible convection bubbles
 // =============================================================================
 
 float risingCells(vec3 p, float time) {
@@ -107,6 +107,56 @@ float risingCells(vec3 p, float time) {
     cells = cells * 0.7 + detail * 0.3;
     float rise = snoise3D(p * CELL_SCALE + vec3(0.0, time * CELL_SPEED * 2.0, 0.0));
     return cells * 0.5 + 0.5 + rise * 0.2;
+}
+
+// =============================================================================
+// BOILING TURBULENCE - fast chaotic movement
+// =============================================================================
+
+float boilingTurbulence(vec3 p, float time) {
+    float turb = 0.0;
+    float amp = 1.0;
+    float freq = 4.0;
+
+    for (int i = 0; i < 4; i++) {
+        vec3 offset = vec3(
+            sin(time * 0.3 + float(i) * 1.7) * 0.5,
+            cos(time * 0.25 + float(i) * 2.3) * 0.5,
+            time * 0.15 * (1.0 + float(i) * 0.3)
+        );
+        turb += amp * abs(snoise3D(p * freq + offset));
+        amp *= 0.5;
+        freq *= 2.1;
+    }
+    return turb;
+}
+
+// =============================================================================
+// HOT BUBBLES - bright spots that appear and pop
+// =============================================================================
+
+float hotBubbles(vec3 p, float time) {
+    // Large slow bubbles
+    vec3 p1 = p * 5.0 + vec3(0.0, time * 0.06, 0.0);
+    float b1 = snoise3D(p1);
+    b1 = smoothstep(0.3, 0.6, b1);
+
+    // Medium bubbles, faster
+    vec3 p2 = p * 9.0 + vec3(time * 0.04, time * 0.08, 0.0);
+    float b2 = snoise3D(p2);
+    b2 = smoothstep(0.35, 0.65, b2);
+
+    // Small rapid bubbles
+    vec3 p3 = p * 16.0 + vec3(time * 0.1, 0.0, time * 0.12);
+    float b3 = snoise3D(p3);
+    b3 = smoothstep(0.4, 0.7, b3);
+
+    float bubbles = b1 * 0.5 + b2 * 0.35 + b3 * 0.15;
+
+    // Pulsing intensity
+    float pulse = sin(time * 2.0 + p.x * 10.0) * 0.3 + 0.7;
+
+    return bubbles * pulse;
 }
 
 // =============================================================================
@@ -148,6 +198,19 @@ void main() {
     sp *= distortStrength;
     r = dot(sp, sp);
     
+    // Fix for pole singularity: when r is very small, add minimum offset
+    // This prevents warpedUV from collapsing to (0,0) which causes black artifact
+    const float POLE_THRESHOLD = 0.0001;
+    if (r < POLE_THRESHOLD) {
+        // At pole: use spherical coordinates with time-based variation
+        // This ensures each pixel gets unique coordinates even at exact pole
+        float poleAngle = angle + time * 0.1;  // Rotate with time for variation
+        float poleElev = elevation;
+        // Create UV from spherical coords, ensuring non-zero values
+        sp = vec2(cos(poleAngle) * 0.1, sin(poleAngle) * 0.1);
+        r = dot(sp, sp);
+    }
+    
     // Distortion factor - creates the bulging effect
     float f = (1.0 - sqrt(abs(1.0 - r))) / (r + 0.001) + brightness * 0.5;
     
@@ -158,6 +221,14 @@ void main() {
     
     // Animate the warped UVs - this creates the flowing effect
     warpedUV += vec2(time * 0.1, 0.0);
+    
+    // Ensure warpedUV is never exactly zero (add tiny offset based on position)
+    // This prevents all noise functions from sampling the same point at pole
+    float minOffset = 0.0001;
+    warpedUV += vec2(
+        spherePos.x * minOffset + spherePos.z * minOffset * 0.5,
+        spherePos.y * minOffset + spherePos.z * minOffset * 0.3
+    );
     
     // ==========================================================================
     // PLASMA TEXTURE using warped coordinates
@@ -184,6 +255,7 @@ void main() {
     plasma = mix(plasma, plasma3 * 0.5 + 0.5, 0.3);
     
     // === OUTWARD FLOWING FLAMES ===
+    // Use rotated coordinates to avoid pole singularity
     vec3 flameCoord = vec3(angle / TAU, elevation / PI, time * 0.1);
     
     float newTime1 = abs(tiledNoise3D(
@@ -238,41 +310,59 @@ void main() {
     }
     
     // Color variants
-    vec3 hotColor = baseColor * vec3(1.5, 1.3, 1.2);
-    hotColor = min(hotColor, vec3(1.8));
-    vec3 coolColor = baseColor * vec3(0.7, 0.4, 0.3);
+    vec3 hotColor = baseColor * vec3(1.6, 1.35, 1.2);
+    hotColor = min(hotColor, vec3(2.0));
+    vec3 coolColor = baseColor * vec3(0.5, 0.3, 0.2);
     vec3 warmColor = baseColor * vec3(1.2, 1.0, 0.85);
+    vec3 blazingColor = baseColor * vec3(2.0, 1.6, 1.3);  // For bubble peaks
     
     // === COMBINE ALL EFFECTS ===
-    
-    // Plasma creates the base boiling texture (DOMINANT)
+
+    // Plasma creates the base boiling texture
     float plasmaIntensity = plasma;
-    
+
     // Flames add streaks
     float flameIntensity = flames * 0.6;
-    
+
     // Cells add larger variation
-    float cellIntensity = cells * CELL_DEPTH;
-    
-    // Combined - plasma is the main visual, flames and cells modulate it
-    float totalIntensity = plasmaIntensity * 0.5 + flameIntensity * 0.35 + cellIntensity * 0.15;
+    float cellIntensity = cells * 0.4;
+
+    // Boiling turbulence - fast chaotic movement
+    float turbIntensity = boilingTurbulence(spherePos, time) * 0.5;
+
+    // Hot bubbles - bright spots that pop
+    float bubbles = hotBubbles(spherePos, time);
+
+    // Combined - more aggressive boiling effect
+    float totalIntensity = plasmaIntensity * 0.35 + flameIntensity * 0.25
+                         + cellIntensity * 0.2 + turbIntensity * 0.2;
+
+    // Add bubbles as bright highlights
+    totalIntensity += bubbles * 0.4;
+
     totalIntensity *= spotDarkening;
     totalIntensity *= 1.0 + pulse * 0.5;
-    
+
     // Raised areas (positive displacement) are hotter/brighter
-    float displacementBoost = vDisplacement * 8.0;  // Amplify the effect
+    float displacementBoost = vDisplacement * 8.0;
     totalIntensity += displacementBoost * 0.5;
-    totalIntensity = clamp(totalIntensity, 0.0, 1.5);
+    totalIntensity = clamp(totalIntensity, 0.0, 1.8);
     
-    // Map intensity to color
+    // Map intensity to color (4-tier system)
     vec3 surfaceColor;
-    if (totalIntensity < 0.4) {
-        surfaceColor = mix(coolColor, warmColor, totalIntensity / 0.4);
-    } else if (totalIntensity < 0.7) {
-        surfaceColor = mix(warmColor, hotColor, (totalIntensity - 0.4) / 0.3);
+    if (totalIntensity < 0.35) {
+        surfaceColor = mix(coolColor, warmColor, totalIntensity / 0.35);
+    } else if (totalIntensity < 0.65) {
+        surfaceColor = mix(warmColor, hotColor, (totalIntensity - 0.35) / 0.3);
+    } else if (totalIntensity < 1.0) {
+        surfaceColor = mix(hotColor, blazingColor, (totalIntensity - 0.65) / 0.35);
     } else {
-        surfaceColor = hotColor * (1.0 + (totalIntensity - 0.7) * COLOR_HOTSPOT_BOOST);
+        surfaceColor = blazingColor * (1.0 + (totalIntensity - 1.0) * 0.8);
     }
+
+    // Bubble highlights - extra bright spots
+    float bubbleHighlight = pow(bubbles, 1.5) * turbIntensity;
+    surfaceColor += blazingColor * bubbleHighlight * 0.6;
     
     // Base glow
     float burnGlow = 0.6 + brightness * 0.4;
@@ -295,9 +385,43 @@ void main() {
     // === HOT STAR BRIGHTNESS ===
     float hotBoost = smoothstep(7000.0, 15000.0, uTemperature) * 0.2;
     surfaceColor += baseColor * hotBoost;
+
+    // === TURBULENT SHIMMER - subtle fast variation ===
+    float shimmer = sin(turbIntensity * 10.0 + time * 3.0) * 0.05 + 1.0;
+    surfaceColor *= shimmer;
+
+    // === ORGANIC RIM GLOW - breaks circular silhouette (from starstudy.glsl) ===
+    float rim = edgeDist;  // Already have edge distance
+
+    // Add noise to rim intensity based on position
+    float rimAngle = atan(vNormal.y, vNormal.x);
+    float rimElev = acos(clamp(vNormal.z, -1.0, 1.0));
     
+    // Fix for pole singularity in rim calculation
+    float rimR = length(vec2(vNormal.x, vNormal.y));
+    if (rimR < 0.01) {
+        // At pole: use time-based variation to ensure unique coordinates
+        rimAngle = time * 0.1;
+        rimElev = abs(vNormal.z) * PI;
+    }
+    float rimNoise = snoise3D(vec3(rimAngle * 3.0, rimElev * 2.0, time * 0.2));
+    rimNoise = rimNoise * 0.5 + 0.5;
+
+    // Flame-like protrusions at the edge
+    float flameRim = tiledNoise3D(vec3(rimAngle / TAU, rimElev / PI, time * 0.15), 12.0);
+    flameRim = abs(flameRim);
+
+    // Combine for organic edge that breaks perfect circle
+    float rimIntensity = pow(rim, 2.5) * (0.4 + rimNoise * 0.6 + flameRim * 0.5);
+    vec3 rimColor = baseColor * vec3(1.3, 0.95, 0.6);
+    surfaceColor += rimColor * rimIntensity * 0.8 * uActivityLevel;
+
+    // Extra bright spots that "pop" out at the edge
+    float hotSpots = pow(rimNoise * flameRim, 2.0);
+    surfaceColor += baseColor * vec3(1.5, 1.1, 0.7) * hotSpots * rim * 0.5 * uActivityLevel;
+
     // === FINAL OUTPUT ===
     surfaceColor = clamp(surfaceColor, 0.0, 2.5);
-    
+
     gl_FragColor = vec4(surfaceColor, 1.0);
 }
