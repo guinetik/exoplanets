@@ -7,6 +7,7 @@ import { useCallback, useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
+import Spinner from '../components/Spinner';
 import { StarSystem } from '../components/StarSystem';
 import type { StellarBody } from '../components/StarSystem/StarSystem';
 import { PlanetaryBodiesPanel } from '../components/StarSystem/PlanetaryBodiesPanel';
@@ -95,16 +96,7 @@ export default function Star() {
   const isBinarySystem = star ? star.sy_snum > 1 : false;
 
   if (isLoading) {
-    return (
-      <div className="spinner-container">
-        <div className="spinner-content">
-          <div className="spinner-orbit">
-            <div className="spinner-planet" />
-          </div>
-          <div className="spinner-text">{t('pages.star.loading')}</div>
-        </div>
-      </div>
-    );
+    return <Spinner message={t('pages.star.loading')} />;
   }
 
   if (!star) {

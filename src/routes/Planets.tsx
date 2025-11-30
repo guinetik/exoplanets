@@ -9,6 +9,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import { PlanetCard } from '../components/PlanetCard';
+import Spinner from '../components/Spinner';
 import type { PlanetType } from '../types';
 
 type SortOption =
@@ -335,14 +336,7 @@ export default function Planets() {
 
   if (isLoading) {
     return (
-      <div className="spinner-container">
-        <div className="spinner-content">
-          <div className="spinner-orbit">
-            <div className="spinner-planet" />
-          </div>
-          <div className="spinner-text">{t('pages.planets.loading')}</div>
-        </div>
-      </div>
+      <Spinner message={t('pages.planets.loading')} />
     );
   }
 

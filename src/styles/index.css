@@ -267,23 +267,6 @@
     position: relative;
   }
 
-  .spinner-orbit {
-    @apply relative w-24 h-24 mx-auto;
-    animation: spin 3s linear infinite;
-  }
-
-  .spinner-orbit::before {
-    content: '';
-    @apply absolute inset-0 rounded-full border border-white/20;
-  }
-
-  .spinner-planet {
-    @apply absolute w-4 h-4 rounded-full bg-white;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-  }
 
   .spinner-text {
     @apply text-xl text-white/70;

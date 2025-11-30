@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { StarCard } from '../components/StarCard';
+import Spinner from '../components/Spinner';
 
 type SortOption = 'name' | 'distance' | 'planets' | 'temperature';
 
@@ -151,16 +152,7 @@ export default function Stars() {
   };
 
   if (isLoading) {
-    return (
-      <div className="spinner-container">
-        <div className="spinner-content">
-          <div className="spinner-orbit">
-            <div className="spinner-planet" />
-          </div>
-          <div className="spinner-text">{t('pages.stars.loading')}</div>
-        </div>
-      </div>
-    );
+    return <Spinner message={t('pages.stars.loading')} />;
   }
 
   if (error) {

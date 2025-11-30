@@ -19,6 +19,7 @@ import {
   RadialVelocitySection,
   TransitSection,
 } from '../components/Planet';
+import Spinner from '../components/Spinner';
 import { TravelTimeCalculator } from '../components/shared';
 import { nameToSlug } from '../utils/urlSlug';
 
@@ -124,12 +125,7 @@ export default function Planet() {
   if (isLoading) {
     return (
       <div className="planet-page">
-        <div className="planet-loading">
-          <div className="spinner-orbit">
-            <div className="spinner-planet" />
-          </div>
-          <p className="spinner-text">{t('pages.planet.loading')}</p>
-        </div>
+        <Spinner message={t('pages.planet.loading')} />
       </div>
     );
   }
