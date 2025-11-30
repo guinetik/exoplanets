@@ -84,8 +84,18 @@ void main() {
     // === RECALCULATE NORMAL ===
     // Approximate new normal by sampling displacement at nearby points
     float eps = 0.01;
-    vec3 tangent1 = normalize(cross(normal, vec3(0.0, 1.0, 0.0)));
-    if (length(tangent1) < 0.1) tangent1 = normalize(cross(normal, vec3(1.0, 0.0, 0.0)));
+    
+    // Robust tangent generation that avoids normalization of zero vectors
+    vec3 t1 = cross(normal, vec3(0.0, 1.0, 0.0));
+    if (length(t1) < 0.001) {
+        // At pole (normal is parallel to Y), try X axis
+        t1 = cross(normal, vec3(1.0, 0.0, 0.0));
+        if (length(t1) < 0.001) {
+            // Should not happen unless normal is zero, but fallback to Z
+            t1 = cross(normal, vec3(0.0, 0.0, 1.0));
+        }
+    }
+    vec3 tangent1 = normalize(t1);
     vec3 tangent2 = normalize(cross(normal, tangent1));
     
     // Sample displacement at offset positions
