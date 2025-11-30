@@ -151,33 +151,146 @@ const PLANET_COLORS: Record<string, string[]> = {
 // HELPER FUNCTIONS
 // =============================================================================
 
-function getStarColor(starClass: string | null): string {
-  if (!starClass) return STELLAR_COLORS.G;
-  const letter = starClass.charAt(0).toUpperCase();
-  return STELLAR_COLORS[letter] || STELLAR_COLORS.G;
+/**
+ * Convert hex color to RGB array
+ */
+function hexToRgb(hex: string): [number, number, number] {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+    : [255, 255, 255];
 }
 
-function getCompanionStarColor(starClass: string | null): string {
+/**
+ * Convert RGB array to hex color
+ */
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  return `#${[r, g, b].map(v => clamp(v).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * Convert RGB to HSL
+ */
+function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return [h, s, l];
+}
+
+/**
+ * Convert HSL to RGB
+ */
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p: number, q: number, t: number) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1/6) return p + (q - p) * 6 * t;
+      if (t < 1/2) return q;
+      if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1/3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1/3);
+  }
+  return [r * 255, g * 255, b * 255];
+}
+
+/**
+ * Generate deterministic random value from seed
+ */
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 12.9898 + seed * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
+ * Generate deterministic seed from star name
+ * Same name always produces same seed
+ */
+function starNameToSeed(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    const char = name.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Add subtle color variation based on seed
+ * Creates unique colors for stars of the same type
+ */
+function addColorVariation(baseHex: string, seed: number): string {
+  const [r, g, b] = hexToRgb(baseHex);
+  const [h, s, l] = rgbToHsl(r, g, b);
+
+  // Generate variation factors from seed
+  const hueShift = (seededRandom(seed) - 0.5) * 0.04;      // ±2% hue shift
+  const satShift = (seededRandom(seed + 1) - 0.5) * 0.15;  // ±7.5% saturation
+  const lumShift = (seededRandom(seed + 2) - 0.5) * 0.08;  // ±4% luminance
+
+  // Apply variations
+  const newH = (h + hueShift + 1) % 1;
+  const newS = Math.max(0, Math.min(1, s + satShift));
+  const newL = Math.max(0, Math.min(1, l + lumShift));
+
+  const [newR, newG, newB] = hslToRgb(newH, newS, newL);
+  return rgbToHex(newR, newG, newB);
+}
+
+function getStarColor(starClass: string | null, seed?: number): string {
+  if (!starClass) return STELLAR_COLORS.G;
+  const letter = starClass.charAt(0).toUpperCase();
+  const baseColor = STELLAR_COLORS[letter] || STELLAR_COLORS.G;
+  return seed !== undefined ? addColorVariation(baseColor, seed) : baseColor;
+}
+
+function getCompanionStarColor(starClass: string | null, seed?: number): string {
   if (!starClass) return COMPANION_STAR_COLORS.K;
   const letter = starClass.charAt(0).toUpperCase();
-  return COMPANION_STAR_COLORS[letter] || COMPANION_STAR_COLORS.K;
+  const baseColor = COMPANION_STAR_COLORS[letter] || COMPANION_STAR_COLORS.K;
+  return seed !== undefined ? addColorVariation(baseColor, seed) : baseColor;
 }
 
 /**
  * Get star color from temperature (for binary.json data)
  */
-function getStarColorFromTemp(temperature: number): string {
+function getStarColorFromTemp(temperature: number, seed?: number): string {
   // Approximate spectral class from temperature
-  if (temperature >= 30000) return STELLAR_COLORS.O;
-  if (temperature >= 10000) return STELLAR_COLORS.B;
-  if (temperature >= 7500) return STELLAR_COLORS.A;
-  if (temperature >= 6000) return STELLAR_COLORS.F;
-  if (temperature >= 5200) return STELLAR_COLORS.G;
-  if (temperature >= 3700) return STELLAR_COLORS.K;
-  if (temperature >= 2400) return STELLAR_COLORS.M;
-  if (temperature >= 1300) return STELLAR_COLORS.L;
-  if (temperature >= 550) return STELLAR_COLORS.T;
-  return STELLAR_COLORS.Y;
+  let baseColor: string;
+  if (temperature >= 30000) baseColor = STELLAR_COLORS.O;
+  else if (temperature >= 10000) baseColor = STELLAR_COLORS.B;
+  else if (temperature >= 7500) baseColor = STELLAR_COLORS.A;
+  else if (temperature >= 6000) baseColor = STELLAR_COLORS.F;
+  else if (temperature >= 5200) baseColor = STELLAR_COLORS.G;
+  else if (temperature >= 3700) baseColor = STELLAR_COLORS.K;
+  else if (temperature >= 2400) baseColor = STELLAR_COLORS.M;
+  else if (temperature >= 1300) baseColor = STELLAR_COLORS.L;
+  else if (temperature >= 550) baseColor = STELLAR_COLORS.T;
+  else baseColor = STELLAR_COLORS.Y;
+
+  return seed !== undefined ? addColorVariation(baseColor, seed) : baseColor;
 }
 
 /**
@@ -741,8 +854,8 @@ export function generateSolarSystem(
       displayName: `${star.hostname} A (Primary)`,
       type: 'star',
       diameter: starADiameter,
-      color: getStarColorFromTemp(starA.temperature),
-      emissive: getStarColorFromTemp(starA.temperature),
+      color: getStarColorFromTemp(starA.temperature, starNameToSeed(star.hostname)),
+      emissive: getStarColorFromTemp(starA.temperature, starNameToSeed(star.hostname)),
       emissiveIntensity: 0.8 + Math.min(starA.luminosity * 0.1, 0.5),
       temperature: starA.temperature,
       spectralType: star.st_spectype ?? star.star_class ?? undefined,
@@ -768,8 +881,8 @@ export function generateSolarSystem(
       displayName: `${star.hostname} B (Companion)`,
       type: 'star',
       diameter: starBDiameter,
-      color: getStarColorFromTemp(starB.temperature),
-      emissive: getStarColorFromTemp(starB.temperature),
+      color: getStarColorFromTemp(starB.temperature, starNameToSeed(`${star.hostname} B`)),
+      emissive: getStarColorFromTemp(starB.temperature, starNameToSeed(`${star.hostname} B`)),
       emissiveIntensity: 0.8 + Math.min(starB.luminosity * 0.1, 0.5),
       temperature: starB.temperature,
       spectralType: companionSpectralType,
@@ -815,8 +928,8 @@ export function generateSolarSystem(
         : star.hostname,
       type: 'star',
       diameter: starDiameter,
-      color: getStarColor(star.star_class),
-      emissive: getStarColor(star.star_class),
+      color: getStarColor(star.star_class, starNameToSeed(star.hostname)),
+      emissive: getStarColor(star.star_class, starNameToSeed(star.hostname)),
       emissiveIntensity: primaryEmissive,
       temperature: star.st_teff ?? 5778,
       spectralType: star.st_spectype ?? star.star_class ?? undefined,
@@ -842,8 +955,8 @@ export function generateSolarSystem(
         displayName: `${star.hostname} B (Companion)`,
         type: 'star',
         diameter: companionDiameter,
-        color: getCompanionStarColor(star.star_class),
-        emissive: getCompanionStarColor(star.star_class),
+        color: getCompanionStarColor(star.star_class, starNameToSeed(`${star.hostname} B`)),
+        emissive: getCompanionStarColor(star.star_class, starNameToSeed(`${star.hostname} B`)),
         emissiveIntensity: companionEmissive,
         temperature: companionTemp,
         spectralType: getSpectralTypeFromTemp(companionTemp),

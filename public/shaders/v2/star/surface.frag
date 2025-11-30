@@ -314,9 +314,11 @@ void main() {
     float cells = risingCells(spherePos, time);
     
     // === SUNSPOTS ===
+    // Hot stars (A-type and above) don't have sunspots - too hot for magnetic structures
+    float spotActivity = smoothstep(8000.0, 5000.0, uTemperature);  // 0 for hot stars, 1 for cool
     float spotNoise = snoise3D(spherePos * 3.0 + vec3(0.0, time * 0.005, 0.0));
     float spotMask = smoothstep(0.55, 0.75, spotNoise);
-    float spotDarkening = 1.0 - spotMask * 0.5;
+    float spotDarkening = 1.0 - spotMask * 0.5 * spotActivity;  // No spots on hot stars
     
     // === COLOR CALCULATION ===
     vec3 baseColor = temperatureToColor(uTemperature);
@@ -328,12 +330,27 @@ void main() {
         baseColor = baseColor / maxComp * 0.85;
     }
     
-    // Color variants
+    // Color variants - adjust for star temperature
+    // Hot stars (A/B/O) should stay blue-white, cool stars (K/M) shift to orange
+    float tempBlend = smoothstep(5000.0, 7500.0, uTemperature);  // 0 for cool, 1 for hot (A-type starts at 7500K)
+
     vec3 hotColor = baseColor * vec3(1.6, 1.35, 1.2);
     hotColor = min(hotColor, vec3(2.0));
-    vec3 coolColor = baseColor * vec3(0.5, 0.3, 0.2);
-    vec3 warmColor = baseColor * vec3(1.2, 1.0, 0.85);
-    vec3 blazingColor = baseColor * vec3(2.0, 1.6, 1.3);  // For bubble peaks
+
+    // Cool color: orange-brown for cool stars, dimmer blue for hot stars
+    vec3 coolColorCool = baseColor * vec3(0.5, 0.3, 0.2);   // Orange-brown for M/K stars
+    vec3 coolColorHot = baseColor * vec3(0.7, 0.8, 0.95);   // Dim blue-white for A/B stars
+    vec3 coolColor = mix(coolColorCool, coolColorHot, tempBlend);
+
+    // Warm color: creamy for cool stars, bright blue-white for hot stars
+    vec3 warmColorCool = baseColor * vec3(1.2, 1.0, 0.85);  // Creamy for M/K
+    vec3 warmColorHot = baseColor * vec3(1.0, 1.05, 1.2);   // Blue-white for A/B
+    vec3 warmColor = mix(warmColorCool, warmColorHot, tempBlend);
+
+    // Blazing: orange for cool, bright white-blue for hot
+    vec3 blazingColorCool = baseColor * vec3(2.0, 1.6, 1.3);
+    vec3 blazingColorHot = baseColor * vec3(1.4, 1.5, 1.8);
+    vec3 blazingColor = mix(blazingColorCool, blazingColorHot, tempBlend);
     
     // === COMBINE ALL EFFECTS ===
 
