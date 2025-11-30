@@ -77,28 +77,19 @@ export function getRingColorProperties(
   }
 
   if (temperature < MATH_CONSTANTS.RING_COLOR_THRESHOLD_WARM) {
-    // Warm (350-600K): Dark rocky/metallic
-    const subType = Math.floor(seed * 2);
-    if (subType === 0) {
-      return {
-        hue: 0.0,
-        saturation: 0.05,
-        lightness: 0.4 + seed * 0.15,
-      };
-    } else {
-      return {
-        hue: 0.05 + variation * 0.5,
-        saturation: 0.45,
-        lightness: 0.45,
-      };
-    }
+    // Warm (350-600K): Rocky/dusty - neutral gray-tan
+    return {
+      hue: 0.1 + variation * 0.1,        // Slight warm tint
+      saturation: 0.08 + seed * 0.08,    // Very low saturation - mostly gray
+      lightness: 0.6 + seed * 0.15,      // Bright enough to see
+    };
   }
 
-  // Hot (> 600K): Silicate/volcanic debris
+  // Hot (> 600K): Silicate debris - slightly warm gray
   return {
-    hue: 0.03 + variation * 0.3,
-    saturation: 0.5 + seed * 0.2,
-    lightness: 0.35 + seed * 0.15,
+    hue: 0.08 + variation * 0.1,
+    saturation: 0.1 + seed * 0.1,        // Low saturation
+    lightness: 0.55 + seed * 0.15,
   };
 }
 

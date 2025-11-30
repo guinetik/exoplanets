@@ -407,6 +407,11 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
         console.log(`  → Selected shader: gasGiant (subtype)`);
         return 'gasGiant';
       case 'Ice Giant':
+        // Hot "Ice Giants" aren't really icy - use subNeptune for warm ones
+        if (temp > 300) {
+          console.log(`  → Selected shader: subNeptune (warm Ice Giant, temp ${temp}K > 300K)`);
+          return 'subNeptune';
+        }
         console.log(`  → Selected shader: iceGiant (subtype)`);
         return 'iceGiant';
       case 'Mini-Neptune':
@@ -444,6 +449,11 @@ export function getV2PlanetShaderType(planet: Exoplanet): V2ShaderType {
       return 'gasGiant';
 
     case 'Neptune-like':
+      // Hot Neptunes aren't icy
+      if (temp > 300) {
+        console.log(`  → Selected shader: subNeptune (warm Neptune-like, temp ${temp}K > 300K)`);
+        return 'subNeptune';
+      }
       console.log(`  → Selected shader: iceGiant (Neptune-like type)`);
       return 'iceGiant';
 
