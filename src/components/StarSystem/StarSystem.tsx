@@ -14,6 +14,7 @@ import { generateSolarSystem, type StellarBody } from '../../utils/solarSystem';
 import { CelestialBody } from './CelestialBody';
 import { OrbitRing } from './OrbitRing';
 import { NebulaBackground } from './NebulaBackground';
+import { useDeviceCapability } from '../../hooks/useDeviceCapability';
 import {
   BACKGROUND_STARS,
   SCENE_LIGHTING,
@@ -300,6 +301,9 @@ export function StarSystem({
   onBodyClick,
   onBackgroundClick,
 }: StarSystemProps) {
+  // Detect device capabilities for performance scaling
+  const { quality: deviceQuality } = useDeviceCapability();
+
   // Ref map to track body positions in real-time
   const bodyPositionsRef = useRef<Map<string, THREE.Vector3>>(new Map());
 
@@ -392,6 +396,7 @@ export function StarSystem({
               systemName={star.hostname}
               density={NEBULA_BACKGROUND.DENSITY}
               radius={NEBULA_BACKGROUND.RADIUS}
+              quality={deviceQuality}
             />
 
             {/* Render all celestial bodies */}

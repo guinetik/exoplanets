@@ -34,18 +34,31 @@ interface NebulaBackgroundProps {
   density?: number;
   /** Sphere radius for the nebula background */
   radius?: number;
+  /** Quality level: 'low' | 'medium' | 'high' - affects performance */
+  quality?: 'low' | 'medium' | 'high';
 }
 
 export function NebulaBackground({
   systemName,
   density = 0.3,
   radius = 400,
+  quality = 'high',
 }: NebulaBackgroundProps) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   // Generate deterministic seed and colors
   const seed = useMemo(() => generateSeed(systemName), [systemName]);
   const colors = useMemo(() => generateNebulaColors(seed), [seed]);
+
+  // Convert quality string to numeric value
+  const qualityValue = useMemo(() => {
+    switch (quality) {
+      case 'low': return 0.0;
+      case 'medium': return 0.5;
+      case 'high': return 1.0;
+      default: return 1.0;
+    }
+  }, [quality]);
 
   // Track fade-in start time
   const fadeStartTime = useRef<number | null>(null);
@@ -60,8 +73,9 @@ export function NebulaBackground({
       uOpacity: { value: 0 }, // Start invisible for fade-in
       uPrimaryColor: { value: colors.primary },
       uSecondaryColor: { value: colors.secondary },
+      uQuality: { value: qualityValue },
     }),
-    [seed, density, colors]
+    [seed, density, colors, qualityValue]
   );
 
   // Animate time and fade-in

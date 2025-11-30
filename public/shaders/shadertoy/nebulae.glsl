@@ -4,8 +4,8 @@
  * @author guinetik
  * @see https://github.com/guinetik
  *
- * Auto-rotates continuously. Drag to temporarily override rotation.
- * Nebula randomizes every 10 seconds.
+ * Cinematic camera: pan + zoom every 4 seconds (like viewing distant space).
+ * Drag mouse to override camera. No 3D travel - just focal length zoom.
  *
  * Features procedural variety:
  * - Main nebula with emission colors
@@ -633,36 +633,73 @@ vec4 distantStorm(vec3 dir, float time, float seed, vec3 stormCenter, float stor
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec2 uv = (fragCoord - 0.5 * iResolution.xy) / min(iResolution.x, iResolution.y);
     
-    // === SEED GENERATION (changes every 10 seconds) ===
-    float seedTime = floor(iTime / 10.0);
+    // === SEED GENERATION (changes every 4 seconds) ===
+    float seedTime = floor(iTime / 4.0);
     float uSeed = seedHash(seedTime);
 
-    // === ROTATION ===
-    float yaw, pitch;
+    // === CINEMATIC CAMERA MOVEMENT ===
+    // Simple pan (where we look) + zoom (focal length), like viewing distant space
 
-    // Random angle offset - constrained to keep nebula in view
-    // Yaw: limited range so we don't spin to empty backside
-    float angleOffset = (seedHash(seedTime + 100.0) - 0.5) * PI * 0.6;  // ±54°
-    // Pitch: small offset to vary the view slightly
-    float pitchOffset = (seedHash(seedTime + 200.0) - 0.5) * 0.4;  // ±~23°
+    // Time within current 4-second segment (0 to 1)
+    float segmentTime = fract(iTime / 4.0);
+    // Smooth easing for gentle movements
+    float eased = segmentTime * segmentTime * (3.0 - 2.0 * segmentTime);
+
+    // Random base angles and zoom for this segment
+    float baseYaw = (seedHash(seedTime + 100.0) - 0.5) * PI * 0.5;
+    float basePitch = (seedHash(seedTime + 200.0) - 0.5) * 0.3;
+    float baseZoom = 0.8 + seedHash(seedTime + 300.0) * 0.4;  // 0.8 to 1.2
+
+    // Random movement style per segment
+    float moveStyle = seedHash(seedTime + 500.0);
+
+    float yaw, pitch, zoom;
 
     if (iMouse.z > 0.0) {
-        // Dragging - use mouse position
+        // Dragging - use mouse position, no zoom animation
         yaw = (iMouse.x / iResolution.x - 0.5) * TAU;
         pitch = (iMouse.y / iResolution.y - 0.5) * PI * 0.8;
+        zoom = 1.0;
     } else {
-        // Auto-rotate from randomized starting angle
-        yaw = angleOffset + iTime * 0.04;
-        pitch = pitchOffset + sin(iTime * 0.025) * 0.2;
+        if (moveStyle < 0.3) {
+            // Style 1: Slow pan with zoom in
+            yaw = baseYaw + eased * 0.08;
+            pitch = basePitch + eased * 0.04;
+            zoom = baseZoom + eased * 0.3;  // Zoom in
+        } else if (moveStyle < 0.5) {
+            // Style 2: Zoom in with minimal pan (focus on subject)
+            yaw = baseYaw + eased * 0.02;
+            pitch = basePitch + eased * 0.02;
+            zoom = baseZoom + eased * 0.5;  // Stronger zoom in
+        } else if (moveStyle < 0.7) {
+            // Style 3: Zoom out / pull back
+            yaw = baseYaw - eased * 0.05;
+            pitch = basePitch - eased * 0.03;
+            zoom = baseZoom + 0.3 - eased * 0.3;  // Zoom out
+        } else if (moveStyle < 0.85) {
+            // Style 4: Pan sideways with slight zoom
+            float panDir = sign(seedHash(seedTime + 600.0) - 0.5);
+            yaw = baseYaw + eased * 0.15 * panDir;
+            pitch = basePitch;
+            zoom = baseZoom + eased * 0.15;
+        } else {
+            // Style 5: Tilt up/down with zoom
+            float tiltDir = sign(seedHash(seedTime + 650.0) - 0.5);
+            yaw = baseYaw;
+            pitch = basePitch + eased * 0.12 * tiltDir;
+            zoom = baseZoom + eased * 0.2;
+        }
     }
-    
+
     // === RAY DIRECTION ===
+    // Zoom works by scaling UV (smaller UV = zoomed in, larger = zoomed out)
+    vec2 zoomedUV = uv / zoom;
     mat3 rot = rotationMatrix(yaw, pitch);
-    vec3 dir = rot * normalize(vec3(uv, 1.0));
-    
+    vec3 dir = rot * normalize(vec3(zoomedUV, 1.0));
+
     float time = mod(iTime * TIME_SCALE, 1000.0);
     float realTime = iTime;
-    
+
     // Seed-based parameters
     float sh1 = seedHash(uSeed);
     float sh2 = seedHash(uSeed + 1.0);
@@ -677,8 +714,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     bool isDramatic = dramaticChance > 0.75;
     float dramaticBoost = isDramatic ? 1.8 : 1.0;
     float colorBoost = isDramatic ? 1.5 : 1.0;
-    
-    // Animated position for main nebula
+
+    // Animated position for main nebula with subtle flow
     vec3 animPos = dir + vec3(
         time * FLOW_SPEED * (sh1 - 0.5),
         time * FLOW_SPEED * 0.5,
@@ -689,11 +726,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec3 finalColor = vec3(0.005, 0.005, 0.008);
     
     // === DISTANT GALAXIES (very far background) ===
+    vec3 galaxyDir = dir;
     // Generate 2-4 distant galaxies based on seed
     int numGalaxies = 2 + int(sh5 * 3.0);
     for (int i = 0; i < 4; i++) {
         if (i >= numGalaxies) break;
-        
+
         float galSeed = seedHash(uSeed + float(i) * 7.0 + 100.0);
         vec3 galCenter = normalize(vec3(
             seedHash(galSeed) - 0.5,
@@ -701,92 +739,95 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
             seedHash(galSeed + 0.2) - 0.5
         ));
         float galSize = 0.03 + seedHash(galSeed + 0.3) * 0.04;
-        
-        finalColor += distantGalaxy(dir, galSeed, galCenter, galSize);
+
+        finalColor += distantGalaxy(galaxyDir, galSeed, galCenter, galSize);
     }
     
     // === STARS (behind everything) ===
+    vec3 starDir = dir;
     float starField = 0.0;
     vec3 starColor = vec3(1.0);
-    
+
     // Bright stars
-    vec3 starPos1 = floor(dir * 180.0);
+    vec3 starPos1 = floor(starDir * 180.0);
     float starHash1 = seedHash(dot(starPos1, vec3(127.1, 311.7, 74.7)) + uSeed);
-    
+
     if (starHash1 > 0.994) {
         vec3 starCenter = (starPos1 + 0.5) / 180.0;
-        float dist = length(dir - normalize(starCenter));
+        float dist = length(starDir - normalize(starCenter));
         float star = exp(-dist * 700.0) * (0.6 + starHash1 * 0.4);
         star = starScintillation(star, starHash1, realTime);
         starField = star;
         starColor = starColorFromTemp(seedHash(starHash1 * 77.7));
     }
-    
+
     // Medium stars
-    vec3 starPos2 = floor(dir * 300.0);
+    vec3 starPos2 = floor(starDir * 300.0);
     float starHash2Val = seedHash(dot(starPos2, vec3(93.1, 157.3, 211.7)) + uSeed * 2.0);
-    
+
     if (starHash2Val > 0.990) {
         vec3 starCenter2 = (starPos2 + 0.5) / 300.0;
-        float dist2 = length(dir - normalize(starCenter2));
+        float dist2 = length(starDir - normalize(starCenter2));
         float star2 = exp(-dist2 * 900.0) * (0.35 + starHash2Val * 0.35);
         if (star2 > starField) {
             starField = star2;
             starColor = starColorFromTemp(seedHash(starHash2Val * 77.7));
         }
     }
-    
+
     // Faint stars
-    vec3 starPos3 = floor(dir * 500.0);
+    vec3 starPos3 = floor(starDir * 500.0);
     float starHash3 = seedHash(dot(starPos3, vec3(41.1, 89.3, 173.7)) + uSeed * 3.0);
     if (starHash3 > 0.982) {
         vec3 starCenter3 = (starPos3 + 0.5) / 500.0;
-        float dist3 = length(dir - normalize(starCenter3));
+        float dist3 = length(starDir - normalize(starCenter3));
         starField = max(starField, exp(-dist3 * 1200.0) * 0.2);
     }
-    
+
     // Very faint stars
-    vec3 starPos4 = floor(dir * 800.0);
+    vec3 starPos4 = floor(starDir * 800.0);
     float starHash4Val = seedHash(dot(starPos4, vec3(17.3, 43.7, 97.1)) + uSeed * 4.0);
     if (starHash4Val > 0.975) {
         vec3 starCenter4 = (starPos4 + 0.5) / 800.0;
-        float dist4 = length(dir - normalize(starCenter4));
+        float dist4 = length(starDir - normalize(starCenter4));
         starField = max(starField, exp(-dist4 * 1800.0) * 0.08);
     }
-    
+
     finalColor += starColor * starField;
     
     // === DISTANT GAS CLOUDS (background, different colors) ===
+    vec3 cloudDir = dir;
     // Generate 3-6 distant clouds
     int numClouds = 3 + int(sh4 * 4.0);
     for (int i = 0; i < 6; i++) {
         if (i >= numClouds) break;
-        
+
         float cloudSeed = seedHash(uSeed + float(i) * 13.0 + 50.0);
-        
+
         // Position on sphere
         vec3 cloudCenter = normalize(vec3(
             seedHash(cloudSeed) - 0.5,
             seedHash(cloudSeed + 0.1) - 0.5,
             seedHash(cloudSeed + 0.2) - 0.5
         ));
-        
+
         float cloudSize = 0.15 + seedHash(cloudSeed + 0.3) * 0.25;
-        
+
         // Color - contrasting with main nebula
         float cloudHue = fract(sh1 + 0.3 + seedHash(cloudSeed + 0.4) * 0.4);
         vec3 cloudColor = nebulaEmissionColor(cloudHue, seedHash(cloudSeed + 0.5));
-        
-        vec4 cloud = distantGasCloud(dir, cloudSeed, cloudCenter, cloudSize, cloudColor);
+
+        vec4 cloud = distantGasCloud(cloudDir, cloudSeed, cloudCenter, cloudSize, cloudColor);
         finalColor = mix(finalColor, finalColor + cloud.rgb, cloud.a);
     }
     
     // === DARK NEBULAE (Bok globules) ===
+    vec3 darkDir = dir;
     float totalDarkness = 0.0;
     int numDark = 2 + int(sh6 * 3.0);
     for (int i = 0; i < 4; i++) {
         if (i >= numDark) break;
-        
+
         float darkSeed = seedHash(uSeed + float(i) * 17.0 + 200.0);
         vec3 darkCenter = normalize(vec3(
             seedHash(darkSeed) - 0.5,
@@ -794,8 +835,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
             seedHash(darkSeed + 0.2) - 0.5
         ));
         float darkSize = 0.05 + seedHash(darkSeed + 0.3) * 0.1;
-        
-        totalDarkness += darkNebula(dir, darkSeed, darkCenter, darkSize);
+
+        totalDarkness += darkNebula(darkDir, darkSeed, darkCenter, darkSize);
     }
     totalDarkness = min(totalDarkness, 1.0);
     
@@ -895,27 +936,28 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     nebulaAlpha = cloudMask * 0.7 * voids;
     
     // === BRIGHT EMISSION KNOTS (within main nebula) ===
+    vec3 knotDir = dir;
     int numKnots = 2 + int(sh3 * 4.0);
     for (int i = 0; i < 5; i++) {
         if (i >= numKnots) break;
-        
+
         float knotSeed = seedHash(uSeed + float(i) * 23.0 + 300.0);
-        
+
         // Position knots within nebula region
         vec3 knotCenter = normalize(vec3(
             (seedHash(knotSeed) - 0.5) * 0.8,
             (seedHash(knotSeed + 0.1) - 0.5) * 0.8,
             0.5 + seedHash(knotSeed + 0.2) * 0.3
         ));
-        
+
         float knotSize = 0.02 + seedHash(knotSeed + 0.3) * 0.03;
-        
+
         // Bright contrasting color
         float knotHue = fract(sh1 + 0.15 + seedHash(knotSeed + 0.4) * 0.2);
         vec3 knotColor = nebulaEmissionColor(knotHue, 0.7);
         knotColor *= 1.5; // Brighter
-        
-        vec4 knot = emissionKnot(dir, knotSeed, knotCenter, knotSize, knotColor);
+
+        vec4 knot = emissionKnot(knotDir, knotSeed, knotCenter, knotSize, knotColor);
         nebulaColor += knot.rgb;
         nebulaAlpha = max(nebulaAlpha, knot.a);
     }
@@ -931,6 +973,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     finalColor *= 1.0 - totalDarkness * 0.85;
 
     // === DISTANT STORMS ===
+    vec3 stormDir = dir;
     // Spawn 4-6 storms at different positions with staggered timings
     int numStorms = 4 + int(sh6 * 3.0);
     for (int i = 0; i < 6; i++) {
@@ -960,7 +1003,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         // Stagger storm timings so they don't all appear at once
         float stormTimeOffset = float(i) * 2.5;
 
-        vec4 storm = distantStorm(dir, realTime + stormTimeOffset, stormSeed, stormCenter, stormSize);
+        vec4 storm = distantStorm(stormDir, realTime + stormTimeOffset, stormSeed, stormCenter, stormSize);
 
         // Additive blending for lightning glow, alpha blend for dust
         finalColor = mix(finalColor, finalColor + storm.rgb, storm.a);
