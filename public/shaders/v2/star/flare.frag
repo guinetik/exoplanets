@@ -31,9 +31,18 @@ void main() {
     float widthPos = abs(uv.x);   // 0 at center, 0.5 at edge
 
     // === FLARE SHAPE ===
-    // Flare is brightest at center and base, fades toward edges and tip
-    float centerFalloff = 1.0 - smoothstep(0.0, 0.4, widthPos);
-    float tipFalloff = 1.0 - pow(lengthPos, 1.5);
+    // Smooth inner/outer fades instead of hard cutoffs (from starstudy.glsl)
+
+    // Center falloff - smooth from center outward
+    float innerFade = smoothstep(0.0, 0.15, 0.5 - widthPos);  // Fade in from center
+    float outerFade = exp(-widthPos * 4.0);  // Exponential fade outward
+
+    // Combine for center falloff
+    float centerFalloff = innerFade * outerFade;
+
+    // Tip falloff - smoother exponential fade toward tip
+    float tipFade = exp(-lengthPos * 2.0);  // Exponential falloff
+    float tipFalloff = tipFade * (1.0 - pow(lengthPos, 2.0));
 
     // Combine falloffs
     float shape = centerFalloff * tipFalloff;

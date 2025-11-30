@@ -18,6 +18,7 @@ import {
   getStarSurfaceShaders,
   getStarCoronaShaders,
   getStarRaysShaders,
+  getStarFlameTonguesShaders,
   generateSeed,
   getStarActivityLevel,
   getRingShaders,
@@ -56,6 +57,7 @@ export function CelestialBody({
   const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<THREE.Mesh>(null);
   const starMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const glowMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const planetMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const orbitAngleRef = useRef(Math.random() * Math.PI * 2); // Random starting position
 
@@ -102,6 +104,18 @@ export function CelestialBody({
       uStarRadius: { value: STAR_RENDERING.RAY_STAR_RADIUS },
     }),
     [body.color, body.temperature, starSeed, activityLevel]
+  );
+
+  // Flame tongues shader uniforms - breaks circular silhouette
+  const flameTonguesMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const flameTonguesUniforms = useMemo(
+    () => ({
+      uStarColor: { value: new THREE.Color(body.color) },
+      uTime: { value: 0 },
+      uSeed: { value: starSeed },
+      uActivityLevel: { value: activityLevel },
+    }),
+    [body.color, starSeed, activityLevel]
   );
 
   // Planet shader uniforms using the factory (detailed mode for full visual quality)
@@ -159,6 +173,7 @@ export function CelestialBody({
   const starShaders = useMemo(() => getStarSurfaceShaders('v2'), []);
   const coronaShaders = useMemo(() => getStarCoronaShaders('v2'), []);
   const raysShaders = useMemo(() => getStarRaysShaders(), []);
+  const flameTonguesShaders = useMemo(() => getStarFlameTonguesShaders(), []);
 
   // Get ring shaders for gas giants
   const ringShaders = useMemo(() => getRingShaders(), []);
@@ -275,11 +290,17 @@ export function CelestialBody({
       if (starMaterialRef.current) {
         starMaterialRef.current.uniforms.uTime.value = time;
       }
+      if (glowMaterialRef.current) {
+        glowMaterialRef.current.uniforms.uTime.value = time;
+      }
       if (coronaMaterialRef.current) {
         coronaMaterialRef.current.uniforms.uTime.value = time;
       }
       if (raysMaterialRef.current) {
         raysMaterialRef.current.uniforms.uTime.value = time;
+      }
+      if (flameTonguesMaterialRef.current) {
+        flameTonguesMaterialRef.current.uniforms.uTime.value = time;
       }
     } else if (body.type === 'planet') {
       if (planetMaterialRef.current) {
@@ -324,17 +345,20 @@ export function CelestialBody({
           distance={body.isCompanionStar ? STAR_RENDERING.COMPANION_LIGHT_DISTANCE : STAR_RENDERING.PRIMARY_LIGHT_DISTANCE}
         />
 
-        {/* Outer glow - billboard always faces camera */}
+        {/* Outer glow - billboard always faces camera, animated */}
         <Billboard>
           <mesh>
             <planeGeometry args={[body.diameter * STAR_RENDERING.GLOW_SIZE_MULTIPLIER, body.diameter * STAR_RENDERING.GLOW_SIZE_MULTIPLIER]} />
             <shaderMaterial
+              ref={glowMaterialRef}
               transparent
               depthWrite={false}
               blending={THREE.AdditiveBlending}
               uniforms={{
                 uColor: { value: new THREE.Color(body.color) },
                 uIntensity: { value: body.emissiveIntensity ?? 1.0 },
+                uTime: { value: 0 },
+                uSeed: { value: starSeed },
               }}
               vertexShader={`
                 varying vec2 vUv;
@@ -346,15 +370,55 @@ export function CelestialBody({
               fragmentShader={`
                 uniform vec3 uColor;
                 uniform float uIntensity;
+                uniform float uTime;
+                uniform float uSeed;
                 varying vec2 vUv;
+
+                // Simple noise for animation
+                float hash(vec2 p) {
+                  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+                }
+
+                float noise(vec2 p) {
+                  vec2 i = floor(p);
+                  vec2 f = fract(p);
+                  f = f * f * (3.0 - 2.0 * f);
+                  float a = hash(i);
+                  float b = hash(i + vec2(1.0, 0.0));
+                  float c = hash(i + vec2(0.0, 1.0));
+                  float d = hash(i + vec2(1.0, 1.0));
+                  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+                }
+
                 void main() {
                   vec2 center = vUv - 0.5;
-                  float dist = length(center) * 2.0;
-                  // Start glow from edge of star (around 0.55 radius in UV space)
-                  float glow = 1.0 - smoothstep(0.55, 1.0, dist);
-                  // Clamp intensity: min 0.7, max 1.8 to prevent huge glows
+                  float dist = length(center);  // 0 to 0.707 at corners
+                  float angle = atan(center.y, center.x);
+
+                  // Hard circular mask - forces circular shape, no box
+                  float circularMask = 1.0 - smoothstep(0.35, 0.5, dist);
+
+                  // Rotating glow with star
+                  float rotAngle = angle + uTime * 0.5;
+
+                  // Animated noise for organic variation
+                  float n1 = noise(vec2(rotAngle * 3.0, dist * 8.0 + uTime * 0.3 + uSeed));
+                  float n2 = noise(vec2(rotAngle * 5.0 + 10.0, dist * 12.0 - uTime * 0.2));
+                  float noiseVal = n1 * 0.6 + n2 * 0.4;
+
+                  // Exponential falloff from center
+                  float glow = exp(-dist * dist * 12.0);
+
+                  // Add noise variation (subtle)
+                  glow *= 0.85 + noiseVal * 0.25;
+
+                  // Pulsing intensity
+                  float pulse = 1.0 + sin(uTime * 0.8 + uSeed * 6.28) * 0.08;
+
+                  // Clamp intensity
                   float clampedIntensity = clamp(uIntensity, 0.7, 1.8);
-                  glow = pow(glow, 2.5) * clampedIntensity * 0.35;
+                  glow = glow * clampedIntensity * 0.7 * pulse * circularMask;
+
                   gl_FragColor = vec4(uColor, glow);
                 }
               `}
@@ -381,6 +445,21 @@ export function CelestialBody({
             vertexShader={shaderService.get(coronaShaders.vert)}
             fragmentShader={shaderService.get(coronaShaders.frag)}
             uniforms={coronaUniforms}
+            transparent
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            side={THREE.FrontSide}
+          />
+        </mesh>
+
+        {/* Flame tongues - visible fire protrusions breaking circular silhouette */}
+        <mesh>
+          <sphereGeometry args={[starRadius * 1.4, 64, 64]} />
+          <shaderMaterial
+            ref={flameTonguesMaterialRef}
+            vertexShader={shaderService.get(flameTonguesShaders.vert)}
+            fragmentShader={shaderService.get(flameTonguesShaders.frag)}
+            uniforms={flameTonguesUniforms}
             transparent
             depthWrite={false}
             blending={THREE.AdditiveBlending}

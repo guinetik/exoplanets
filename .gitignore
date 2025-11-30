@@ -6,6 +6,7 @@ dist/
 *.tsbuildinfo
 *.tsbuildinfo.map
 tsconfig.*.tsbuildinfo
+tsconfig.tsbuildinfo
 vite.config.d.ts
 vite.config.d.ts.map
 

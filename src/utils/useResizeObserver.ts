@@ -27,3 +27,4 @@ function useResizeObserver<T extends HTMLElement>(ref: RefObject<T>): Size {
 }
 
 export default useResizeObserver;
+

@@ -18,7 +18,7 @@
         "description": "You're viewing the night sky from Earth, but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
         "stats": "Over {{starCount}} stellar systems harboring {{planetCount}}+ confirmed worlds",
         "hint": "Click any star to explore its planetary system",
-        "dismiss": "Got it"
+        "dismiss": "Explore"
       }
     },
     "stars": {

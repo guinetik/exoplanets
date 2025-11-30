@@ -591,6 +591,15 @@ export function getStarFlareShaders(): { vert: string; frag: string } {
 }
 
 /**
+ * Get flame tongues shader names (V2 only)
+ * Creates visible fire protrusions that break the circular star silhouette
+ * @returns Object with vert and frag shader names
+ */
+export function getStarFlameTonguesShaders(): { vert: string; frag: string } {
+  return { vert: 'v2StarFlameTonguesVert', frag: 'v2StarFlameTonguesFrag' };
+}
+
+/**
  * Get planetary ring shader names
  * @returns Object with vert and frag shader names
  */

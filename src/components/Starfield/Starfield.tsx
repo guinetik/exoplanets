@@ -40,6 +40,9 @@ function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+// Track if user has explored in this session (persists until refresh)
+let hasUserExplored = false;
+
 function easeInOutBack(t: number): number {
   const c1 = EASING.INOUT_BACK_C1;
   const c2 = c1 * EASING.INOUT_BACK_C2_MULTIPLIER;
@@ -422,8 +425,8 @@ function BackgroundStars({ opacity }: { opacity: number }) {
  */
 function useIntroSequence() {
   const [state, setState] = useState<IntroState>({
-    phase: 'earth-spin',
-    progress: 0,
+    phase: hasUserExplored ? 'complete' : 'earth-spin',
+    progress: hasUserExplored ? 1 : 0,
   });
 
   const phaseStartTime = useRef(Date.now());
@@ -624,7 +627,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
   const [locationName, setLocationName] = useState('São Paulo');
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [isWelcomeCardExiting, setIsWelcomeCardExiting] = useState(false);
-  const welcomeCardDismissed = useRef(false);
+  const welcomeCardDismissed = useRef(hasUserExplored);
 
   const {
     state,
@@ -661,6 +664,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
    * Handle welcome card dismissal with exit animation
    */
   const handleDismissWelcome = useCallback(() => {
+    hasUserExplored = true;
     welcomeCardDismissed.current = true;
     setIsWelcomeCardExiting(true);
     setTimeout(() => {

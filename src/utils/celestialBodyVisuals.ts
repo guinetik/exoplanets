@@ -25,17 +25,17 @@ export const CAMERA_ZOOM = {
  * Star rendering parameters
  */
 export const STAR_RENDERING = {
-  /** Star takes up 12.5% of billboard width (radius) - billboard is 4x diameter */
-  RAY_STAR_RADIUS: 0.125,
+  /** Star takes up ~8% of billboard width (radius) - billboard is 6x diameter */
+  RAY_STAR_RADIUS: 0.08,
 
   /** Billboard size multiplier for outer glow effect */
-  GLOW_SIZE_MULTIPLIER: 1.8,
+  GLOW_SIZE_MULTIPLIER: 3.0,
 
   /** Billboard size multiplier for radiating rays */
-  RAYS_SIZE_MULTIPLIER: 4.0,
+  RAYS_SIZE_MULTIPLIER: 6.0,
 
   /** Corona layer size relative to star radius */
-  CORONA_SCALE_MULTIPLIER: 1.5,
+  CORONA_SCALE_MULTIPLIER: 1.8,
 
   /** Point light intensity for primary star */
   PRIMARY_LIGHT_INTENSITY: 2.0,
