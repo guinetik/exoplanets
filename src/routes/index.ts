@@ -66,7 +66,7 @@ export const routes: RouteConfig[] = [
     path: '/habitability',
     element: Habitability,
     labelKey: 'nav.habitability',
-    showInNav: false, // Now part of Explore dropdown
+    showInNav: true,
   },
   {
     path: '/vote',
@@ -78,7 +78,7 @@ export const routes: RouteConfig[] = [
     path: '/apod',
     element: Apod,
     labelKey: 'nav.apod',
-    showInNav: true,
+    showInNav: false, // Now part of Explore dropdown
   },
   {
     path: '/about',
@@ -97,11 +97,11 @@ export const navItems: NavItem[] = [
     children: [
       { labelKey: 'nav.stars', path: '/stars' },
       { labelKey: 'nav.planets', path: '/planets' },
-      { labelKey: 'nav.habitability', path: '/habitability' },
+      { labelKey: 'nav.apod', path: '/apod' },
     ],
   },
+  { labelKey: 'nav.habitability', path: '/habitability' },
   { labelKey: 'nav.vote', path: '/vote' },
-  { labelKey: 'nav.apod', path: '/apod' },
   { labelKey: 'nav.about', path: '/about' },
 ];
 

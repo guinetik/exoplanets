@@ -814,6 +814,12 @@
         "builtBy": "Desenvolvido por",
         "dataFrom": "Dados de",
         "year": "2024"
+      },
+      "iconCredits": {
+        "title": "Créditos dos Ícones",
+        "intro": "Ícones de espaçonaves usados na visualização de Tempo de Viagem:",
+        "by": "por",
+        "license": "Todos os ícones do Noun Project, licenciados sob CC BY 3.0"
       }
     },
     "habitability": {

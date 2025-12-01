@@ -3855,6 +3855,37 @@
   @apply text-white/60;
 }
 
+.about-icon-credits-intro {
+  @apply text-white/50 text-sm mb-4;
+}
+
+.about-icon-credits {
+  @apply grid grid-cols-1 sm:grid-cols-2 gap-2;
+  @apply text-sm;
+}
+
+.about-icon-credit {
+  @apply flex flex-wrap items-center gap-1;
+  @apply text-white/40;
+}
+
+.about-icon-credit .icon-credit-name {
+  @apply text-white/60;
+}
+
+.about-icon-credit .icon-credit-by {
+  @apply text-white/30;
+}
+
+.about-icon-credit .icon-credit-author {
+  @apply text-cyan-400/70 hover:text-cyan-400;
+  @apply transition-colors;
+}
+
+.about-icon-credits-license {
+  @apply text-white/30 text-xs mt-4 text-center;
+}
+
 /* =============================================================================
    MOBILE OPTIMIZATIONS - Star and Planet Pages
    ============================================================================= */

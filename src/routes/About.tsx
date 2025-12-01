@@ -28,6 +28,20 @@ const TECH_STACK = [
   'Vite',
 ];
 
+// Icon credits from Noun Project (CC BY 3.0)
+const ICON_CREDITS = [
+  { name: 'space voyager', author: 'Muhammad Naufal Subhiansyah', url: 'https://thenounproject.com/browse/icons/term/space-voyager/' },
+  { name: 'Voyager Spacecraft', author: 'Boyan', url: 'https://thenounproject.com/browse/icons/term/voyager-spacecraft/' },
+  { name: 'probe', author: 'PixelBazaar', url: 'https://thenounproject.com/browse/icons/term/probe/' },
+  { name: 'spacecraft', author: 'Roat Studio', url: 'https://thenounproject.com/browse/icons/term/spacecraft/' },
+  { name: 'spacecraft', author: 'Fath Yusuf Iskhaqy', url: 'https://thenounproject.com/browse/icons/term/spacecraft/' },
+  { name: 'space-x', author: 'Stepko Mutko', url: 'https://thenounproject.com/browse/icons/term/space-x/' },
+  { name: 'Falcon Heavy', author: 'Amelia Stefani', url: 'https://thenounproject.com/browse/icons/term/falcon-heavy/' },
+  { name: 'Enterprise', author: 'Jonas Nullens', url: 'https://thenounproject.com/browse/icons/term/enterprise/' },
+  { name: 'solar sail', author: 'CVXF', url: 'https://thenounproject.com/browse/icons/term/solar-sail/' },
+  { name: 'space station', author: 'Smashing Stocks', url: 'https://thenounproject.com/browse/icons/term/space-station/' },
+];
+
 export default function About() {
   const { t } = useTranslation();
 
@@ -148,6 +162,35 @@ export default function About() {
             </span>
           ))}
         </div>
+      </section>
+
+      <div className="about-divider" />
+
+      {/* Icon Credits */}
+      <section className="about-section">
+        <h2 className="about-section-title">{t('pages.about.iconCredits.title')}</h2>
+        <p className="about-icon-credits-intro">
+          {t('pages.about.iconCredits.intro')}
+        </p>
+        <div className="about-icon-credits">
+          {ICON_CREDITS.map((credit, index) => (
+            <div key={index} className="about-icon-credit">
+              <span className="icon-credit-name">{credit.name}</span>
+              <span className="icon-credit-by">{t('pages.about.iconCredits.by')}</span>
+              <a
+                href={credit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="icon-credit-author"
+              >
+                {credit.author}
+              </a>
+            </div>
+          ))}
+        </div>
+        <p className="about-icon-credits-license">
+          {t('pages.about.iconCredits.license')}
+        </p>
       </section>
 
       <div className="about-divider" />

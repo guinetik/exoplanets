@@ -834,6 +834,12 @@
         "builtBy": "Built by",
         "dataFrom": "Data from",
         "year": "2024"
+      },
+      "iconCredits": {
+        "title": "Icon Credits",
+        "intro": "Spacecraft icons used in the Travel Time visualization:",
+        "by": "by",
+        "license": "All icons from Noun Project, licensed under CC BY 3.0"
       }
     },
     "habitability": {
