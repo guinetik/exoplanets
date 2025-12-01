@@ -12,7 +12,7 @@ interface PropertyExplanationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   propertyKey: string;
-  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery' | 'flag';
+  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery' | 'flag' | 'visualization';
 }
 
 export function PropertyExplanationDialog({

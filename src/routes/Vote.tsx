@@ -11,6 +11,8 @@ import { useAuth } from '../context/AuthContext';
 import { pollService } from '../services';
 import { UserPrompt } from '../components/Reviews/UserPrompt';
 import { PlanetThumbnail } from '../components/CelestialBodyThumbnail';
+import SEO from '../components/SEO';
+import { getVoteSEO } from '../utils/seo';
 import Spinner from '../components/Spinner';
 import type { Exoplanet, VoteCount } from '../types';
 import { nameToSlug } from '../utils/urlSlug';
@@ -177,10 +179,14 @@ export default function Vote() {
     );
   }
 
+  const seoData = getVoteSEO();
+
   return (
-    <div className="vote-page">
-      {/* Header */}
-      <header className="vote-header">
+    <>
+      <SEO {...seoData} />
+      <div className="vote-page">
+        {/* Header */}
+        <header className="vote-header">
         <h1 className="vote-title">{t('pages.vote.title')}</h1>
         <p className="vote-subtitle">{t('pages.vote.subtitle')}</p>
         <div className="vote-stats">
@@ -225,7 +231,8 @@ export default function Vote() {
           onClose={handleUserPromptClose}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

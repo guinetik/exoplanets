@@ -10,22 +10,24 @@ import { useData } from '../context/DataContext';
 import { TourSection, TourNavigation, useScrollAnimation } from '../components/Tour';
 import { PlanetCard } from '../components/PlanetCard';
 import { StarCard } from '../components/StarCard';
+import SEO from '../components/SEO';
+import { getTourSEO } from '../utils/seo';
 import { getTourData } from '../utils/tourData';
 
 // Lazy load the 3D background to avoid blocking
 const TourHeroBackground = lazy(() => import('../components/Tour/TourHeroBackground'));
 
-const TOUR_SECTIONS = [
-  { id: 'stars', label: 'Famous Stars' },
-  { id: 'famous', label: 'Famous Worlds' },
-  { id: 'nearest', label: 'Nearest Neighbors' },
-  { id: 'habitable', label: 'Most Habitable' },
-  { id: 'extreme', label: 'Extreme Worlds' },
-  { id: 'records', label: 'Record Breakers' },
-];
-
 export default function Tour() {
   const { t } = useTranslation();
+  
+  const TOUR_SECTIONS = [
+    { id: 'stars', label: t('pages.tour.sections.stars.title') },
+    { id: 'famous', label: t('pages.tour.sections.famous.title') },
+    { id: 'nearest', label: t('pages.tour.sections.nearest.title') },
+    { id: 'habitable', label: t('pages.tour.sections.habitable.title') },
+    { id: 'extreme', label: t('pages.tour.sections.extreme.title') },
+    { id: 'records', label: t('pages.tour.sections.records.title') },
+  ];
   const { getAllPlanets, getAllStars, isLoading } = useData();
 
   const tourData = useMemo(() => {
@@ -49,10 +51,14 @@ export default function Tour() {
     );
   }
 
+  const seoData = getTourSEO();
+
   return (
-    <div className="tour-page">
-      {/* Hero Section */}
-      <header
+    <>
+      <SEO {...seoData} />
+      <div className="tour-page">
+        {/* Hero Section */}
+        <header
         ref={heroRef}
         className={`tour-hero ${heroVisible ? 'visible' : ''}`}
       >
@@ -175,6 +181,7 @@ export default function Tour() {
           {t('pages.tour.footer.cta')}
         </Link>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

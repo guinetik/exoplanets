@@ -5,6 +5,8 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO';
+import { getAboutSEO } from '../utils/seo';
 
 // Timeline data for exoplanet exploration history
 const TIMELINE_ITEMS = [
@@ -48,8 +50,12 @@ export default function About() {
   // Check if image exists, show placeholder if not
   const getImageSrc = (filename: string) => `/images/about/${filename}`;
 
+  const seoData = getAboutSEO();
+
   return (
-    <div className="about-page">
+    <>
+      <SEO {...seoData} />
+      <div className="about-page">
       {/* Hero Section */}
       <section className="about-hero">
         <h1 className="about-hero-title">{t('pages.about.title')}</h1>
@@ -219,6 +225,7 @@ export default function About() {
         </p>
         <p>{t('pages.about.credits.year')}</p>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

@@ -8,12 +8,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import Spinner from '../components/Spinner';
+import SEO from '../components/SEO';
+import { getStarSEO } from '../utils/seo';
 import { StarSystem } from '../components/StarSystem';
 import type { StellarBody } from '../components/StarSystem/StarSystem';
 import { PlanetaryBodiesPanel } from '../components/StarSystem/PlanetaryBodiesPanel';
 import { SystemOverviewModal } from '../components/StarSystem/SystemOverviewModal';
 import { generateSolarSystem } from '../utils/solarSystem';
 import { nameToSlug } from '../utils/urlSlug';
+import { ExplainableProperty } from '../components/shared/ExplainableProperty';
 
 export default function Star() {
   const { t } = useTranslation();
@@ -123,10 +126,14 @@ export default function Star() {
     );
   }
 
+  const seoData = star ? getStarSEO(star) : null;
+
   return (
-    <div className="starsystem-page">
-      {/* Hero Section */}
-      <section className="starsystem-hero-section">
+    <>
+      {seoData && <SEO {...seoData} />}
+      <div className="starsystem-page">
+        {/* Hero Section */}
+        <section className="starsystem-hero-section">
         <div className="starsystem-hero-header">
           <h1 className="starsystem-title">{star.hostname}</h1>
           <p className="starsystem-subtitle">
@@ -141,6 +148,17 @@ export default function Star() {
           >
             {t('pages.starSystem.systemOverview.button')}
           </button>
+        </div>
+        
+        {/* Procedural visualization notice - positioned top left */}
+        <div className="starsystem-procedural-notice">
+          <ExplainableProperty
+            propertyKey="proceduralVisuals"
+            category="visualization"
+            showIcon={true}
+          >
+            {t('pages.starSystem.proceduralNotice')}
+          </ExplainableProperty>
         </div>
 
         {/* Back button */}
@@ -288,6 +306,7 @@ export default function Star() {
           onClose={() => setShowSystemOverview(false)}
         />
       </section>
-    </div>
+      </div>
+    </>
   );
 }

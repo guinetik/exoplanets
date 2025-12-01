@@ -6,6 +6,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
+import SEO from '../components/SEO';
+import { getHabitabilitySEO } from '../utils/seo';
 import Spinner from '../components/Spinner';
 import HabitableGalaxyView from '../components/Habitability/spatial/HabitableGalaxyView';
 import HabitabilityStats from '../components/Habitability/HabitabilityStats';
@@ -81,8 +83,12 @@ export default function Habitability() {
 
   if (!analytics) return null;
 
+  const seoData = getHabitabilitySEO();
+
   return (
-    <div className="habitability-page">
+    <>
+      <SEO {...seoData} />
+      <div className="habitability-page">
       {/* Hero: 3D Galaxy Map */}
       <section className="habitability-hero-section">
         <div className="habitability-hero-header">
@@ -161,6 +167,7 @@ export default function Habitability() {
           </ul>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

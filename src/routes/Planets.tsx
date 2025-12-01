@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { PlanetCard } from '../components/PlanetCard';
+import SEO from '../components/SEO';
+import { getCatalogSEO } from '../utils/seo';
 import Spinner from '../components/Spinner';
 import type { PlanetType } from '../types';
 
@@ -387,9 +389,13 @@ export default function Planets() {
     ultraHotOnly ||
     frozenOnly;
 
+  const seoData = getCatalogSEO('planets');
+
   return (
-    <div className="page-container">
-      <h1 className="page-title">{t('pages.planets.title')}</h1>
+    <>
+      <SEO {...seoData} />
+      <div className="page-container">
+        <h1 className="page-title">{t('pages.planets.title')}</h1>
 
       {/* Controls Panel */}
       <div className="planets-controls">
@@ -619,6 +625,7 @@ export default function Planets() {
           {t('pages.planets.results.noResults')}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

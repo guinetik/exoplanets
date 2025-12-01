@@ -23,6 +23,7 @@
     "i18next": "^23.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
     "react-i18next": "^15.1.0",
     "react-router-dom": "^6.28.0",
     "three": "^0.181.2"

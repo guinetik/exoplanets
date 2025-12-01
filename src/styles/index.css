@@ -654,6 +654,21 @@
     @apply bg-black text-white/70 text-sm;
   }
 
+  .starsystem-procedural-notice {
+    @apply absolute top-4 right-4 z-50;
+    @apply max-w-xs px-3 py-2;
+    @apply bg-black/50 border border-white/20 rounded-lg;
+    @apply backdrop-blur-sm pointer-events-auto;
+    @apply text-xs text-white/60;
+    @apply whitespace-nowrap;
+  }
+
+  .starsystem-procedural-notice .explainable-property {
+    @apply cursor-pointer;
+    @apply text-white/70 hover:text-white/90;
+    @apply whitespace-nowrap;
+  }
+
   .starsystem-back-button {
     @apply absolute top-4 left-4 z-50;
     @apply px-4 py-2 text-sm text-white/70;
@@ -662,8 +677,12 @@
     @apply transition-all backdrop-blur-sm;
   }
 
-  /* Hide back button on mobile to avoid overlapping with title */
+  /* Adjust title position on mobile to avoid overlapping with procedural notice button */
   @media (max-width: 768px) {
+    .starsystem-hero-header {
+      @apply pt-20;
+    }
+    
     .starsystem-back-button {
       display: none;
     }
@@ -1852,7 +1871,7 @@
   /* Explainable Property Wrapper */
   .explainable-property {
     @apply relative inline-flex items-center gap-1;
-    @apply cursor-help transition-all duration-200;
+    @apply cursor-pointer transition-all duration-200;
   }
 
   .explainable-property:hover {

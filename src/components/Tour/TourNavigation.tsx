@@ -4,12 +4,14 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface TourNavigationProps {
   sections: Array<{ id: string; label: string }>;
 }
 
 export default function TourNavigation({ sections }: TourNavigationProps) {
+  const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState<string>('');
 
   useEffect(() => {
@@ -47,14 +49,14 @@ export default function TourNavigation({ sections }: TourNavigationProps) {
   };
 
   return (
-    <nav className="tour-navigation" aria-label="Tour sections">
+    <nav className="tour-navigation" aria-label={t('components.tour.navigation.ariaLabel')}>
       {sections.map(({ id, label }) => (
         <button
           key={id}
           className={`tour-nav-dot ${activeSection === id ? 'active' : ''}`}
           onClick={() => scrollToSection(id)}
           title={label}
-          aria-label={`Jump to ${label}`}
+          aria-label={t('components.tour.navigation.jumpTo', { section: label })}
         />
       ))}
     </nav>

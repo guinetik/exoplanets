@@ -102,6 +102,7 @@
         "unknown": "Unknown"
       },
       "hint": "Drag to rotate • Scroll to zoom • Hover planets for info",
+      "proceduralNotice": "Procedurally Generated Visuals",
       "showBodies": "Show planetary bodies",
       "hideBodies": "Hide planetary bodies",
       "systemOverview": {
@@ -1051,6 +1052,10 @@
       "next": "Next →",
       "finish": "Finish",
       "skip": "Skip Tour",
+      "navigation": {
+        "ariaLabel": "Tour sections",
+        "jumpTo": "Jump to {{section}}"
+      },
       "stars": {
         "proxima": "The nearest star to our Sun at just 4.2 light-years away. Home to Proxima Centauri b, a potentially habitable exoplanet.",
         "trappist": "An ultra-cool red dwarf hosting 7 Earth-sized planets, 3 of which are in the habitable zone. The most promising system for finding life.",
@@ -1470,6 +1475,15 @@
         "description": "A controversial planet's existence is debated or not fully confirmed. This might be due to weak signals, conflicting data, or alternative explanations for observations. These planets require additional follow-up observations.",
         "example": "Some marginal detections or claims requiring confirmation",
         "technicalNote": "Marked in the Exoplanet Archive as controversial or unconfirmed."
+      }
+    },
+    "visualization": {
+      "proceduralVisuals": {
+        "title": "Procedural Visualization System",
+        "description": "The visuals you see are procedurally generated based on real astronomical data from NASA's Exoplanet Archive. These are not actual photographs or artist's impressions, but rather computer-generated visualizations that use scientific data to determine how planets and stars should appear.",
+        "technicalNote": "Planet appearance is determined by planet type (rocky, gas giant, hot Jupiter, etc.), temperature, and density. Planet colors are based on temperature (hot planets appear red/orange, cold planets appear blue/white), composition, and distance from the star. Planet rings show up automatically for gas giant planets. Star appearance is based on spectral type, which determines color and activity level. Star effects like corona, rays, and flares vary based on star type and activity. Orbital motion follows elliptical orbits based on real orbital data. Each celestial body gets a unique seed based on its name, ensuring consistent but varied appearance. Visual detail increases when zooming closer to planets.",
+        "example": "A hot Jupiter close to its star will appear orange-red with visible atmospheric bands, while a cold rocky planet far from its star will appear blue-gray with surface features.",
+        "funFact": "Each planet's appearance is unique but consistent - reloading the page will show the same planet looking the same way, thanks to procedural generation!"
       }
     }
   }

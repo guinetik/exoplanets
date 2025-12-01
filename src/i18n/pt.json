@@ -14,8 +14,8 @@
     "home": {
       "title": "Início",
       "infoCard": {
-        "title": "Bem-vindo ao Cosmos",
-        "description": "Você está vendo o céu noturno da Terra — mas essas não são estrelas comuns. Cada ponto de luz representa uma estrela hospedeira de exoplanetas confirmada pelo arquivo da NASA.",
+        "title": "Bem-vindo ao Exoplanets",
+        "description": "Você está vendo o céu noturno da Terra: mas essas não são estrelas comuns. Cada ponto de luz representa uma estrela hospedeira de exoplanetas confirmada pelo arquivo da NASA.",
         "stats": "Mais de {{starCount}} sistemas estelares abrigando {{planetCount}}+ mundos confirmados",
         "hint": "Clique em qualquer estrela para explorar seu sistema planetário",
         "takeTour": "Fazer o Tour",
@@ -102,6 +102,7 @@
         "unknown": "Desconhecido"
       },
       "hint": "Arraste para girar • Role para zoom • Passe o mouse nos planetas para informações",
+      "proceduralNotice": "Visualizações Geradas Proceduralmente",
       "showBodies": "Mostrar corpos planetários",
       "hideBodies": "Ocultar corpos planetários",
       "systemOverview": {
@@ -141,23 +142,23 @@
           "solarAnalog": "Análogo Solar",
           "solarAnalogDesc": "Mais similar ao nosso Sol em temperatura, massa e luminosidade",
           "sunLike": "Estrela Tipo Solar",
-          "sunLikeDesc": "Classe espectral F, G ou K — estável e longeva",
+          "sunLikeDesc": "Classe espectral F, G ou K: estável e longeva",
           "redDwarf": "Anã Vermelha",
-          "redDwarfDesc": "Estrela classe M — o tipo mais comum na galáxia",
+          "redDwarfDesc": "Estrela classe M: o tipo mais comum na galáxia",
           "youngSystem": "Sistema Jovem",
-          "youngSystemDesc": "Menos de 1 bilhão de anos — ainda na juventude cósmica",
+          "youngSystemDesc": "Menos de 1 bilhão de anos: ainda na juventude cósmica",
           "matureSystem": "Sistema Maduro",
-          "matureSystemDesc": "1-8 bilhões de anos — idade similar ao nosso sistema solar",
+          "matureSystemDesc": "1-8 bilhões de anos: idade similar ao nosso sistema solar",
           "ancientSystem": "Sistema Antigo",
-          "ancientSystemDesc": "Mais de 10 bilhões de anos — mais velho que a maioria das estrelas",
+          "ancientSystemDesc": "Mais de 10 bilhões de anos: mais velho que a maioria das estrelas",
           "metalRich": "Estrela Rica em Metais",
-          "metalRichDesc": "Alto teor de elementos pesados — favorável para formação planetária",
+          "metalRichDesc": "Alto teor de elementos pesados: favorável para formação planetária",
           "metalPoor": "Estrela Pobre em Metais",
-          "metalPoorDesc": "Baixa metalicidade — formada de gás primordial",
+          "metalPoorDesc": "Baixa metalicidade: formada de gás primordial",
           "binarySystem": "Sistema Estelar Binário",
           "binarySystemDesc": "Duas estrelas orbitando uma à outra",
           "circumbinary": "Planetas Circumbinários",
-          "circumbinaryDesc": "Planetas orbitando ambas as estrelas — como Tatooine"
+          "circumbinaryDesc": "Planetas orbitando ambas as estrelas: como Tatooine"
         },
         "habitability": {
           "title": "Habitabilidade do Sistema",
@@ -326,12 +327,12 @@
       },
       "rv": {
         "title": "Detecção por Velocidade Radial",
-        "intro": "O método de velocidade radial revolucionou a astrobiologia ao permitir detectar planetas orbitando estrelas distantes—incluindo mundos potencialmente habitáveis que nunca poderíamos ver diretamente. Esta visualização usa medições reais da estrela hospedeira deste planeta para simular a sutil oscilação estelar que revelou sua existência. Observe como as visualizações sincronizadas mostram como os astrônomos decodificam pequenos desvios Doppler na luz das estrelas para descobrir novos mundos pela galáxia.",
+        "intro": "O método de velocidade radial revolucionou a astrobiologia ao permitir detectar planetas orbitando estrelas distantes incluindo mundos potencialmente habitáveis que nunca poderíamos ver diretamente. Esta visualização usa medições reais da estrela hospedeira deste planeta para simular a sutil oscilação estelar que revelou sua existência. Observe como as visualizações sincronizadas mostram como os astrônomos decodificam pequenos desvios Doppler na luz das estrelas para descobrir novos mundos pela galáxia.",
         "curveTitle": "Velocidade Radial ao Longo do Tempo",
         "xAxisLabel": "Tempo (dias)",
         "yAxisLabel": "Velocidade Radial (m/s)",
         "comparisonTitle": "Comparação de Amplitude RV",
-        "comparisonDescription": "A amplitude RV (semi-amplitude K) indica quanto a estrela oscila devido a cada planeta. Amplitudes maiores significam que o planeta tem uma atração gravitacional mais forte sobre sua estrela—seja porque é mais massivo, orbita mais perto, ou ambos. Planetas com amplitudes abaixo de ~1 m/s são extremamente difíceis de detectar com a tecnologia atual. Este gráfico compara todos os planetas neste sistema para mostrar quais criam a oscilação estelar mais detectável.",
+        "comparisonDescription": "A amplitude RV (semi-amplitude K) indica quanto a estrela oscila devido a cada planeta. Amplitudes maiores significam que o planeta tem uma atração gravitacional mais forte sobre sua estrela, seja porque é mais massivo, orbita mais perto, ou ambos. Planetas com amplitudes abaixo de ~1 m/s são extremamente difíceis de detectar com a tecnologia atual. Este gráfico compara todos os planetas neste sistema para mostrar quais criam a oscilação estelar mais detectável.",
         "detectionThreshold": "Limite de Detecção Moderno (~1 m/s)",
         "dataDisplay": {
           "currentRV": "RV Atual",
@@ -355,7 +356,7 @@
           "dopplerContent": "Assim como uma sirene de ambulância soa mais aguda quando se aproxima e mais grave quando se afasta, a luz de uma estrela muda para comprimentos de onda mais azuis quando se move em nossa direção e mais vermelhos quando se afasta. Os astrônomos medem essas pequenas mudanças de comprimento de onda nas linhas espectrais da estrela para detectar seu movimento.",
           "dopplerImageCaption": "Detecção por velocidade radial: À medida que um planeta orbita, ele faz sua estrela hospedeira oscilar. Este movimento produz um desvio Doppler no espectro da estrela que podemos medir da Terra.",
           "wobbleTitle": "Como Funciona a Oscilação Estelar?",
-          "wobbleContent": "Planetas e suas estrelas hospedeiras orbitam em torno de um centro de massa comum (baricentro). À medida que um planeta orbita, ele puxa a estrela, fazendo com que a estrela 'oscile' para frente e para trás. Planetas maiores ou aqueles mais próximos de suas estrelas causam oscilações mais perceptíveis. Por exemplo, Júpiter faz o nosso Sol oscilar a cerca de 12 m/s, enquanto o efeito da Terra é apenas 0,09 m/s—pequeno demais para detectar com a tecnologia atual.",
+          "wobbleContent": "Planetas e suas estrelas hospedeiras orbitam em torno de um centro de massa comum (baricentro). À medida que um planeta orbita, ele puxa a estrela, fazendo com que a estrela 'oscile' para frente e para trás. Planetas maiores ou aqueles mais próximos de suas estrelas causam oscilações mais perceptíveis. Por exemplo, Júpiter faz o nosso Sol oscilar a cerca de 12 m/s, enquanto o efeito da Terra é apenas 0,09 m/s, pequeno demais para detectar com a tecnologia atual.",
           "discoveryTitle": "A Descoberta de 51 Pegasi (1995)",
           "discoveryContent": "51 Pegasi b foi o primeiro exoplaneta descoberto em torno de uma estrela semelhante ao Sol usando o método de velocidade radial. Sua amplitude RV de ~50 m/s e período orbital de 4,2 dias chocou os astrônomos, revelando um planeta da massa de Júpiter orbitando mais perto de sua estrela do que Mercúrio está do nosso Sol. Esta descoberta introduziu a classe de exoplanetas 'Júpiter Quente' e revolucionou nossa compreensão dos sistemas planetários."
         },
@@ -643,28 +644,33 @@
       "subtitle": "Descubra os exoplanetas mais notáveis já encontrados",
       "scrollHint": "Role para começar",
       "sections": {
+        "stars": {
+          "chapter": "Parada 1",
+          "title": "Estrelas Famosas",
+          "intro": "Todo planeta precisa de um sol. Essas estrelas hospedeiras são tão fascinantes quanto os mundos que nutrem, desde anãs vermelhas ultra-frias até sistemas estelares binários."
+        },
         "famous": {
-          "chapter": "Capítulo 1",
+          "chapter": "Parada 2",
           "title": "Mundos Famosos",
           "intro": "Conheça as celebridades do mundo dos exoplanetas. Esses são os planetas que fizeram manchetes, despertaram nossa imaginação e mudaram como pensamos sobre nosso lugar no cosmos."
         },
         "nearest": {
-          "chapter": "Capítulo 2",
+          "chapter": "Parada 3",
           "title": "Vizinhos Mais Próximos",
           "intro": "Esses mundos estão praticamente ao lado em termos cósmicos. Alguns estão ao alcance de potenciais missões futuras, tornando-os candidatos ideais para estudos detalhados."
         },
         "habitable": {
-          "chapter": "Capítulo 3",
+          "chapter": "Parada 4",
           "title": "Mais Habitáveis",
           "intro": "Se a humanidade encontrar um segundo lar entre as estrelas, pode ser um desses mundos. Nosso algoritmo de habitabilidade classifica esses planetas como os candidatos mais promissores para a vida como a conhecemos."
         },
         "extreme": {
-          "chapter": "Capítulo 4",
+          "chapter": "Parada 5",
           "title": "Mundos Extremos",
           "intro": "Esses planetas desafiam os limites do que pensávamos ser possível. De mundos escaldantes a anomalias gravitacionais, eles desafiam nossa compreensão da formação planetária."
         },
         "records": {
-          "chapter": "Capítulo 5",
+          "chapter": "Parada 6",
           "title": "Recordistas",
           "intro": "Os campeões das Olimpíadas dos exoplanetas. Esses mundos detêm os recordes de mais quente, mais frio, mais rápido, maior e mais antigo entre todos os exoplanetas conhecidos."
         }
@@ -719,7 +725,7 @@
         },
         "extreme": {
           "ultraHot": "Um inferno escaldante a {{temp}}K, quente o suficiente para vaporizar ferro e titânio. Neste mundo ultra-quente, metais chovem do céu e o lado diurno brilha como uma brasa.",
-          "puffy": "Um gigante inflado com densidade de apenas {{density}} g/cm³—menos denso que isopor. Apesar de ser maior que Júpiter, você teoricamente poderia flutuar neste mundo de algodão-doce.",
+          "puffy": "Um gigante inflado com densidade de apenas {{density}} g/cm³, menos denso que isopor. Apesar de ser maior que Júpiter, você teoricamente poderia flutuar neste mundo de algodão-doce.",
           "circumbinary": "Um mundo com dois sóis em seu céu. Este planeta circumbinário orbita um par de estrelas, criando espetaculares nascer e pôr do sol duplos como o fictício Tatooine.",
           "ultraDense": "Um mundo de ferro com incrível densidade de {{density}} g/cm³, mais denso que qualquer planeta do nosso sistema solar. Este mundo compacto provavelmente tem um núcleo metálico massivo.",
           "eccentric": "Uma órbita selvagem com excentricidade de {{ecc}}. Este planeta oscila de aproximações escaldantes a passagens distantes gélidas, experimentando mudanças de temperatura sazonais extremas.",
@@ -732,11 +738,11 @@
           }
         },
         "records": {
-          "hottest": "O exoplaneta mais quente conhecido a {{temp}}K—mais quente que a maioria das estrelas! Sua atmosfera é quente o suficiente para quebrar moléculas em seus átomos componentes.",
+          "hottest": "O exoplaneta mais quente conhecido a {{temp}}K, mais quente que a maioria das estrelas! Sua atmosfera é quente o suficiente para quebrar moléculas em seus átomos componentes.",
           "coldest": "O exoplaneta mais frio conhecido a apenas {{temp}}K ({{tempC}}°C). Um mundo congelado onde até gases como metano e nitrogênio congelariam sólidos.",
           "fastest": "Um ano dura apenas {{period}} neste velocista! Ele orbita tão perto de sua estrela que as temperaturas da superfície vaporizariam rochas.",
           "largest": "O maior exoplaneta conhecido com {{radius}} vezes o raio de Júpiter. Este gigante inflado é tão expandido pela radiação estelar que desafia os limites da física planetária.",
-          "smallest": "O menor exoplaneta confirmado com {{radius}} raios terrestres—menor que nossa Lua. Encontrar mundos tão pequenos mostra o quanto nossos métodos de detecção avançaram.",
+          "smallest": "O menor exoplaneta confirmado com {{radius}} raios terrestres, menor que nossa Lua. Encontrar mundos tão pequenos mostra o quanto nossos métodos de detecção avançaram.",
           "oldest": "Com {{age}} bilhões de anos, este sistema antigo se formou quando o universo era jovem. Se a vida surgiu aqui, teve bilhões de anos a mais que a Terra para evoluir.",
           "labels": {
             "hottest": "Mais Quente",
@@ -783,7 +789,7 @@
       },
       "project": {
         "title": "Evolução do Projeto",
-        "author_message": "Saudações, Viajantes! Guinetik aqui 👩‍🚀, seu guia para as estrelas e além. Sou engenheiro de software e entusiasta do espaço, e este projeto é um trabalho feito com carinho. Tudo começou como uma forma de aprender Firebase — pensei, por que não usar o banco de dados de exoplanetas da NASA para criar um TripAdvisor das estrelas, onde futuros viajantes espaciais poderiam deixar avaliações sobre os planetas que visitam? Começamos com dados do TESS e um catálogo simples. Depois quis aprender Three.js, então dei uma repaginada completa neste projeto antigo — adicionando planetas 3D procedurais, shaders customizados, pontuação de habitabilidade e muito mais. Bem-vindos a bordo!",
+        "author_message": "Saudações, Viajantes! Guinetik aqui 👩‍🚀, seu guia para as estrelas e além. Sou engenheiro de software e entusiasta do espaço, e este projeto é um trabalho feito com carinho. Tudo começou como uma forma de aprender Firebase: pensei, por que não usar o banco de dados de exoplanetas da NASA para criar um TripAdvisor das estrelas, onde futuros viajantes espaciais poderiam deixar avaliações sobre os planetas que visitam? Começamos com dados do TESS e um catálogo simples. Depois quis aprender Three.js, então dei uma repaginada completa neste projeto antigo: adicionando planetas 3D procedurais, shaders customizados, pontuação de habitabilidade e muito mais. Bem-vindos a bordo!",
         "legacy": {
           "name": "TESS Explorer (2022)",
           "features": [
@@ -1031,6 +1037,10 @@
       "next": "Próximo →",
       "finish": "Finalizar",
       "skip": "Pular Tour",
+      "navigation": {
+        "ariaLabel": "Seções do tour",
+        "jumpTo": "Ir para {{section}}"
+      },
       "stars": {
         "proxima": "A estrela mais próxima do nosso Sol, a apenas 4,2 anos-luz. Lar de Proxima Centauri b, um exoplaneta potencialmente habitável.",
         "trappist": "Uma anã vermelha ultrafria hospedando 7 planetas do tamanho da Terra, 3 dos quais estão na zona habitável. O sistema mais promissor para encontrar vida.",
@@ -1042,7 +1052,7 @@
     "planet": {
       "radius": {
         "title": "Raio do Planeta",
-        "description": "O raio de um planeta nos diz o quão grande ele é comparado à Terra. Os raios dos planetas variam de menor que Mercúrio (0,4 raios terrestres) até maior que Júpiter (11 raios terrestres). O raio de um planeta, combinado com sua massa, nos ajuda a determinar sua composição—se é um mundo rochoso como a Terra ou um gigante gasoso como Júpiter.",
+        "description": "O raio de um planeta nos diz o quão grande ele é comparado à Terra. Os raios dos planetas variam de menor que Mercúrio (0,4 raios terrestres) até maior que Júpiter (11 raios terrestres). O raio de um planeta, combinado com sua massa, nos ajuda a determinar sua composição; se é um mundo rochoso como a Terra ou um gigante gasoso como Júpiter.",
         "example": "Júpiter tem raio de 11,2 raios terrestres, tornando-o o maior planeta do nosso sistema solar. Os Júpiteres quentes podem ser ainda maiores devido ao inchaço atmosférico causado pelo calor intenso de suas estrelas.",
         "technicalNote": "Medido em raios terrestres (R⊕). As observações de trânsito fornecem as medições mais precisas de raio.",
         "funFact": "Alguns exoplanetas 'inchados' têm menor densidade que poliestireno devido ao aquecimento extremo de suas estrelas próximas!"
@@ -1067,7 +1077,7 @@
       },
       "orbitalPeriod": {
         "title": "Período Orbital",
-        "description": "O período orbital é quanto tempo um planeta leva para completar uma órbita ao redor de sua estrela—essencialmente, o comprimento de seu ano. O período da Terra é 365,25 dias. Alguns exoplanetas orbitam em meras horas, enquanto outros levam milhares de anos.",
+        "description": "O período orbital é quanto tempo um planeta leva para completar uma órbita ao redor de sua estrela. Essencialmente, o comprimento de seu ano. O período da Terra é 365,25 dias. Alguns exoplanetas orbitam em meras horas, enquanto outros levam milhares de anos.",
         "example": "Mercúrio: 88 dias, Terra: 365 dias, Júpiter quente: 1-10 dias, Planeta distante: 1.000+ dias",
         "technicalNote": "Medido em dias terrestres. Derivado de observações repetidas de trânsito ou velocidade radial.",
         "funFact": "Alguns planetas de 'período ultra-curto' orbitam suas estrelas mais rápido do que a Terra gira!"
@@ -1087,7 +1097,7 @@
       },
       "hostStar": {
         "title": "Estrela Hospedeira",
-        "description": "A estrela hospedeira é a estrela que o planeta orbita. As propriedades da estrela hospedeira—seu tamanho, temperatura e idade—afetam dramaticamente o clima do planeta e sua potencial habitabilidade. O nome da estrela frequentemente se torna parte do nome do planeta.",
+        "description": "A estrela hospedeira é a estrela que o planeta orbita. As propriedades da estrela hospedeira, seu tamanho, temperatura e idade afetam dramaticamente o clima do planeta e sua potencial habitabilidade. O nome da estrela frequentemente se torna parte do nome do planeta.",
         "example": "Nosso Sol hospeda a Terra, TRAPPIST-1 hospeda 7 planetas do tamanho terrestre, Proxima Centauri hospeda Proxima Centauri b",
         "technicalNote": "Do campo hostname do Exoplanet Archive."
       }
@@ -1095,7 +1105,7 @@
     "star": {
       "starTemperature": {
         "title": "Temperatura da Estrela",
-        "description": "A temperatura da superfície de uma estrela determina sua cor e o tipo de luz que emite. Anãs vermelhas mais frias queimam a 2.500-3.500 K, enquanto nosso Sol é 5.778 K, e estrelas azuis quentes excedem 30.000 K. A temperatura estelar afeta diretamente a zona habitável—a região onde planetas poderiam ter água líquida.",
+        "description": "A temperatura da superfície de uma estrela determina sua cor e o tipo de luz que emite. Anãs vermelhas mais frias queimam a 2.500-3.500 K, enquanto nosso Sol é 5.778 K, e estrelas azuis quentes excedem 30.000 K. A temperatura estelar afeta diretamente a zona habitável; a região onde planetas poderiam ter água líquida.",
         "example": "Anã vermelha (tipo M): 3.000 K (brilho vermelho), Sol (tipo G): 5.778 K (amarelo), Estrela azul quente (tipo O): 40.000 K",
         "technicalNote": "Medido em Kelvin (K). Determinado a partir de análise espectral.",
         "funFact": "Anãs vermelhas são as estrelas mais comuns na galáxia e podem queimar por trilhões de anos!"
@@ -1180,7 +1190,7 @@
     "orbital": {
       "semiMajorAxis": {
         "title": "Semi-Eixo Maior",
-        "description": "O semi-eixo maior é a distância média de um planeta para sua estrela. É medido em unidades astronômicas (AU)—a distância da Terra ao Sol. Esta distância determina quanta energia o planeta recebe e se está na zona habitável.",
+        "description": "O semi-eixo maior é a distância média de um planeta para sua estrela. É medido em unidades astronômicas (AU) a distância da Terra ao Sol. Esta distância determina quanta energia o planeta recebe e se está na zona habitável.",
         "example": "Mercúrio: 0,39 AU, Terra: 1,0 AU, Marte: 1,52 AU, Júpiter: 5,2 AU",
         "technicalNote": "Medido em AU. Para órbitas circulares, é o raio orbital; para órbitas elípticas, é a média."
       },
@@ -1246,14 +1256,14 @@
     "flag": {
       "habitableZone": {
         "title": "Zona Habitável",
-        "description": "A zona habitável (ou 'zona de Goldilocks') é a região ao redor de uma estrela onde as temperaturas permitem que água líquida exista na superfície de um planeta—nem muito quente, nem muito fria. Para nosso Sol, esta zona se estende de aproximadamente a órbita de Vênus até a órbita de Marte. Estar na zona habitável não garante vida, mas é um sinal promissor.",
+        "description": "A zona habitável (ou 'zona de Goldilocks') é a região ao redor de uma estrela onde as temperaturas permitem que água líquida exista na superfície de um planeta: nem muito quente, nem muito fria. Para nosso Sol, esta zona se estende de aproximadamente a órbita de Vênus até a órbita de Marte. Estar na zona habitável não garante vida, mas é um sinal promissor.",
         "example": "Zona habitável do Sol: 0,95-1,67 AU, Anã vermelha: 0,1-0,3 AU (muito mais próximo), Estrela quente: 2-10 AU (muito mais longe)",
         "technicalNote": "Os limites dependem da luminosidade estelar e modelos atmosféricos.",
         "funFact": "A Terra está bem no meio da zona habitável do Sol, às vezes chamada de 'distância perfeita'!"
       },
       "earthLike": {
         "title": "Semelhante à Terra",
-        "description": "Um planeta 'semelhante à Terra' é aquele que compartilha similaridades significativas com a Terra. Isso tipicamente significa que é um planeta rochoso na zona habitável de uma estrela semelhante ao Sol. No entanto, ser semelhante à Terra não significa que seja realmente habitável—apenas tem condições similares às da Terra.",
+        "description": "Um planeta 'semelhante à Terra' é aquele que compartilha similaridades significativas com a Terra. Isso tipicamente significa que é um planeta rochoso na zona habitável de uma estrela semelhante ao Sol. No entanto, ser semelhante à Terra não significa que seja realmente habitável; apenas tem condições similares às da Terra.",
         "example": "Proxima Centauri b é um dos exoplanetas semelhantes à Terra mais próximos, embora orbite uma anã vermelha.",
         "technicalNote": "Definição varia por fonte. Este aplicativo usa raio (0,8-1,25 R⊕), localização zona habitável e composição rochosa.",
         "funFact": "Apenas alguns duzias de exoplanetas confirmados são considerados semelhantes à Terra baseado em critérios atuais!"
@@ -1278,7 +1288,7 @@
       },
       "hotJupiter": {
         "title": "Júpiter Quente",
-        "description": "Um Júpiter quente é um planeta gigante gasoso orbitando muito próximo de sua estrela—muito mais próximo que Mercúrio orbita o Sol. Isto foi surpreendente quando primeiro descoberto porque os gigantes gasosos do nosso sistema solar são distantes. Júpiteres quentes são fáceis de detectar via método de trânsito porque são grandes e frequentemente eclipsam suas estrelas.",
+        "description": "Um Júpiter quente é um planeta gigante gasoso orbitando muito próximo de sua estrela muito mais próximo que Mercúrio orbita o Sol. Isto foi surpreendente quando primeiro descoberto porque os gigantes gasosos do nosso sistema solar são distantes. Júpiteres quentes são fáceis de detectar via método de trânsito porque são grandes e frequentemente eclipsam suas estrelas.",
         "example": "51 Pegasi b, WASP-12b, HD 209458b",
         "technicalNote": "Tipicamente definido como planetas massa-de-Júpiter com períodos orbitais < 10 dias."
       },
@@ -1308,7 +1318,7 @@
       },
       "puffy": {
         "title": "Planeta Inchado",
-        "description": "Um planeta inchado é surpreendentemente grande para sua massa—tem densidade inferior ao esperado. Estes planetas podem ter atmosferas espessas de hidrogênio/hélio ou ser aquecidos tão intensamente por suas estrelas que suas atmosferas se incham. Alguns são tão leves que flutariam em água!",
+        "description": "Um planeta inchado é surpreendentemente grande para sua massa, tem densidade inferior ao esperado. Estes planetas podem ter atmosferas espessas de hidrogênio/hélio ou ser aquecidos tão intensamente por suas estrelas que suas atmosferas se incham. Alguns são tão leves que flutariam em água!",
         "example": "WASP-17b, HAT-P-18b, alguns Júpiteres quentes",
         "technicalNote": "Definido por baixa densidade relativamente ao tamanho. Densidade < 0,5 g/cm³ (menos denso que água)."
       },
@@ -1350,13 +1360,13 @@
       },
       "tidallyLocked": {
         "title": "Provável Bloqueado por Maré",
-        "description": "Um planeta bloqueado por maré sempre mostra a mesma face para sua estrela—um lado perpetuamente enfrenta a estrela enquanto o outro enfrenta afastado. Isto acontece para planetas muito próximos de suas estrelas. O lado do dia é extremamente quente enquanto o lado da noite é freezer-cold.",
+        "description": "Um planeta bloqueado por maré sempre mostra a mesma face para sua estrela: um lado perpetuamente enfrenta a estrela enquanto o outro enfrenta afastado. Isto acontece para planetas muito próximos de suas estrelas. O lado do dia é extremamente quente enquanto o lado da noite é freezer-cold.",
         "example": "A maioria dos Júpiteres quentes, muitos planetas ultra-quentes, planetas semelhantes a Mercúrio próximos",
         "technicalNote": "Provável se período orbital e semi-eixo maior sugerem que bloqueio por maré está completo."
       },
       "circumbinary": {
         "title": "Circumbinária",
-        "description": "Um planeta circumbinária orbita dois sóis em vez de um. Estes são raros e fascinantes—planetas devem orbitar longe o bastante para evitar destabilizar interações com o par binário. Têm dinâmicas mais complexas mas poderiam potencialmente ter dois sóis em seu céu.",
+        "description": "Um planeta circumbinária orbita dois sóis em vez de um. Estes são raros e fascinantes. Planetas devem orbitar longe o bastante para evitar destabilizar interações com o par binário. Têm dinâmicas mais complexas mas poderiam potencialmente ter dois sóis em seu céu.",
         "example": "Kepler-16b, Kepler-34b, Kepler-35b",
         "technicalNote": "Sóis binários com planetas orbitando ambos. Requer cálculos orbitais cuidadosos."
       },
@@ -1392,7 +1402,7 @@
       },
       "solarAnalog": {
         "title": "Análogo Solar",
-        "description": "Um análogo solar é uma estrela muito similar ao nosso Sol—mesma temperatura, tamanho, massa e idade. Planetas orbitando análogos solares são especialmente interessantes porque podemos comparar seus sistemas com o nosso. Encontrar análogos da Terra ao redor de análogos solares é um objetivo principal.",
+        "description": "Um análogo solar é uma estrela muito similar ao nosso Sol; mesma temperatura, tamanho, massa e idade. Planetas orbitando análogos solares são especialmente interessantes porque podemos comparar seus sistemas com o nosso. Encontrar análogos da Terra ao redor de análogos solares é um objetivo principal.",
         "example": "Estrelas semelhantes ao Sol com Teff, raio e idade similares a nosso Sol de 4,6 bilhões de anos",
         "technicalNote": "Definido por parâmetros estelares similares ao Sol."
       },
@@ -1404,13 +1414,13 @@
       },
       "youngSystem": {
         "title": "Sistema Jovem",
-        "description": "Um sistema jovem tem idade < 500 milhões de anos ou assim. Sistemas planetários jovens ainda estão se formando e evoluindo—planetas podem estar migrando, e poeira e detritos residuais são comuns. Estes sistemas ajudam-nos a entender a formação planetária.",
+        "description": "Um sistema jovem tem idade < 500 milhões de anos ou assim. Sistemas planetários jovens ainda estão se formando e evoluindo, planetas podem estar migrando, e poeira e detritos residuais são comuns. Estes sistemas ajudam-nos a entender a formação planetária.",
         "example": "Sistemas ao redor de estrelas jovens em regiões de formação estelar",
         "technicalNote": "Idade < ~500-1000 milhões de anos."
       },
       "ancientSystem": {
         "title": "Sistema Antigo",
-        "description": "Um sistema antigo tem idade > 10 bilhões de anos—é mais antigo que nosso sistema solar. Sistemas antigos são estáveis e assentados. Encontrar planetas ao redor de estrelas antigas nos diz sobre a estabilidade do sistema a longo prazo.",
+        "description": "Um sistema antigo tem idade > 10 bilhões de anos,é mais antigo que nosso sistema solar. Sistemas antigos são estáveis e assentados. Encontrar planetas ao redor de estrelas antigas nos diz sobre a estabilidade do sistema a longo prazo.",
         "example": "Alguns sistemas com estrelas tipo M ou em aglomerados globulares",
         "technicalNote": "Idade > ~10 bilhões de anos."
       },
@@ -1450,6 +1460,15 @@
         "description": "A existência de um planeta controverso é debatida ou não completamente confirmada. Isto pode ser devido a sinais fracos, dados conflitantes, ou explicações alternativas para observações. Estes planetas requerem observações de acompanhamento adicionais.",
         "example": "Algumas detecções marginais ou reivindicações requerendo confirmação",
         "technicalNote": "Marcado no Exoplanet Archive como controverso ou não confirmado."
+      }
+    },
+    "visualization": {
+      "proceduralVisuals": {
+        "title": "Sistema de Visualização Procedural",
+        "description": "As visualizações que você vê são geradas proceduralmente com base em dados astronômicos reais do Exoplanet Archive da NASA. Estas não são fotografias reais ou impressões artísticas, mas sim visualizações geradas por computador que usam dados científicos para determinar como planetas e estrelas devem aparecer.",
+        "technicalNote": "A aparência do planeta é determinada pelo tipo de planeta (rochoso, gigante gasoso, Júpiter quente, etc.), temperatura e densidade. As cores dos planetas são baseadas na temperatura (planetas quentes aparecem vermelho/laranja, planetas frios aparecem azul/branco), composição e distância da estrela. Os anéis dos planetas aparecem automaticamente para planetas gigantes gasosos. A aparência da estrela é baseada no tipo espectral, que determina a cor e o nível de atividade. Efeitos estelares como corona, raios e erupções variam com base no tipo e atividade da estrela. O movimento orbital segue órbitas elípticas com base em dados orbitais reais. Cada corpo celeste recebe uma semente única baseada em seu nome, garantindo aparência consistente mas variada. O detalhe visual aumenta ao aproximar-se dos planetas.",
+        "example": "Um Júpiter quente próximo à sua estrela aparecerá laranja-avermelhado com bandas atmosféricas visíveis, enquanto um planeta rochoso frio longe de sua estrela aparecerá azul-acinzentado com características de superfície.",
+        "funFact": "A aparência de cada planeta é única mas consistente - recarregar a página mostrará o mesmo planeta com a mesma aparência, graças à geração procedural!"
       }
     }
   }

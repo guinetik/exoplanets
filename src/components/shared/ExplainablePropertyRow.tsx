@@ -8,7 +8,7 @@ import { ExplainableProperty } from './ExplainableProperty';
 
 interface ExplainablePropertyRowProps {
   propertyKey: string;
-  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery';
+  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery' | 'visualization';
   label: string;
   value: string;
   earthRef?: {

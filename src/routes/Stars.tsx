@@ -10,6 +10,8 @@ import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { StarCard } from '../components/StarCard';
+import SEO from '../components/SEO';
+import { getCatalogSEO } from '../utils/seo';
 import Spinner from '../components/Spinner';
 
 type SortOption = 'name' | 'distance' | 'planets' | 'temperature';
@@ -184,9 +186,13 @@ export default function Stars() {
     );
   }
 
+  const seoData = getCatalogSEO('stars');
+
   return (
-    <div className="page-container">
-      <h1 className="page-title">{t('pages.stars.title')}</h1>
+    <>
+      <SEO {...seoData} />
+      <div className="page-container">
+        <h1 className="page-title">{t('pages.stars.title')}</h1>
 
       {/* Controls Panel */}
       <div className="stars-controls">
@@ -348,6 +354,7 @@ export default function Stars() {
           {t('pages.stars.results.noResults')}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

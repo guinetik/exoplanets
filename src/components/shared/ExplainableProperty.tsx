@@ -8,7 +8,7 @@ import { PropertyExplanationDialog } from './PropertyExplanationDialog';
 
 interface ExplainablePropertyProps {
   propertyKey: string;
-  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery' | 'flag';
+  category: 'planet' | 'star' | 'orbital' | 'detection' | 'discovery' | 'flag' | 'visualization';
   children: ReactNode;
   className?: string;
   showIcon?: boolean;

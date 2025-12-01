@@ -19,6 +19,8 @@ import {
   RadialVelocitySection,
   TransitSection,
 } from '../components/Planet';
+import SEO from '../components/SEO';
+import { getPlanetSEO } from '../utils/seo';
 import Spinner from '../components/Spinner';
 import { TravelTimeCalculator } from '../components/shared';
 import { nameToSlug } from '../utils/urlSlug';
@@ -145,15 +147,19 @@ export default function Planet() {
     );
   }
 
+  const seoData = planet ? getPlanetSEO(planet) : null;
+
   return (
-    <div className="planet-page">
-      {/* Back button */}
-      <button
-        className="planet-back-button"
-        onClick={() => navigate(-1)}
-      >
-        {t('pages.planet.back')}
-      </button>
+    <>
+      {seoData && <SEO {...seoData} />}
+      <div className="planet-page">
+        {/* Back button */}
+        <button
+          className="planet-back-button"
+          onClick={() => navigate(-1)}
+        >
+          {t('pages.planet.back')}
+        </button>
 
       {/* Top: 3D Planet visualization */}
       <div className="planet-hero">
@@ -270,6 +276,7 @@ export default function Planet() {
           </PlanetSection>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -6,6 +6,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apodService } from '../services';
+import SEO from '../components/SEO';
+import { getAPODSEO } from '../utils/seo';
 import type { ApodData } from '../types';
 
 /**
@@ -144,9 +146,13 @@ export default function Apod() {
     }
   };
 
+  const seoData = getAPODSEO();
+
   return (
-    <div className="page-container">
-      <h1 className="page-title">{t('pages.apod.title')}</h1>
+    <>
+      <SEO {...seoData} />
+      <div className="page-container">
+        <h1 className="page-title">{t('pages.apod.title')}</h1>
 
         {/* Loading State */}
         {loading && (
@@ -208,7 +214,8 @@ export default function Apod() {
             </div>
           </div>
         )}
-    </div>
+      </div>
+    </>
   );
 }
 
