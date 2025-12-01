@@ -410,3 +410,76 @@ export const LOCATIONS: Record<string, ObserverLocation> = {
   'Rio de Janeiro': { latitude: -22.9068, longitude: -43.1729 },
   Greenwich: { latitude: 51.4772, longitude: 0.0 },
 };
+
+// ============================================================================
+// Time Calculations for Star Visibility
+// ============================================================================
+
+/**
+ * Sidereal rate: degrees per hour (360.98564736629° per sidereal day)
+ * A sidereal day is ~23h 56m, so in 24 solar hours, LST advances ~361°
+ */
+const SIDEREAL_RATE_DEG_PER_HOUR = 15.04107;
+
+/**
+ * Calculate a date when a star is at transit (highest altitude above horizon)
+ * This finds the time when Hour Angle = 0, i.e., LST = RA
+ *
+ * @param ra - Right Ascension in degrees
+ * @param observer - Observer location
+ * @param referenceDate - Reference date to find nearest transit
+ * @returns Date when the star is at transit
+ */
+export function getTransitDate(
+  ra: number,
+  observer: ObserverLocation,
+  referenceDate: Date = new Date()
+): Date {
+  const currentLST = getLST(referenceDate, observer.longitude);
+
+  // Calculate hour angle difference to get to transit (LST = RA)
+  let lstDiff = ra - currentLST;
+
+  // Normalize to -180 to 180 to find nearest transit
+  if (lstDiff > ASTRONOMY_CONSTANTS.HOUR_ANGLE_MAX)
+    lstDiff -= ASTRONOMY_CONSTANTS.FULL_CIRCLE;
+  if (lstDiff < ASTRONOMY_CONSTANTS.HOUR_ANGLE_MIN)
+    lstDiff += ASTRONOMY_CONSTANTS.FULL_CIRCLE;
+
+  // Convert LST difference to time offset in milliseconds
+  const hoursOffset = lstDiff / SIDEREAL_RATE_DEG_PER_HOUR;
+  const msOffset = hoursOffset * 3600000;
+
+  return new Date(referenceDate.getTime() + msOffset);
+}
+
+/**
+ * Get a date when a star is visible above the horizon
+ * Returns the transit time if the star would be above horizon at transit
+ *
+ * @param ra - Right Ascension in degrees
+ * @param dec - Declination in degrees
+ * @param observer - Observer location
+ * @param referenceDate - Reference date
+ * @returns Date when star is visible, or null if star never rises
+ */
+export function getVisibleDate(
+  ra: number,
+  dec: number,
+  observer: ObserverLocation,
+  referenceDate: Date = new Date()
+): Date | null {
+  // Calculate maximum altitude (at transit)
+  // altitude_max = 90 - |latitude - declination|
+  const transitAltitude =
+    ASTRONOMY_CONSTANTS.QUARTER_CIRCLE -
+    Math.abs(observer.latitude - dec);
+
+  // If star never rises above horizon at this location
+  if (transitAltitude < ASTRONOMY_CONSTANTS.HORIZON_ALTITUDE_THRESHOLD) {
+    return null;
+  }
+
+  // Return the transit time
+  return getTransitDate(ra, observer, referenceDate);
+}

@@ -21,6 +21,8 @@ import {
   formatAzimuth,
   formatAltitude,
   LOCATIONS,
+  equatorialToHorizontal,
+  getVisibleDate,
 } from '../../utils/astronomy';
 import {
   INTRO_ANIMATION,
@@ -44,6 +46,19 @@ function easeInOutCubic(t: number): number {
 
 // Track if user has explored in this session (persists until refresh)
 let hasUserExplored = false;
+
+// Tour stars configuration (RA/Dec in degrees)
+const TOUR_STARS = [
+  { name: 'Proxima Cen', ra: 217.42, dec: -62.68, descKey: 'proxima' },
+  { name: 'TRAPPIST-1', ra: 346.62, dec: -5.04, descKey: 'trappist' },
+  { name: 'Kepler-452', ra: 286.81, dec: 44.28, descKey: 'kepler452' },
+] as const;
+
+// Tour animation settings
+const TOUR_ANIMATION = {
+  LERP_FACTOR: 0.03,
+  ARRIVAL_THRESHOLD: 0.5, // degrees
+} as const;
 
 function easeInOutBack(t: number): number {
   const c1 = EASING.INOUT_BACK_C1;
@@ -228,23 +243,31 @@ function IntroEarth({ progress }: { progress: number }) {
 }
 
 /**
- * Camera controller - handles intro animation and user controls
+ * Camera controller - handles intro animation, user controls, and tour animation
  */
 function CameraController({
   introState,
   onBearingChange,
   controlsEnabled,
+  tourTarget,
+  isTourActive,
+  onTourArrival,
 }: {
   introState: IntroState;
   onBearingChange: (azimuth: number, altitude: number) => void;
   controlsEnabled: boolean;
+  tourTarget?: { azimuth: number; altitude: number } | null;
+  isTourActive?: boolean;
+  onTourArrival?: () => void;
 }) {
   const { camera, gl } = useThree();
   const isDragging = useRef(false);
   const previousMouse = useRef({ x: 0, y: 0 });
   const rotation = useRef<{ azimuth: number; altitude: number }>({ azimuth: CAMERA_CONTROLLER.INITIAL_AZIMUTH, altitude: CAMERA_CONTROLLER.INITIAL_ALTITUDE });
 
-  // Intro animation
+  const hasArrived = useRef(false);
+
+  // Intro animation and tour animation
   useFrame(() => {
     const { phase } = introState;
 
@@ -254,8 +277,40 @@ function CameraController({
       camera.lookAt(0, 0, -CAMERA_CONTROLLER.LOOKAT_DISTANCE);
       camera.updateProjectionMatrix();
     } else if (phase === 'stars-fade' || phase === 'complete') {
-      // Final position maintained by user controls or default
-      if (!controlsEnabled) {
+      // Tour animation - smoothly rotate to target
+      if (isTourActive && tourTarget) {
+        // Calculate shortest path for azimuth (handle 360° wraparound)
+        let azDiff = tourTarget.azimuth - rotation.current.azimuth;
+        if (azDiff > 180) azDiff -= 360;
+        if (azDiff < -180) azDiff += 360;
+
+        // Lerp towards target
+        rotation.current.azimuth += azDiff * TOUR_ANIMATION.LERP_FACTOR;
+        rotation.current.altitude += (tourTarget.altitude - rotation.current.altitude) * TOUR_ANIMATION.LERP_FACTOR;
+
+        // Normalize azimuth
+        rotation.current.azimuth = ((rotation.current.azimuth % 360) + 360) % 360;
+
+        // Check if arrived at target
+        const distToTarget = Math.sqrt(azDiff * azDiff + Math.pow(tourTarget.altitude - rotation.current.altitude, 2));
+        if (distToTarget < TOUR_ANIMATION.ARRIVAL_THRESHOLD && !hasArrived.current) {
+          hasArrived.current = true;
+          onTourArrival?.();
+        }
+
+        // Update camera
+        camera.position.set(0, 0, 0);
+        const azRad = (rotation.current.azimuth * Math.PI) / 180;
+        const altRad = (rotation.current.altitude * Math.PI) / 180;
+        camera.lookAt(
+          -Math.sin(azRad) * Math.cos(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE,
+          Math.sin(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE,
+          -Math.cos(azRad) * Math.cos(altRad) * CAMERA_CONTROLLER.LOOKAT_DISTANCE
+        );
+        camera.updateProjectionMatrix();
+        onBearingChange(rotation.current.azimuth, rotation.current.altitude);
+      } else if (!controlsEnabled) {
+        // Final position maintained by user controls or default
         camera.position.set(0, 0, 0);
         const azRad = (rotation.current.azimuth * Math.PI) / 180;
         const altRad = (rotation.current.altitude * Math.PI) / 180;
@@ -269,9 +324,14 @@ function CameraController({
     }
   });
 
-  // User controls (only when enabled)
+  // Reset arrival flag when tour target changes
   useEffect(() => {
-    if (!controlsEnabled) return;
+    hasArrived.current = false;
+  }, [tourTarget?.azimuth, tourTarget?.altitude]);
+
+  // User controls (only when enabled and not in tour mode)
+  useEffect(() => {
+    if (!controlsEnabled || isTourActive) return;
 
     const canvas = gl.domElement;
 
@@ -376,7 +436,7 @@ function CameraController({
       canvas.removeEventListener('touchend', handleTouchEnd);
       canvas.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [gl, camera, controlsEnabled, onBearingChange]);
+  }, [gl, camera, controlsEnabled, onBearingChange, isTourActive]);
 
   return null;
 }
@@ -577,6 +637,7 @@ interface WelcomeCardProps {
   starCount: number;
   planetCount: number;
   onDismiss: () => void;
+  onStartTour: () => void;
   isExiting: boolean;
   onTrackCTA: (buttonName: 'take_tour' | 'explore') => void;
 }
@@ -585,6 +646,7 @@ function WelcomeCard({
   starCount,
   planetCount,
   onDismiss,
+  onStartTour,
   isExiting,
   onTrackCTA,
 }: WelcomeCardProps) {
@@ -592,7 +654,7 @@ function WelcomeCard({
 
   const handleTourClick = () => {
     onTrackCTA('take_tour');
-    onDismiss();
+    onStartTour();
   };
 
   const handleExploreClick = () => {
@@ -615,9 +677,9 @@ function WelcomeCard({
         </div>
         <p className="welcome-hint">{t('pages.home.infoCard.hint')}</p>
         <div className="welcome-actions">
-          <Link to="/tour" className="welcome-tour-btn" onClick={handleTourClick}>
+          <button className="welcome-tour-btn" onClick={handleTourClick}>
             {t('pages.home.infoCard.takeTour')}
-          </Link>
+          </button>
           <button className="welcome-dismiss" onClick={handleExploreClick}>
             {t('pages.home.infoCard.dismiss')}
           </button>
@@ -628,9 +690,52 @@ function WelcomeCard({
 }
 
 /**
+ * Tour overlay component - shows Next/Skip buttons during tour
+ */
+interface TourOverlayProps {
+  currentStep: number;
+  totalSteps: number;
+  currentStarName: string;
+  onNext: () => void;
+  onSkip: () => void;
+}
+
+function TourOverlay({
+  currentStep,
+  totalSteps,
+  currentStarName,
+  onNext,
+  onSkip,
+}: TourOverlayProps) {
+  const { t } = useTranslation();
+  const isLastStep = currentStep === totalSteps - 1;
+
+  return (
+    <div className="tour-overlay">
+      <div className="tour-info">
+        <div className="tour-step">
+          {t('components.tour.step', { current: currentStep + 1, total: totalSteps })}
+        </div>
+        <div className="tour-star-name">{currentStarName}</div>
+        <div className="tour-star-desc">
+          {t(`components.tour.stars.${TOUR_STARS[currentStep].descKey}`)}
+        </div>
+      </div>
+      <button className="tour-next" onClick={onNext}>
+        {isLastStep ? t('components.tour.finish') : t('components.tour.next')}
+      </button>
+      <button className="tour-skip" onClick={onSkip}>
+        {t('components.tour.skip')}
+      </button>
+    </div>
+  );
+}
+
+/**
  * Main Starfield component
  */
 export function Starfield({ stars, onStarClick }: StarfieldProps) {
+  const { t } = useTranslation();
   const {
     currentLocation: observer,
     changeLocation,
@@ -647,6 +752,14 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [isWelcomeCardExiting, setIsWelcomeCardExiting] = useState(false);
   const welcomeCardDismissed = useRef(hasUserExplored);
+
+  // Tour state
+  const [isTourActive, setIsTourActive] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [tourComplete, setTourComplete] = useState(false);
+  const [tourTarget, setTourTarget] = useState<{ azimuth: number; altitude: number } | null>(null);
+  const [tourDate, setTourDate] = useState<Date>(date);
+  const [focusedStarScreenPos, setFocusedStarScreenPos] = useState<{ x: number; y: number } | null>(null);
 
   const { trackCTAClick, trackLocationChange } = useAnalytics();
 
@@ -694,6 +807,88 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
     }, INTRO_ANIMATION.WELCOME_CARD_DISMISS_DURATION);
   }, []);
 
+  /**
+   * Calculate tour target position for current step
+   * Adjusts the simulation date so the star is above the horizon
+   */
+  const calculateTourTarget = useCallback((step: number) => {
+    const tourStar = TOUR_STARS[step];
+
+    // Get optimal date when star is visible (at transit)
+    const visibleDate = getVisibleDate(tourStar.ra, tourStar.dec, observer, date);
+    const effectiveDate = visibleDate || date;
+
+    // Update tour date so Stars component uses the same date
+    setTourDate(effectiveDate);
+
+    const horizontal = equatorialToHorizontal(
+      { ra: tourStar.ra, dec: tourStar.dec },
+      observer,
+      effectiveDate
+    );
+    return { azimuth: horizontal.azimuth, altitude: horizontal.altitude };
+  }, [observer, date]);
+
+  /**
+   * Start the interactive tour
+   */
+  const handleStartTour = useCallback(() => {
+    hasUserExplored = true;
+    welcomeCardDismissed.current = true;
+    setShowWelcomeCard(false);
+    setIsTourActive(true);
+    setTourStep(0);
+    setTourComplete(false);
+    // Calculate initial target
+    setTourTarget(calculateTourTarget(0));
+  }, [calculateTourTarget]);
+
+  /**
+   * Advance to next tour step or finish
+   */
+  const handleTourNext = useCallback(() => {
+    if (tourStep < TOUR_STARS.length - 1) {
+      const nextStep = tourStep + 1;
+      setTourStep(nextStep);
+      setTourTarget(calculateTourTarget(nextStep));
+    } else {
+      // Tour complete
+      setIsTourActive(false);
+      setTourTarget(null);
+      setTourComplete(true);
+    }
+  }, [tourStep, calculateTourTarget]);
+
+  /**
+   * Skip/exit the tour
+   */
+  const handleTourSkip = useCallback(() => {
+    setIsTourActive(false);
+    setTourTarget(null);
+    setTourComplete(true);
+  }, []);
+
+  /**
+   * Called when camera arrives at tour target
+   */
+  const handleTourArrival = useCallback(() => {
+    // Find the star in the data to show tooltip
+    const tourStar = TOUR_STARS[tourStep];
+    const matchingStar = stars.find(s =>
+      s.hostname.toLowerCase().includes(tourStar.name.toLowerCase().split(' ')[0])
+    );
+    if (matchingStar) {
+      setHoveredStar(matchingStar);
+    }
+  }, [tourStep, stars]);
+
+  // Update tooltip position for tour - use focused star screen position
+  useEffect(() => {
+    if (isTourActive && focusedStarScreenPos) {
+      setMousePos(focusedStarScreenPos);
+    }
+  }, [isTourActive, focusedStarScreenPos]);
+
   const handleBearingChange = useCallback(
     (azimuth: number, altitude: number) => {
       setBearing({ azimuth, altitude });
@@ -739,7 +934,10 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         <CameraController
           introState={state}
           onBearingChange={handleBearingChange}
-          controlsEnabled={controlsEnabled}
+          controlsEnabled={controlsEnabled && !isTourActive}
+          tourTarget={tourTarget}
+          isTourActive={isTourActive}
+          onTourArrival={handleTourArrival}
         />
 
         {/* Ambient light */}
@@ -756,9 +954,11 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
             <Stars
               stars={stars}
               observer={observer}
-              date={date}
+              date={isTourActive ? tourDate : date}
               onStarClick={onStarClick}
               onStarHover={handleStarHover}
+              focusedStarName={isTourActive ? TOUR_STARS[tourStep].name : null}
+              onFocusedStarScreenPos={setFocusedStarScreenPos}
             />
 
             <EarthHorizon longitude={observer.longitude} />
@@ -783,7 +983,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
       {/* Telescope Bearing Display */}
       {showUI && (
         <div className="starfield-bearing">
-          <div className="bearing-title">Telescope Bearing</div>
+          <div className="bearing-title">{t('components.starfield.bearing.title')}</div>
           <div className="bearing-value">
             <span className="bearing-icon">↔</span>{' '}
             {formatAzimuth(bearing.azimuth)}
@@ -806,12 +1006,12 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         >
           <div className="tooltip-name">{hoveredStar.hostname}</div>
           <div className="tooltip-info">
-            {hoveredStar.sy_pnum} planet{hoveredStar.sy_pnum !== 1 ? 's' : ''}
+            {hoveredStar.sy_pnum} {t('components.starfield.tooltip.planet', { count: hoveredStar.sy_pnum })}
             {hoveredStar.distance_ly && (
-              <> · {hoveredStar.distance_ly.toFixed(1)} ly</>
+              <> · {hoveredStar.distance_ly.toFixed(1)} {t('components.starfield.tooltip.lightYears')}</>
             )}
           </div>
-          <div className="tooltip-hint">Click to explore</div>
+          <div className="tooltip-hint">{t('components.starfield.tooltip.clickToExplore')}</div>
         </div>
       )}
 
@@ -820,7 +1020,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
         <div className="starfield-location">
           {isLocationAnimating ? (
             <span className="location-coords location-animating">
-              Traveling to {locationName}...
+              {t('components.starfield.location.travelingTo', { locationName })}
             </span>
           ) : (
             <span className="location-coords">
@@ -833,7 +1033,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
             onClick={() => setShowLocationPicker(!showLocationPicker)}
             disabled={isLocationAnimating}
           >
-            CHANGE LOCATION
+            {t('components.starfield.location.changeLocation')}
           </button>
 
           {showLocationPicker && !isLocationAnimating && (
@@ -855,7 +1055,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
       {/* Star count indicator */}
       {showUI && (
         <div className="starfield-info">
-          <span>{stars.length.toLocaleString()} exoplanet host stars</span>
+          <span>{stars.length.toLocaleString()} {t('components.starfield.info.hostStars')}</span>
         </div>
       )}
 
@@ -916,9 +1116,28 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
           starCount={stars.length}
           planetCount={stars.reduce((acc, s) => acc + (s.sy_pnum || 0), 0)}
           onDismiss={handleDismissWelcome}
+          onStartTour={handleStartTour}
           isExiting={isWelcomeCardExiting}
           onTrackCTA={trackCTAClick}
         />
+      )}
+
+      {/* Tour overlay - shows during active tour */}
+      {isTourActive && (
+        <TourOverlay
+          currentStep={tourStep}
+          totalSteps={TOUR_STARS.length}
+          currentStarName={TOUR_STARS[tourStep].name}
+          onNext={handleTourNext}
+          onSkip={handleTourSkip}
+        />
+      )}
+
+      {/* Post-tour button - links to full tour page */}
+      {tourComplete && showUI && !isTourActive && (
+        <Link to="/tour" className="tour-button-persistent">
+          Tour
+        </Link>
       )}
     </div>
   );

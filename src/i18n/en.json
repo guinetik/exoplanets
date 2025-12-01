@@ -962,6 +962,26 @@
     "notFound": "Page not found"
   },
   "components": {
+    "starfield": {
+      "bearing": {
+        "title": "Telescope Bearing",
+        "azimuth": "Azimuth",
+        "altitude": "Altitude"
+      },
+      "tooltip": {
+        "planet": "planet",
+        "planet_plural": "planets",
+        "lightYears": "ly",
+        "clickToExplore": "Click to explore"
+      },
+      "location": {
+        "travelingTo": "Traveling to {{locationName}}...",
+        "changeLocation": "CHANGE LOCATION"
+      },
+      "info": {
+        "hostStars": "exoplanet host stars"
+      }
+    },
     "travelTime": {
       "lightYearsAway": "light-years away",
       "reachableAt": "Reachable at {{speed}} or faster",
@@ -1024,6 +1044,17 @@
           "description": "The ultimate speed limit of the universe. Nothing can travel faster than light in a vacuum. At this speed, time dilation becomes infinite and distances contract to zero.",
           "funFact": "If you traveled at light speed, you could circle the Earth 7.5 times in a single second, but time would stop for you entirely."
         }
+      }
+    },
+    "tour": {
+      "step": "Step {{current}} of {{total}}",
+      "next": "Next →",
+      "finish": "Finish",
+      "skip": "Skip Tour",
+      "stars": {
+        "proxima": "The nearest star to our Sun at just 4.2 light-years away. Home to Proxima Centauri b, a potentially habitable exoplanet.",
+        "trappist": "An ultra-cool red dwarf hosting 7 Earth-sized planets, 3 of which are in the habitable zone. The most promising system for finding life.",
+        "kepler452": "Often called 'Earth's cousin', this G-type star hosts Kepler-452b, an Earth-sized planet in the habitable zone of a Sun-like star."
       }
     }
   },

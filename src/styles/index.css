@@ -396,6 +396,56 @@
     @apply text-white/40 text-xs mt-2 uppercase tracking-wider;
   }
 
+  /* Tour Overlay */
+  .tour-overlay {
+    @apply absolute inset-0 pointer-events-none z-40;
+  }
+
+  .tour-info {
+    @apply absolute top-6 left-6;
+    @apply bg-black/80 border border-white/20 rounded-lg px-5 py-4;
+    @apply backdrop-blur-sm;
+    @apply pointer-events-auto;
+    max-width: 300px;
+  }
+
+  .tour-step {
+    @apply text-xs uppercase tracking-wider text-white/50 mb-2;
+  }
+
+  .tour-star-name {
+    @apply text-xl font-semibold text-white mb-2;
+  }
+
+  .tour-star-desc {
+    @apply text-sm text-white/70 leading-relaxed;
+  }
+
+  .tour-next {
+    @apply absolute top-6 right-6;
+    @apply px-6 py-3 rounded-lg text-sm font-medium;
+    @apply bg-cyan-500/20 border border-cyan-400/50 text-cyan-300;
+    @apply hover:bg-cyan-500/30 hover:border-cyan-400;
+    @apply transition-all duration-200;
+    @apply pointer-events-auto;
+  }
+
+  .tour-skip {
+    @apply absolute bottom-6 right-6;
+    @apply px-4 py-2 rounded text-xs uppercase tracking-wider;
+    @apply text-white/40 hover:text-white/70;
+    @apply transition-colors duration-200;
+    @apply pointer-events-auto;
+  }
+
+  .tour-button-persistent {
+    @apply absolute top-6 right-6 z-40;
+    @apply px-4 py-2 rounded-lg text-sm;
+    @apply bg-black/60 border border-white/20 text-white/70;
+    @apply hover:bg-black/80 hover:border-white/40 hover:text-white;
+    @apply transition-all duration-200;
+  }
+
   /* Display Options Panel */
   .starfield-options {
     @apply absolute top-1/2 right-4 -translate-y-1/2;

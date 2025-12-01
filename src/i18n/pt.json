@@ -942,6 +942,26 @@
     "notFound": "Página não encontrada"
   },
   "components": {
+    "starfield": {
+      "bearing": {
+        "title": "Orientação do Telescópio",
+        "azimuth": "Azimute",
+        "altitude": "Altitude"
+      },
+      "tooltip": {
+        "planet": "planeta",
+        "planet_plural": "planetas",
+        "lightYears": "al",
+        "clickToExplore": "Clique para explorar"
+      },
+      "location": {
+        "travelingTo": "Viajando para {{locationName}}...",
+        "changeLocation": "MUDAR LOCALIZAÇÃO"
+      },
+      "info": {
+        "hostStars": "estrelas hospedeiras de exoplanetas"
+      }
+    },
     "travelTime": {
       "lightYearsAway": "anos-luz de distância",
       "reachableAt": "Alcançável a {{speed}} ou mais rápido",
@@ -1004,6 +1024,17 @@
           "description": "O limite máximo de velocidade do universo. Nada pode viajar mais rápido que a luz no vácuo. Nessa velocidade, a dilatação do tempo se torna infinita e as distâncias se contraem para zero.",
           "funFact": "Se você viajasse à velocidade da luz, poderia dar a volta na Terra 7,5 vezes em um único segundo, mas o tempo pararia completamente para você."
         }
+      }
+    },
+    "tour": {
+      "step": "Passo {{current}} de {{total}}",
+      "next": "Próximo →",
+      "finish": "Finalizar",
+      "skip": "Pular Tour",
+      "stars": {
+        "proxima": "A estrela mais próxima do nosso Sol, a apenas 4,2 anos-luz. Lar de Proxima Centauri b, um exoplaneta potencialmente habitável.",
+        "trappist": "Uma anã vermelha ultrafria hospedando 7 planetas do tamanho da Terra, 3 dos quais estão na zona habitável. O sistema mais promissor para encontrar vida.",
+        "kepler452": "Frequentemente chamado de 'primo da Terra', esta estrela do tipo G hospeda Kepler-452b, um planeta do tamanho da Terra na zona habitável de uma estrela semelhante ao Sol."
       }
     }
   },

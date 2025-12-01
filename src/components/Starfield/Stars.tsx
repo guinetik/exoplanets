@@ -30,6 +30,8 @@ interface StarsProps {
   date: Date;
   onStarClick?: (star: Star) => void;
   onStarHover?: (star: Star | null, mousePos?: { x: number; y: number }) => void;
+  focusedStarName?: string | null;
+  onFocusedStarScreenPos?: (pos: { x: number; y: number } | null) => void;
 }
 
 interface VisibleStar {
@@ -192,6 +194,8 @@ export function Stars({
   date,
   onStarClick,
   onStarHover,
+  focusedStarName,
+  onFocusedStarScreenPos,
 }: StarsProps) {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -274,6 +278,15 @@ export function Stars({
   // Store hover attribute ref for updates
   const hoverAttrRef = useRef<THREE.BufferAttribute | null>(null);
 
+  // Find focused star index
+  const focusedIndex = useMemo(() => {
+    if (!focusedStarName) return -1;
+    const searchName = focusedStarName.toLowerCase().split(' ')[0];
+    return visibleStars.findIndex(vs =>
+      vs.star.hostname.toLowerCase().includes(searchName)
+    );
+  }, [focusedStarName, visibleStars]);
+
   // Update geometry when buffer data changes
   useEffect(() => {
     if (!geometryRef.current) return;
@@ -306,13 +319,14 @@ export function Stars({
       materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
     }
 
-    // Smooth hover transitions
+    // Smooth hover/focus transitions
     if (hoverAttrRef.current) {
       const arr = hoverAttrRef.current.array as Float32Array;
       let needsUpdate = false;
 
       for (let i = 0; i < arr.length; i++) {
-        const target = i === hoveredIndex ? 1 : 0;
+        // Either hovered or focused star should be highlighted
+        const target = (i === hoveredIndex || i === focusedIndex) ? 1 : 0;
         const diff = target - arr[i];
 
         if (Math.abs(diff) > 0.001) {
@@ -324,6 +338,22 @@ export function Stars({
       if (needsUpdate) {
         hoverAttrRef.current.needsUpdate = true;
       }
+    }
+
+    // Calculate focused star screen position
+    if (focusedIndex >= 0 && onFocusedStarScreenPos) {
+      const focusedStar = visibleStars[focusedIndex];
+      if (focusedStar) {
+        const projected = focusedStar.position.clone().project(camera);
+        if (projected.z <= 1) {
+          const rect = gl.domElement.getBoundingClientRect();
+          const screenX = (projected.x + 1) / 2 * rect.width + rect.left;
+          const screenY = (1 - projected.y) / 2 * rect.height + rect.top;
+          onFocusedStarScreenPos({ x: screenX, y: screenY });
+        }
+      }
+    } else if (onFocusedStarScreenPos && focusedIndex === -1) {
+      onFocusedStarScreenPos(null);
     }
   });
 
