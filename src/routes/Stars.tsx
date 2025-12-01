@@ -4,10 +4,11 @@
  * Uses URL query parameters to maintain state across navigation
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useAnalytics } from '../hooks/useAnalytics';
 import { StarCard } from '../components/StarCard';
 import Spinner from '../components/Spinner';
 
@@ -18,7 +19,9 @@ const ITEMS_PER_PAGE = 24;
 export default function Stars() {
   const { t } = useTranslation();
   const { getAllStars, isLoading, error } = useData();
+  const { trackSearch, trackFilter } = useAnalytics();
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize state from URL params
   const [sortBy, setSortBy] = useState<SortOption>(
@@ -120,17 +123,32 @@ export default function Stars() {
   };
 
   const toggleStarClass = (starClass: string) => {
+    const isAdding = !selectedClasses.includes(starClass);
     setSelectedClasses((prev) =>
       prev.includes(starClass)
         ? prev.filter((c) => c !== starClass)
         : [...prev, starClass]
     );
     handleFilterChange();
+    if (isAdding) trackFilter('star_class', starClass);
   };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     handleFilterChange();
+
+    // Debounced search tracking
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    if (value.length >= 2) {
+      searchDebounceRef.current = setTimeout(() => {
+        const results = allStars.filter((s) =>
+          s.hostname.toLowerCase().includes(value.toLowerCase())
+        );
+        trackSearch('stars', value, results.length);
+      }, 500);
+    }
   };
 
   const handleSortChange = (value: SortOption) => {

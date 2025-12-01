@@ -1,29 +1,16 @@
 /**
  * TravelTimeCalculator Component
- * Speed race visualization showing travel times at various speeds
- * Extracted from SystemOverviewModal for reuse
+ * SVG visualization showing spacecraft racing from Earth to a target planet
+ * along curved paths at different speeds
  */
 
-import { useRef, useEffect, useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import * as d3 from 'd3';
 
 // =============================================================================
 // CONSTANTS
 // =============================================================================
-
-/** Speed constants in km/s */
-const TRAVEL_SPEEDS = {
-  WALKING_KMS: 0.0014,
-  CAR_KMS: 0.030,
-  JET_KMS: 0.25,
-  VOYAGER_KMS: 17,
-  NEW_HORIZONS_KMS: 16.26,
-  PARKER_PROBE_KMS: 192,
-  LIGHT_1PCT_KMS: 2998,
-  LIGHT_10PCT_KMS: 29979,
-  LIGHT_SPEED_KMS: 299792,
-};
 
 /** One light year in kilometers */
 const LIGHT_YEAR_KM = 9.461e12;
@@ -34,28 +21,30 @@ const HUMAN_LIFETIME_YEARS = 80;
 /** Seconds per year */
 const SECONDS_PER_YEAR = 31557600;
 
-/** Animation duration in milliseconds */
-const RACE_ANIMATION_DURATION = 2000;
+/** Animation settings */
+const ANIMATION = {
+  BASE_DURATION: 2, // seconds for fastest (light speed)
+  MAX_DURATION: 8,  // seconds cap for slowest
+};
 
-/** Speed reference data for display */
-interface SpeedReference {
-  key: string;
-  speedKms: number;
+/** Spacecraft data */
+interface Spacecraft {
+  id: string;
   icon: string;
-  category: 'human' | 'spacecraft' | 'light';
+  speedKms: number;
   color: string;
 }
 
-const SPEED_REFERENCES: SpeedReference[] = [
-  { key: 'walking', speedKms: TRAVEL_SPEEDS.WALKING_KMS, icon: '🚶', category: 'human', color: '#888888' },
-  { key: 'car', speedKms: TRAVEL_SPEEDS.CAR_KMS, icon: '🚗', category: 'human', color: '#aaaaaa' },
-  { key: 'jet', speedKms: TRAVEL_SPEEDS.JET_KMS, icon: '✈️', category: 'human', color: '#cccccc' },
-  { key: 'voyager', speedKms: TRAVEL_SPEEDS.VOYAGER_KMS, icon: '🛰️', category: 'spacecraft', color: '#ff6b6b' },
-  { key: 'newHorizons', speedKms: TRAVEL_SPEEDS.NEW_HORIZONS_KMS, icon: '🚀', category: 'spacecraft', color: '#ffa06b' },
-  { key: 'parkerProbe', speedKms: TRAVEL_SPEEDS.PARKER_PROBE_KMS, icon: '☀️', category: 'spacecraft', color: '#ffcc00' },
-  { key: 'onePercentC', speedKms: TRAVEL_SPEEDS.LIGHT_1PCT_KMS, icon: '⚡', category: 'light', color: '#00ccff' },
-  { key: 'tenPercentC', speedKms: TRAVEL_SPEEDS.LIGHT_10PCT_KMS, icon: '💫', category: 'light', color: '#00ffcc' },
-  { key: 'lightSpeed', speedKms: TRAVEL_SPEEDS.LIGHT_SPEED_KMS, icon: '🌟', category: 'light', color: '#00ff88' },
+const SPACECRAFT: Spacecraft[] = [
+  { id: 'starship', icon: 'bfr', speedKms: 7.6, color: '#ff6b6b' },         // Mach 25 (~17,000 mph)
+  { id: 'shuttle', icon: 'shuttle', speedKms: 7.8, color: '#ff8c6b' },      // Orbital velocity
+  { id: 'saturnV', icon: 'saturn9', speedKms: 11.2, color: '#ffa06b' },     // Escape velocity
+  { id: 'falconHeavy', icon: 'falcon-heavy', speedKms: 11.2, color: '#ffb86b' },
+  { id: 'newHorizons', icon: 'new-horizons', speedKms: 16.26, color: '#ffd06b' },
+  { id: 'voyager', icon: 'voyager', speedKms: 17, color: '#ffcc00' },
+  { id: 'parkerProbe', icon: 'parker', speedKms: 192, color: '#00ccff' },
+  { id: 'solarSail', icon: 'solar', speedKms: 2998, color: '#00ffcc' },     // 1% light speed
+  { id: 'enterprise', icon: 'enterprise', speedKms: 299792, color: '#00ff88' },
 ];
 
 // =============================================================================
@@ -64,9 +53,6 @@ const SPEED_REFERENCES: SpeedReference[] = [
 
 /**
  * Calculates travel time in years for a given distance and speed
- * @param distanceLy - Distance in light-years
- * @param speedKms - Speed in km/s
- * @returns Travel time in years
  */
 function calculateTravelTimeYears(distanceLy: number, speedKms: number): number {
   const distanceKm = distanceLy * LIGHT_YEAR_KM;
@@ -76,8 +62,6 @@ function calculateTravelTimeYears(distanceLy: number, speedKms: number): number 
 
 /**
  * Formats large numbers with appropriate suffixes
- * @param years - Number of years
- * @returns Formatted string
  */
 function formatTravelTime(years: number): string {
   if (years < 1) {
@@ -98,6 +82,54 @@ function formatTravelTime(years: number): string {
   return `${(years / 1e12).toFixed(1)}T years`;
 }
 
+/**
+ * Calculates arc height based on spacecraft index
+ */
+function getArcHeight(index: number, total: number): number {
+  const arcFactor = 1 - index / (total - 1); // 1 for slowest, 0 for fastest
+  const maxArcHeight = 80;
+  const minArcHeight = 15;
+  return minArcHeight + arcFactor * (maxArcHeight - minArcHeight);
+}
+
+/**
+ * Generates a quadratic bezier curve path from Earth to Planet
+ * Slower spacecraft = higher arc
+ */
+function generateCurvePath(
+  index: number,
+  total: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number
+): string {
+  const arcHeight = getArcHeight(index, total);
+  const controlX = (startX + endX) / 2;
+  const controlY = startY - arcHeight;
+
+  return `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
+}
+
+/**
+ * Gets a point on a quadratic bezier curve at parameter t (0-1)
+ */
+function getPointOnCurve(
+  t: number,
+  startX: number,
+  startY: number,
+  controlX: number,
+  controlY: number,
+  endX: number,
+  endY: number
+): { x: number; y: number } {
+  const oneMinusT = 1 - t;
+  return {
+    x: oneMinusT * oneMinusT * startX + 2 * oneMinusT * t * controlX + t * t * endX,
+    y: oneMinusT * oneMinusT * startY + 2 * oneMinusT * t * controlY + t * t * endY,
+  };
+}
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -110,373 +142,177 @@ interface TravelTimeCalculatorProps {
 }
 
 /**
- * Speed Race Visualization Component
- * Interactive animated bar race showing travel times at various speeds
+ * Travel Time Visualization Component
+ * Shows spacecraft racing along curved paths from Earth to a target planet
  */
-export function TravelTimeCalculator({ 
+/** Spacecraft info for the detail dialog */
+interface SpacecraftInfo {
+  id: string;
+  icon: string;
+  speedKms: number;
+  color: string;
+  years: number;
+  withinLifetime: boolean;
+}
+
+/**
+ * Spacecraft Info Dialog Component
+ */
+function SpacecraftInfoDialog({
+  spacecraft,
+  onClose,
+  t,
+}: {
+  spacecraft: SpacecraftInfo;
+  onClose: () => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  // Handle Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+
+  const speedMph = (spacecraft.speedKms * 2236.94).toFixed(0);
+  const speedPercentLight = ((spacecraft.speedKms / 299792) * 100).toFixed(
+    spacecraft.speedKms >= 2998 ? 0 : 6
+  );
+
+  return createPortal(
+    <div className="property-dialog-overlay" onClick={onClose}>
+      <div className="property-dialog" onClick={(e) => e.stopPropagation()}>
+        <button
+          className="property-dialog-close"
+          onClick={onClose}
+          aria-label="Close dialog"
+        >
+          &times;
+        </button>
+
+        <div className="spacecraft-dialog-header">
+          <img
+            src={`/icons/${spacecraft.icon}.svg`}
+            alt={spacecraft.id}
+            className="spacecraft-dialog-icon"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+          <h3 className="property-dialog-title">
+            {t(`components.travelTime.speeds.${spacecraft.id}`)}
+          </h3>
+        </div>
+
+        <div className="property-dialog-content">
+          <p className="property-dialog-description">
+            {t(`components.travelTime.spacecraft.${spacecraft.id}.description`)}
+          </p>
+
+          <div className="spacecraft-stats">
+            <div className="spacecraft-stat">
+              <span className="stat-label">{t('components.travelTime.speedLabel')}</span>
+              <span className="stat-value" style={{ color: spacecraft.color }}>
+                {spacecraft.speedKms.toLocaleString()} km/s
+              </span>
+              <span className="stat-secondary">
+                ({Number(speedMph).toLocaleString()} mph)
+              </span>
+            </div>
+            <div className="spacecraft-stat">
+              <span className="stat-label">{t('components.travelTime.percentLight')}</span>
+              <span className="stat-value" style={{ color: spacecraft.color }}>
+                {speedPercentLight}%
+              </span>
+            </div>
+            <div className="spacecraft-stat">
+              <span className="stat-label">{t('components.travelTime.travelTimeLabel')}</span>
+              <span className="stat-value" style={{ color: spacecraft.color }}>
+                {formatTravelTime(spacecraft.years)}
+              </span>
+              {spacecraft.withinLifetime && (
+                <span className="stat-reachable">
+                  ✓ {t('components.travelTime.withinLifetime')}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="property-dialog-fun-fact">
+            {t(`components.travelTime.spacecraft.${spacecraft.id}.funFact`)}
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+export function TravelTimeCalculator({
   distanceLy,
   compact = false,
 }: TravelTimeCalculatorProps) {
   const { t } = useTranslation();
-  const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedSpeed, setSelectedSpeed] = useState<string | null>(null);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(true);
+  const [selectedSpacecraft, setSelectedSpacecraft] = useState<SpacecraftInfo | null>(null);
 
-  // Calculate all travel times
-  const speedData = useMemo(() => {
-    return SPEED_REFERENCES.map((speed) => {
-      const years = calculateTravelTimeYears(distanceLy, speed.speedKms);
+  // Calculate travel data for each spacecraft
+  const spacecraftData = useMemo(() => {
+    const maxSpeed = Math.max(...SPACECRAFT.map(s => s.speedKms));
+
+    return SPACECRAFT.map((craft, index) => {
+      const years = calculateTravelTimeYears(distanceLy, craft.speedKms);
       const withinLifetime = years <= HUMAN_LIFETIME_YEARS;
+
+      // Animation duration: faster craft = shorter duration
+      const speedRatio = craft.speedKms / maxSpeed;
+      const duration = ANIMATION.BASE_DURATION + (1 - speedRatio) * (ANIMATION.MAX_DURATION - ANIMATION.BASE_DURATION);
+
       return {
-        ...speed,
+        ...craft,
+        index,
         years,
         withinLifetime,
+        duration,
       };
     });
   }, [distanceLy]);
 
   // Find fastest that arrives within lifetime
   const fastestReachable = useMemo(() => {
-    return speedData.find((s) => s.withinLifetime)?.key || null;
-  }, [speedData]);
+    return spacecraftData.find((s) => s.withinLifetime)?.id || null;
+  }, [spacecraftData]);
 
+  // Handle animation end
   useEffect(() => {
-    if (!svgRef.current || !containerRef.current || !distanceLy) return;
-
-    const width = containerRef.current.clientWidth;
-    const isMobile = width < 600;
-
-    // Mobile: vertical chart, Desktop: horizontal chart
-    const height = isMobile ? Math.max(300, speedData.length * 35 + 80) : (compact ? 300 : 400);
-    const margin = isMobile
-      ? { top: 20, right: 30, bottom: 60, left: 30 }
-      : { top: 20, right: 120, bottom: 30, left: compact ? 100 : 140 };
-
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
-    svg
-      .attr('viewBox', `0 0 ${width} ${height}`)
-      .attr('preserveAspectRatio', 'xMidYMid meet')
-      .style('max-width', '100%')
-      .style('height', 'auto');
-
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Use log scale for speed (since range is enormous)
-    const maxSpeed = Math.max(...speedData.map((d) => d.speedKms));
-    const minSpeed = Math.min(...speedData.map((d) => d.speedKms));
-
-    // Mobile: swap x/y - bars grow vertically
-    // Desktop: bars grow horizontally (original layout)
-    let x, y;
-    if (isMobile) {
-      // Vertical chart: x is band scale (positions), y is log scale (bar height)
-      x = d3
-        .scaleBand()
-        .domain(speedData.map((d) => d.key))
-        .range([0, innerWidth])
-        .padding(0.4);
-
-      y = d3
-        .scaleLog()
-        .domain([minSpeed * 0.5, maxSpeed * 2])
-        .range([innerHeight, 0]); // Inverted for SVG coordinates
-    } else {
-      // Horizontal chart: original layout
-      x = d3
-        .scaleLog()
-        .domain([minSpeed * 0.5, maxSpeed * 2])
-        .range([0, innerWidth]);
-
-      y = d3
-        .scaleBand()
-        .domain(speedData.map((d) => d.key))
-        .range([0, innerHeight])
-        .padding(0.3);
+    if (isAnimating) {
+      const maxDuration = Math.max(...spacecraftData.map(s => s.duration));
+      const timer = setTimeout(() => {
+        setIsAnimating(false);
+      }, maxDuration * 1000 + 500);
+      return () => clearTimeout(timer);
     }
+  }, [isAnimating, spacecraftData, animationKey]);
 
-    // Background track for each bar
-    if (isMobile) {
-      // Vertical bars
-      const xBand = x as d3.ScaleBand<string>;
-      g.selectAll('.bar-track')
-        .data(speedData)
-        .join('rect')
-        .attr('class', 'bar-track')
-        .attr('x', (d) => xBand(d.key) || 0)
-        .attr('y', 0)
-        .attr('width', xBand.bandwidth())
-        .attr('height', innerHeight)
-        .attr('fill', 'rgba(255, 255, 255, 0.03)')
-        .attr('rx', 4);
-    } else {
-      // Horizontal bars
-      const yBand = y as d3.ScaleBand<string>;
-      g.selectAll('.bar-track')
-        .data(speedData)
-        .join('rect')
-        .attr('class', 'bar-track')
-        .attr('x', 0)
-        .attr('y', (d) => yBand(d.key) || 0)
-        .attr('width', innerWidth)
-        .attr('height', yBand.bandwidth())
-        .attr('fill', 'rgba(255, 255, 255, 0.03)')
-        .attr('rx', 4);
-    }
+  // Replay race
+  const handleReplay = useCallback(() => {
+    setAnimationKey(prev => prev + 1);
+    setIsAnimating(true);
+  }, []);
 
-    // Speed bars with animation
-    let bars;
-    if (isMobile) {
-      // Vertical bars
-      const xBand = x as d3.ScaleBand<string>;
-      bars = g
-        .selectAll('.speed-bar')
-        .data(speedData)
-        .join('rect')
-        .attr('class', 'speed-bar')
-        .attr('x', (d) => xBand(d.key) || 0)
-        .attr('width', xBand.bandwidth())
-        .attr('fill', (d) => d.color)
-        .attr('rx', 4)
-        .attr('opacity', 0.8)
-        .attr('cursor', 'pointer')
-        .attr('y', innerHeight)
-        .attr('height', 0);
-    } else {
-      // Horizontal bars
-      const yBand = y as d3.ScaleBand<string>;
-      bars = g
-        .selectAll('.speed-bar')
-        .data(speedData)
-        .join('rect')
-        .attr('class', 'speed-bar')
-        .attr('x', 0)
-        .attr('y', (d) => yBand(d.key) || 0)
-        .attr('height', yBand.bandwidth())
-        .attr('fill', (d) => d.color)
-        .attr('rx', 4)
-        .attr('opacity', 0.8)
-        .attr('cursor', 'pointer')
-        .attr('width', 0);
-    }
-
-    // Animate bars growing
-    if (!hasAnimated) {
-      if (isMobile) {
-        const yScale = y as d3.ScaleLogarithmic<number, number>;
-        bars
-          .transition()
-          .duration(RACE_ANIMATION_DURATION)
-          .delay((_, i) => i * 100)
-          .ease(d3.easeCubicOut)
-          .attr('y', (d) => yScale(d.speedKms))
-          .attr('height', (d) => innerHeight - yScale(d.speedKms))
-          .on('end', () => setHasAnimated(true));
-      } else {
-        const xScale = x as d3.ScaleLogarithmic<number, number>;
-        bars
-          .transition()
-          .duration(RACE_ANIMATION_DURATION)
-          .delay((_, i) => i * 100)
-          .ease(d3.easeCubicOut)
-          .attr('width', (d) => xScale(d.speedKms))
-          .on('end', () => setHasAnimated(true));
-      }
-    } else {
-      if (isMobile) {
-        const yScale = y as d3.ScaleLogarithmic<number, number>;
-        bars
-          .attr('y', (d) => yScale(d.speedKms))
-          .attr('height', (d) => innerHeight - yScale(d.speedKms));
-      } else {
-        const xScale = x as d3.ScaleLogarithmic<number, number>;
-        bars.attr('width', (d) => xScale(d.speedKms));
-      }
-    }
-
-    // Hover effects
-    bars
-      .on('mouseenter', function (_, d) {
-        d3.select(this).attr('opacity', 1);
-        setSelectedSpeed(d.key);
-      })
-      .on('mouseleave', function () {
-        d3.select(this).attr('opacity', 0.8);
-        setSelectedSpeed(null);
-      });
-
-    // Icons and labels
-    if (isMobile) {
-      // Mobile: icons and labels below bars
-      const xBandMobile = x as d3.ScaleBand<string>;
-      g.selectAll('.speed-icon')
-        .data(speedData)
-        .join('text')
-        .attr('class', 'speed-icon')
-        .attr('x', (d) => (xBandMobile(d.key) || 0) + xBandMobile.bandwidth() / 2)
-        .attr('y', innerHeight + 15)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '14px')
-        .text((d) => d.icon);
-
-      g.selectAll('.speed-label')
-        .data(speedData)
-        .join('text')
-        .attr('class', 'speed-label')
-        .attr('x', (d) => (xBandMobile(d.key) || 0) + xBandMobile.bandwidth() / 2)
-        .attr('y', innerHeight + 30)
-        .attr('text-anchor', 'middle')
-        .attr('fill', 'rgba(255, 255, 255, 0.6)')
-        .attr('font-size', '7px')
-        .text((d) => t(`components.travelTime.speeds.${d.key}`));
-    } else {
-      // Desktop: icons and labels on the left
-      const yBandDesktop = y as d3.ScaleBand<string>;
-      g.selectAll('.speed-icon')
-        .data(speedData)
-        .join('text')
-        .attr('class', 'speed-icon')
-        .attr('x', -35)
-        .attr('y', (d) => (yBandDesktop(d.key) || 0) + yBandDesktop.bandwidth() / 2)
-        .attr('dy', '0.35em')
-        .attr('text-anchor', 'middle')
-        .attr('font-size', compact ? '16px' : '20px')
-        .text((d) => d.icon);
-
-      g.selectAll('.speed-label')
-        .data(speedData)
-        .join('text')
-        .attr('class', 'speed-label')
-        .attr('x', -45)
-        .attr('y', (d) => (yBandDesktop(d.key) || 0) + yBandDesktop.bandwidth() / 2)
-        .attr('dy', '0.35em')
-        .attr('text-anchor', 'end')
-        .attr('fill', 'rgba(255, 255, 255, 0.7)')
-        .attr('font-size', compact ? '9px' : '11px')
-        .text((d) => t(`components.travelTime.speeds.${d.key}`));
-    }
-
-    // Travel time labels
-    const timeLabels = g
-      .selectAll('.time-label')
-      .data(speedData)
-      .join('text')
-      .attr('class', 'time-label')
-      .attr('fill', 'rgba(255, 255, 255, 0.9)')
-      .attr('font-size', isMobile ? '8px' : (compact ? '9px' : '11px'))
-      .attr('font-family', 'monospace')
-      .attr('opacity', 0);
-
-    // Position and animate time labels
-    if (isMobile) {
-      // Mobile: labels above bars
-      const xBand = x as d3.ScaleBand<string>;
-      const yLog = y as d3.ScaleLogarithmic<number, number>;
-      if (!hasAnimated) {
-        timeLabels
-          .attr('x', (d) => (xBand(d.key) || 0) + xBand.bandwidth() / 2)
-          .attr('y', (d) => yLog(d.speedKms) - 5)
-          .attr('text-anchor', 'middle')
-          .transition()
-          .duration(300)
-          .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
-          .attr('opacity', 1)
-          .text((d) => formatTravelTime(d.years));
-      } else {
-        timeLabels
-          .attr('x', (d) => (xBand(d.key) || 0) + xBand.bandwidth() / 2)
-          .attr('y', (d) => yLog(d.speedKms) - 5)
-          .attr('text-anchor', 'middle')
-          .attr('opacity', 1)
-          .text((d) => formatTravelTime(d.years));
-      }
-    } else {
-      // Desktop: labels to the right of bars
-      const xLog = x as d3.ScaleLogarithmic<number, number>;
-      const yBand = y as d3.ScaleBand<string>;
-      if (!hasAnimated) {
-        timeLabels
-          .attr('y', (d) => (yBand(d.key) || 0) + yBand.bandwidth() / 2)
-          .attr('dy', '0.35em')
-          .transition()
-          .duration(300)
-          .delay((_, i) => RACE_ANIMATION_DURATION + i * 100)
-          .attr('x', (d) => xLog(d.speedKms) + 8)
-          .attr('opacity', 1)
-          .text((d) => formatTravelTime(d.years));
-      } else {
-        timeLabels
-          .attr('x', (d) => xLog(d.speedKms) + 8)
-          .attr('y', (d) => (yBand(d.key) || 0) + yBand.bandwidth() / 2)
-          .attr('dy', '0.35em')
-          .attr('opacity', 1)
-          .text((d) => formatTravelTime(d.years));
-      }
-    }
-
-    // "Reachable in lifetime" indicator
-    const reachableData = speedData.filter((d) => d.withinLifetime);
-    if (reachableData.length > 0) {
-      const firstReachable = reachableData[reachableData.length - 1];
-
-      if (isMobile) {
-        // Mobile: horizontal line at the reachable speed threshold
-        const yScale = y as d3.ScaleLogarithmic<number, number>;
-        const yPos = yScale(firstReachable.speedKms) || 0;
-        g.append('line')
-          .attr('x1', -10)
-          .attr('x2', innerWidth + 10)
-          .attr('y1', yPos)
-          .attr('y2', yPos)
-          .attr('stroke', '#00ff88')
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '4,4')
-          .attr('opacity', 0.6);
-
-        g.append('text')
-          .attr('x', -15)
-          .attr('y', yPos)
-          .attr('text-anchor', 'end')
-          .attr('dy', '0.35em')
-          .attr('fill', '#00ff88')
-          .attr('font-size', '8px')
-          .text('✓ Lifetime');
-      } else {
-        // Desktop: vertical line at the reachable speed threshold
-        const xScale = x as d3.ScaleLogarithmic<number, number>;
-        const xPos = xScale(firstReachable.speedKms) || 0;
-        g.append('line')
-          .attr('x1', xPos)
-          .attr('x2', xPos)
-          .attr('y1', -10)
-          .attr('y2', innerHeight + 10)
-          .attr('stroke', '#00ff88')
-          .attr('stroke-width', 2)
-          .attr('stroke-dasharray', '4,4')
-          .attr('opacity', 0.6);
-
-        g.append('text')
-          .attr('x', xPos)
-          .attr('y', -15)
-          .attr('text-anchor', 'middle')
-          .attr('fill', '#00ff88')
-          .attr('font-size', '10px')
-          .text(t('components.travelTime.reachableInLifetime'));
-      }
-    }
-
-  }, [distanceLy, speedData, t, hasAnimated, compact]);
-
-  // Get selected speed details
-  const selectedData = selectedSpeed
-    ? speedData.find((s) => s.key === selectedSpeed)
-    : null;
+  // SVG dimensions
+  const svgWidth = 400;
+  const svgHeight = compact ? 160 : 200;
+  const startX = 50;
+  const endX = svgWidth - 50;
+  const centerY = svgHeight - 50;
 
   if (!distanceLy || distanceLy <= 0) {
     return (
@@ -511,43 +347,183 @@ export function TravelTimeCalculator({
       </div>
 
       {/* SVG Race visualization */}
-      <div ref={containerRef} className="travel-time-chart">
-        <svg ref={svgRef} />
+      <div className="travel-viz-container">
+        <svg
+          key={animationKey}
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          className="travel-viz"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          {/* Curved paths only */}
+          {spacecraftData.map((craft) => {
+            const path = generateCurvePath(
+              craft.index,
+              spacecraftData.length,
+              startX,
+              centerY,
+              endX,
+              centerY
+            );
+
+            return (
+              <path
+                key={craft.id}
+                d={path}
+                fill="none"
+                stroke={craft.color}
+                strokeWidth={2}
+                strokeOpacity={0.3}
+                strokeDasharray="4,4"
+              />
+            );
+          })}
+
+          {/* Earth */}
+          <text
+            x={startX}
+            y={centerY}
+            fontSize={compact ? 24 : 32}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            🌍
+          </text>
+          <text
+            x={startX}
+            y={centerY + 25}
+            fill="rgba(255,255,255,0.6)"
+            fontSize={compact ? 10 : 12}
+            textAnchor="middle"
+          >
+            {t('components.travelTime.earth')}
+          </text>
+
+          {/* Target Planet */}
+          <text
+            x={endX}
+            y={centerY}
+            fontSize={compact ? 24 : 32}
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            🪐
+          </text>
+          <text
+            x={endX}
+            y={centerY + 25}
+            fill="rgba(255,255,255,0.6)"
+            fontSize={compact ? 10 : 12}
+            textAnchor="middle"
+          >
+            {t('components.travelTime.planet')}
+          </text>
+
+          {/* Spacecraft - rendered last to appear on top */}
+          {spacecraftData.map((craft) => {
+            const arcHeight = getArcHeight(craft.index, spacecraftData.length);
+            const controlX = (startX + endX) / 2;
+            const controlY = centerY - arcHeight;
+            const path = generateCurvePath(
+              craft.index,
+              spacecraftData.length,
+              startX,
+              centerY,
+              endX,
+              centerY
+            );
+
+            // Calculate final position - evenly distributed ranking from slowest to fastest
+            // Position 0.1 (just after Earth) to 0.9 (just before Planet)
+            const totalCraft = spacecraftData.length;
+            const normalizedRatio = 0.1 + 0.8 * (craft.index / (totalCraft - 1));
+            const finalPos = getPointOnCurve(
+              normalizedRatio,
+              startX,
+              centerY,
+              controlX,
+              controlY,
+              endX,
+              centerY
+            );
+
+            const iconSize = compact ? 20 : 24;
+
+            return isAnimating ? (
+              <image
+                key={craft.id}
+                href={`/icons/${craft.icon}.svg`}
+                width={iconSize}
+                height={iconSize}
+                className="craft-icon"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              >
+                <animateMotion
+                  dur={`${craft.duration}s`}
+                  repeatCount="1"
+                  fill="freeze"
+                  path={path}
+                />
+              </image>
+            ) : (
+              <image
+                key={craft.id}
+                href={`/icons/${craft.icon}.svg`}
+                x={finalPos.x - iconSize / 2}
+                y={finalPos.y - iconSize / 2}
+                width={iconSize}
+                height={iconSize}
+                className="craft-icon"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            );
+          })}
+        </svg>
       </div>
 
-      {/* Selected speed details */}
-      {selectedData && (
-        <div className="travel-time-details">
-          <div className="detail-icon">{selectedData.icon}</div>
-          <div className="detail-info">
-            <span className="detail-name">
-              {t(`components.travelTime.speeds.${selectedData.key}`)}
+      {/* Legend */}
+      <div className="travel-legend">
+        {spacecraftData.map((craft) => (
+          <button
+            key={craft.id}
+            className={`travel-legend-item clickable ${craft.withinLifetime ? 'reachable' : ''}`}
+            onClick={() => setSelectedSpacecraft(craft)}
+            type="button"
+          >
+            <img
+              src={`/icons/${craft.icon}.svg`}
+              alt={craft.id}
+              className="legend-icon"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+            <span className="legend-name">
+              {t(`components.travelTime.speeds.${craft.id}`)}
             </span>
-            <span className="detail-time">{formatTravelTime(selectedData.years)}</span>
-          </div>
-          <div className="detail-stats">
-            <span className={`detail-badge ${selectedData.withinLifetime ? 'reachable' : ''}`}>
-              {selectedData.withinLifetime 
-                ? t('components.travelTime.withinLifetime')
-                : t('components.travelTime.lifetimes', { 
-                    count: Math.ceil(selectedData.years / HUMAN_LIFETIME_YEARS) 
-                  })
-              }
+            <span className="legend-time" style={{ color: craft.color }}>
+              {formatTravelTime(craft.years)}
             </span>
-          </div>
-        </div>
-      )}
+          </button>
+        ))}
+      </div>
 
       {/* Replay button */}
       <button
         className="travel-time-replay"
-        onClick={() => setHasAnimated(false)}
+        onClick={handleReplay}
+        disabled={isAnimating}
       >
         🔄 {t('components.travelTime.replayRace')}
       </button>
+
+      {/* Spacecraft info dialog */}
+      {selectedSpacecraft && (
+        <SpacecraftInfoDialog
+          spacecraft={selectedSpacecraft}
+          onClose={() => setSelectedSpacecraft(null)}
+          t={t}
+        />
+      )}
     </div>
   );
 }
 
 export default TravelTimeCalculator;
-

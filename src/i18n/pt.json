@@ -18,6 +18,7 @@
         "description": "Você está vendo o céu noturno da Terra — mas essas não são estrelas comuns. Cada ponto de luz representa uma estrela hospedeira de exoplanetas confirmada pelo arquivo da NASA.",
         "stats": "Mais de {{starCount}} sistemas estelares abrigando {{planetCount}}+ mundos confirmados",
         "hint": "Clique em qualquer estrela para explorar seu sistema planetário",
+        "takeTour": "Fazer o Tour",
         "dismiss": "Entendi"
       }
     },
@@ -133,26 +134,7 @@
         "similarToSun": "Tamanho semelhante ao do Sol",
         "travelTime": {
           "title": "Tempo de Viagem Interestelar",
-          "unreachable": "Dados de distância indisponíveis",
-          "lightYearsAway": "anos-luz de distância",
-          "reachableAt": "Alcançável em",
-          "orFaster": "ou mais rápido",
-          "withinLifetime": "✓ Dentro da sua vida",
-          "lifetimes": "{{count}} vidas",
-          "replay": "🔄 Repetir Corrida",
-          "walking": "Andando",
-          "car": "Carro",
-          "jet": "Avião a Jato",
-          "voyager": "Voyager 1",
-          "newHorizons": "New Horizons",
-          "parkerProbe": "Sonda Parker Solar",
-          "onePercentC": "1% Veloc. da Luz",
-          "tenPercentC": "10% Veloc. da Luz",
-          "lightSpeed": "Velocidade da Luz",
-          "instant": "Instantâneo",
-          "generationNote": "1 geração = 25 anos",
-          "lifetimeNote": "1 vida = 80 anos",
-          "unreachable": "Inatingível em termos humanos"
+          "distanceUnavailable": "Dados de distância indisponíveis"
         },
         "starFeatures": {
           "title": "Características Estelares Notáveis",
@@ -963,16 +945,59 @@
       "lifetimes_plural": "{{count}} vidas",
       "unknownDistance": "Distância desconhecida",
       "replayRace": "Repetir Corrida",
+      "earth": "Terra",
+      "planet": "Planeta",
       "speeds": {
-        "walking": "Caminhando",
-        "car": "Carro",
-        "jet": "Avião Comercial",
-        "voyager": "Voyager 1",
+        "shuttle": "Shuttle",
+        "saturnV": "Saturn V",
+        "falconHeavy": "Falcon Heavy",
+        "starship": "SpaceX BFR",
         "newHorizons": "New Horizons",
-        "parkerProbe": "Sonda Parker Solar",
-        "onePercentC": "1% Veloc. da Luz",
-        "tenPercentC": "10% Veloc. da Luz",
-        "lightSpeed": "Velocidade da Luz"
+        "voyager": "Voyager 1",
+        "parkerProbe": "Sonda Parker",
+        "solarSail": "Vela Solar",
+        "enterprise": "Velocidade da Luz"
+      },
+      "speedLabel": "Velocidade",
+      "percentLight": "% da Luz",
+      "travelTimeLabel": "Tempo de Viagem",
+      "spacecraft": {
+        "starship": {
+          "description": "A espaçonave totalmente reutilizável da SpaceX, projetada para missões a Marte e além. O foguete mais poderoso já construído quando empilhado com o propulsor Super Heavy.",
+          "funFact": "O Starship pode transportar mais de 100 toneladas para órbita terrestre baixa e foi projetado para ser reabastecido no espaço para missões no espaço profundo."
+        },
+        "shuttle": {
+          "description": "O Ônibus Espacial da NASA foi a primeira espaçonave reutilizável do mundo, realizando 135 missões de 1981 a 2011. Podia transportar 7 astronautas e implantar satélites, construir a ISS e reparar o telescópio Hubble.",
+          "funFact": "Os motores principais do Ônibus Espacial eram tão confiáveis que voaram um total de 1 milhão de segundos sem uma única falha em voo."
+        },
+        "saturnV": {
+          "description": "O lendário foguete que levou os astronautas Apollo à Lua. Com 111 metros de altura, continua sendo o foguete mais poderoso já lançado com sucesso, gerando 3,4 milhões de quilos de empuxo.",
+          "funFact": "O Saturn V era tão barulhento no lançamento que podia ser ouvido a 160 km de distância e criava seus próprios padrões climáticos."
+        },
+        "falconHeavy": {
+          "description": "O veículo de lançamento pesado da SpaceX, capaz de transportar cargas massivas para a órbita. Possui três núcleos Falcon 9 que podem pousar sozinhos para reutilização.",
+          "funFact": "Em seu primeiro voo, o Falcon Heavy lançou um Tesla Roadster ao espaço com um manequim chamado 'Starman' ao volante."
+        },
+        "newHorizons": {
+          "description": "A sonda de exploração de Plutão da NASA, lançada em 2006. Realizou o primeiro sobrevoo de Plutão em 2015 e continua explorando o Cinturão de Kuiper.",
+          "funFact": "O New Horizons deixou a Terra com a velocidade de lançamento mais rápida já alcançada, chegando à órbita da Lua em apenas 9 horas."
+        },
+        "voyager": {
+          "description": "Lançada em 1977, a Voyager 1 é o objeto feito pelo homem mais distante no espaço. Carrega o Disco Dourado com sons e imagens da Terra para qualquer inteligência extraterrestre que possa encontrá-lo.",
+          "funFact": "A Voyager 1 está tão longe da Terra que seus sinais de rádio levam mais de 22 horas para nos alcançar, viajando à velocidade da luz."
+        },
+        "parkerProbe": {
+          "description": "A missão da NASA para 'tocar o Sol' voando através de sua atmosfera externa. Usa assistências gravitacionais de Vênus para alcançar velocidades incríveis enquanto estuda a coroa solar.",
+          "funFact": "A Sonda Parker é o objeto mais rápido já feito pelo homem, atingindo velocidades de 690.000 km/h durante suas aproximações solares mais próximas."
+        },
+        "solarSail": {
+          "description": "Uma tecnologia de propulsão teórica usando pressão de radiação da luz solar em grandes velas refletivas. Poderia potencialmente atingir 1% da velocidade da luz usando conjuntos de lasers potentes.",
+          "funFact": "O projeto Breakthrough Starshot propõe usar velas solares com lasers terrestres para enviar pequenas sondas a Alpha Centauri em apenas 20 anos."
+        },
+        "enterprise": {
+          "description": "O limite máximo de velocidade do universo. Nada pode viajar mais rápido que a luz no vácuo. Nessa velocidade, a dilatação do tempo se torna infinita e as distâncias se contraem para zero.",
+          "funFact": "Se você viajasse à velocidade da luz, poderia dar a volta na Terra 7,5 vezes em um único segundo, mas o tempo pararia completamente para você."
+        }
       }
     }
   },

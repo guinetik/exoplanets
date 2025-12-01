@@ -528,6 +528,22 @@
     @apply text-xs text-center text-neutral-500 mb-4;
   }
 
+  .welcome-actions {
+    @apply flex flex-col gap-2;
+  }
+
+  .welcome-tour-btn {
+    @apply w-full py-2.5 px-4 rounded-md text-center;
+    @apply text-sm font-semibold;
+    @apply bg-cyan-500 text-white;
+    @apply hover:bg-cyan-400 transition-colors duration-200;
+    text-decoration: none;
+  }
+
+  .welcome-tour-btn:active {
+    @apply bg-cyan-600;
+  }
+
   .welcome-dismiss {
     @apply w-full py-2.5 px-4 rounded-md;
     @apply text-sm font-semibold text-black bg-white;
@@ -2555,47 +2571,60 @@
     @apply w-5 h-5 rounded-full bg-green-500/20 text-center;
   }
 
-  .travel-time-chart {
-    @apply w-full;
-  }
-
-  .travel-time-details {
-    @apply flex items-center gap-4 p-4 rounded-lg;
-    @apply border border-white/[0.06] backdrop-blur-sm;
+  /* SVG Race Visualization */
+  .travel-viz-container {
+    @apply w-full overflow-hidden rounded-lg;
+    @apply border border-white/[0.06];
     background: rgba(10, 10, 14, 0.6);
   }
 
-  .travel-time-details .detail-icon {
-    @apply text-2xl;
+  .travel-viz {
+    @apply w-full h-auto;
+    min-height: 150px;
   }
 
-  .travel-time-details .detail-info {
-    @apply flex-1;
+  .travel-viz .craft-emoji {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
   }
 
-  .travel-time-details .detail-name {
-    @apply block text-sm text-white/70;
+  /* Legend */
+  .travel-legend {
+    @apply flex flex-col gap-1 p-3 rounded-lg;
+    @apply border border-white/[0.06];
+    background: rgba(10, 10, 14, 0.6);
   }
 
-  .travel-time-details .detail-time {
-    @apply block text-lg font-bold text-white;
+  @media (min-width: 640px) {
+    .travel-legend {
+      @apply grid gap-2 p-4;
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
-  .travel-time-details .detail-stats {
-    @apply flex items-center;
+  .travel-legend-item {
+    @apply flex items-center gap-2 text-sm;
+    @apply py-1 px-2 rounded;
+    transition: background 0.2s;
   }
 
-  .travel-time-details .detail-badge {
-    @apply text-xs px-2 py-1 rounded;
-    @apply text-white/60;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  .travel-legend-item:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
 
-  .travel-time-details .detail-badge.reachable {
+  .travel-legend-item.reachable {
     @apply text-green-400;
-    background: rgba(34, 197, 94, 0.15);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  .travel-legend-item .legend-icon {
+    @apply w-5 h-5;
+  }
+
+  .travel-legend-item .legend-name {
+    @apply flex-1 text-white/70 truncate;
+  }
+
+  .travel-legend-item .legend-time {
+    @apply font-mono text-xs;
   }
 
   .travel-time-replay {
@@ -2608,6 +2637,48 @@
 
   .travel-time-replay:hover {
     background: rgba(15, 15, 20, 0.8);
+  }
+
+  .travel-legend-item.clickable {
+    @apply cursor-pointer border-0 bg-transparent;
+    @apply text-left w-full;
+  }
+
+  .travel-legend-item.clickable:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .spacecraft-dialog-header {
+    @apply flex items-center gap-3 mb-4;
+  }
+
+  .spacecraft-dialog-icon {
+    @apply w-10 h-10;
+  }
+
+  .spacecraft-stats {
+    @apply mt-4 space-y-3;
+  }
+
+  .spacecraft-stat {
+    @apply flex flex-wrap items-baseline gap-2;
+  }
+
+  .spacecraft-stat .stat-label {
+    @apply text-xs text-white/50 uppercase tracking-wider;
+    min-width: 100px;
+  }
+
+  .spacecraft-stat .stat-value {
+    @apply text-lg font-mono font-medium;
+  }
+
+  .spacecraft-stat .stat-secondary {
+    @apply text-xs text-white/40;
+  }
+
+  .spacecraft-stat .stat-reachable {
+    @apply text-xs text-green-400 ml-2;
   }
 
   .travel-unreachable {

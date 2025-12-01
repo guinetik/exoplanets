@@ -18,6 +18,7 @@
         "description": "You're viewing the night sky from Earth, but these aren't ordinary stars. Each point of light represents a confirmed exoplanet host star from NASA's archive.",
         "stats": "Over {{starCount}} stellar systems harboring {{planetCount}}+ confirmed worlds",
         "hint": "Click any star to explore its planetary system",
+        "takeTour": "Take the Tour",
         "dismiss": "Explore"
       }
     },
@@ -133,26 +134,7 @@
         "similarToSun": "Similar in size to the Sun",
         "travelTime": {
           "title": "Interstellar Travel Time",
-          "distanceUnavailable": "Distance data not available",
-          "lightYearsAway": "light-years away",
-          "reachableAt": "Reachable at",
-          "orFaster": "or faster",
-          "withinLifetime": "✓ Within your lifetime",
-          "lifetimes": "{{count}} lifetimes",
-          "replay": "🔄 Replay Race",
-          "walking": "Walking",
-          "car": "Car",
-          "jet": "Jetliner",
-          "voyager": "Voyager 1",
-          "newHorizons": "New Horizons",
-          "parkerProbe": "Parker Solar Probe",
-          "onePercentC": "1% Light Speed",
-          "tenPercentC": "10% Light Speed",
-          "lightSpeed": "Light Speed",
-          "instant": "Instant",
-          "generationNote": "1 generation = 25 years",
-          "lifetimeNote": "1 lifetime = 80 years",
-          "unreachable": "Unreachable in human terms"
+          "distanceUnavailable": "Distance data not available"
         },
         "starFeatures": {
           "title": "Notable Star Features",
@@ -983,16 +965,59 @@
       "lifetimes_plural": "{{count}} lifetimes",
       "unknownDistance": "Distance unknown",
       "replayRace": "Replay Race",
+      "earth": "Earth",
+      "planet": "Planet",
       "speeds": {
-        "walking": "Walking",
-        "car": "Car",
-        "jet": "Commercial Jet",
-        "voyager": "Voyager 1",
+        "shuttle": "Shuttle",
+        "saturnV": "Saturn V",
+        "falconHeavy": "Falcon Heavy",
+        "starship": "SpaceX BFR",
         "newHorizons": "New Horizons",
-        "parkerProbe": "Parker Solar Probe",
-        "onePercentC": "1% Light Speed",
-        "tenPercentC": "10% Light Speed",
-        "lightSpeed": "Light Speed"
+        "voyager": "Voyager 1",
+        "parkerProbe": "Parker Probe",
+        "solarSail": "Solar Sail",
+        "enterprise": "Light Speed"
+      },
+      "speedLabel": "Speed",
+      "percentLight": "% Light Speed",
+      "travelTimeLabel": "Travel Time",
+      "spacecraft": {
+        "starship": {
+          "description": "SpaceX's fully reusable spacecraft designed for missions to Mars and beyond. The most powerful rocket ever built when fully stacked with Super Heavy booster.",
+          "funFact": "Starship can carry over 100 tons to low Earth orbit and is designed to be refueled in space for deep space missions."
+        },
+        "shuttle": {
+          "description": "NASA's Space Shuttle was the world's first reusable spacecraft, flying 135 missions from 1981 to 2011. It could carry 7 astronauts and deploy satellites, build the ISS, and repair the Hubble telescope.",
+          "funFact": "The Space Shuttle's main engines were so reliable that they flew a combined 1 million seconds without a single in-flight failure."
+        },
+        "saturnV": {
+          "description": "The legendary rocket that carried Apollo astronauts to the Moon. At 111 meters tall, it remains the most powerful rocket ever successfully flown, generating 7.5 million pounds of thrust.",
+          "funFact": "Saturn V was so loud at launch that it could be heard from 100 miles away and created its own weather patterns."
+        },
+        "falconHeavy": {
+          "description": "SpaceX's heavy-lift launch vehicle, capable of carrying massive payloads to orbit. Features three Falcon 9 cores that can land themselves for reuse.",
+          "funFact": "On its first flight, Falcon Heavy launched a Tesla Roadster into space with a mannequin named 'Starman' at the wheel."
+        },
+        "newHorizons": {
+          "description": "NASA's Pluto exploration probe, launched in 2006. It conducted the first flyby of Pluto in 2015 and continues exploring the Kuiper Belt.",
+          "funFact": "New Horizons left Earth at the fastest launch speed ever achieved, reaching the Moon's orbit in just 9 hours."
+        },
+        "voyager": {
+          "description": "Launched in 1977, Voyager 1 is the most distant human-made object in space. It carries the Golden Record with sounds and images of Earth for any extraterrestrial intelligence that might find it.",
+          "funFact": "Voyager 1 is so far from Earth that its radio signals take over 22 hours to reach us, traveling at the speed of light."
+        },
+        "parkerProbe": {
+          "description": "NASA's mission to 'touch the Sun' by flying through its outer atmosphere. Uses Venus gravity assists to achieve incredible speeds as it studies the solar corona.",
+          "funFact": "Parker Solar Probe is the fastest human-made object ever, reaching speeds of 430,000 mph during its closest solar approaches."
+        },
+        "solarSail": {
+          "description": "A theoretical propulsion technology using radiation pressure from sunlight on large reflective sails. Could potentially achieve 1% the speed of light using powerful laser arrays.",
+          "funFact": "The Breakthrough Starshot project proposes using solar sails with Earth-based lasers to send tiny probes to Alpha Centauri in just 20 years."
+        },
+        "enterprise": {
+          "description": "The ultimate speed limit of the universe. Nothing can travel faster than light in a vacuum. At this speed, time dilation becomes infinite and distances contract to zero.",
+          "funFact": "If you traveled at light speed, you could circle the Earth 7.5 times in a single second, but time would stop for you entirely."
+        }
       }
     }
   },

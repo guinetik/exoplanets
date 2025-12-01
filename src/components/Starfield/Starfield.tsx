@@ -6,6 +6,8 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { useAnalytics } from '../../hooks/useAnalytics';
 import * as THREE from 'three';
 import { Stars } from './Stars';
 import { EarthHorizon } from './EarthHorizon';
@@ -576,6 +578,7 @@ interface WelcomeCardProps {
   planetCount: number;
   onDismiss: () => void;
   isExiting: boolean;
+  onTrackCTA: (buttonName: 'take_tour' | 'explore') => void;
 }
 
 function WelcomeCard({
@@ -583,8 +586,19 @@ function WelcomeCard({
   planetCount,
   onDismiss,
   isExiting,
+  onTrackCTA,
 }: WelcomeCardProps) {
   const { t } = useTranslation();
+
+  const handleTourClick = () => {
+    onTrackCTA('take_tour');
+    onDismiss();
+  };
+
+  const handleExploreClick = () => {
+    onTrackCTA('explore');
+    onDismiss();
+  };
 
   return (
     <div className={`welcome-card-container ${isExiting ? 'exiting' : ''}`}>
@@ -600,9 +614,14 @@ function WelcomeCard({
           })}
         </div>
         <p className="welcome-hint">{t('pages.home.infoCard.hint')}</p>
-        <button className="welcome-dismiss" onClick={onDismiss}>
-          {t('pages.home.infoCard.dismiss')}
-        </button>
+        <div className="welcome-actions">
+          <Link to="/tour" className="welcome-tour-btn" onClick={handleTourClick}>
+            {t('pages.home.infoCard.takeTour')}
+          </Link>
+          <button className="welcome-dismiss" onClick={handleExploreClick}>
+            {t('pages.home.infoCard.dismiss')}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -628,6 +647,8 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
   const [isWelcomeCardExiting, setIsWelcomeCardExiting] = useState(false);
   const welcomeCardDismissed = useRef(hasUserExplored);
+
+  const { trackCTAClick, trackLocationChange } = useAnalytics();
 
   const {
     state,
@@ -685,8 +706,9 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
       changeLocation(location);
       setLocationName(name);
       setShowLocationPicker(false);
+      trackLocationChange(name);
     },
-    [changeLocation]
+    [changeLocation, trackLocationChange]
   );
 
   const handleStarHover = useCallback(
@@ -895,6 +917,7 @@ export function Starfield({ stars, onStarClick }: StarfieldProps) {
           planetCount={stars.reduce((acc, s) => acc + (s.sy_pnum || 0), 0)}
           onDismiss={handleDismissWelcome}
           isExiting={isWelcomeCardExiting}
+          onTrackCTA={trackCTAClick}
         />
       )}
     </div>

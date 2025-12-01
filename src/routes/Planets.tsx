@@ -4,10 +4,11 @@
  * Uses URL query parameters to maintain state across navigation
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useData } from '../context/DataContext';
+import { useAnalytics } from '../hooks/useAnalytics';
 import { PlanetCard } from '../components/PlanetCard';
 import Spinner from '../components/Spinner';
 import type { PlanetType } from '../types';
@@ -29,7 +30,9 @@ const ITEMS_PER_PAGE = 24;
 export default function Planets() {
   const { t } = useTranslation();
   const { getAllPlanets, isLoading, error } = useData();
+  const { trackSearch, trackFilter } = useAnalytics();
   const [searchParams, setSearchParams] = useSearchParams();
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Initialize state from URL params
   const [sortBy, setSortBy] = useState<SortOption>(
@@ -259,24 +262,43 @@ export default function Planets() {
   };
 
   const togglePlanetType = (type: PlanetType) => {
+    const isAdding = !selectedTypes.includes(type);
     setSelectedTypes((prev) =>
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
     handleFilterChange();
+    if (isAdding) trackFilter('planet_type', type);
   };
 
   const toggleStarClass = (starClass: string) => {
+    const isAdding = !selectedClasses.includes(starClass);
     setSelectedClasses((prev) =>
       prev.includes(starClass)
         ? prev.filter((c) => c !== starClass)
         : [...prev, starClass]
     );
     handleFilterChange();
+    if (isAdding) trackFilter('star_class', starClass);
   };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     handleFilterChange();
+
+    // Debounced search tracking
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    if (value.length >= 2) {
+      searchDebounceRef.current = setTimeout(() => {
+        const results = allPlanets.filter(
+          (p) =>
+            p.pl_name.toLowerCase().includes(value.toLowerCase()) ||
+            p.hostname.toLowerCase().includes(value.toLowerCase())
+        );
+        trackSearch('planets', value, results.length);
+      }, 500);
+    }
   };
 
   const handleSortChange = (value: SortOption) => {
@@ -285,11 +307,13 @@ export default function Planets() {
   };
 
   const handleHabitableToggle = () => {
+    if (!habitableOnly) trackFilter('habitable_zone', 'true');
     setHabitableOnly((prev) => !prev);
     handleFilterChange();
   };
 
   const handleEarthLikeToggle = () => {
+    if (!earthLikeOnly) trackFilter('earth_like', 'true');
     setEarthLikeOnly((prev) => !prev);
     handleFilterChange();
   };
