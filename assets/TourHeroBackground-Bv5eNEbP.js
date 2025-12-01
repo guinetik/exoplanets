@@ -1,4 +1,4 @@
-import{j as o,r as n,b as l}from"./index-XZ3gHdqT.js";import{C as m,a as f}from"./react-three-fiber.esm-C6U2ObIp.js";const u=`
+import{j as o,r as n,b as l}from"./index-agfWtMau.js";import{C as m,a as f}from"./react-three-fiber.esm-5J2Felbe.js";const u=`
   varying vec3 vNormal;
   varying vec3 vPosition;
   varying vec2 vUv;
