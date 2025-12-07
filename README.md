@@ -4,7 +4,7 @@
 
 <div align="center">
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/vhRGp0q6VvQ" title="Exoplanets Demo Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Watch The Demo](http://img.youtube.com/vi/vhRGp0q6VvQ/0.jpg)](http://www.youtube.com/watch?v=vhRGp0q6VvQ "Demo")
 
 </div>
 
