@@ -231,3 +231,4 @@ Potential improvements:
 4. **Sitemap Generation**: Automatically generate sitemap.xml
 5. **Robots.txt**: Configure robots.txt for better crawling
 
+
