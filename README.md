@@ -4,7 +4,9 @@
 
 <div align="center">
 
-[![Watch The Demo](http://img.youtube.com/vi/vhRGp0q6VvQ/0.jpg)](http://www.youtube.com/watch?v=vhRGp0q6VvQ "Demo")
+<a href="http://www.youtube.com/watch?v=vhRGp0q6VvQ" target="_blank" rel="noopener noreferrer">
+  <img src="./exoplanets.webp" alt="Watch The Demo" title="Demo" />
+</a>
 
 </div>
 
