@@ -156,7 +156,7 @@ All exoplanet data is sourced from NASA's Exoplanet Archive API and processed th
 
 ## License
 
-[Add your license here]
+MIT
 
 ## Links
 
